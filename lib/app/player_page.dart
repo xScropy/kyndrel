@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/engine_sync.dart';
 import 'package:kyndrel/app/launch_options.dart';
+import 'package:kyndrel/app/media_session_sync.dart';
 import 'package:kyndrel/app/player_shortcuts.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/window/window_title_bar.dart';
@@ -64,7 +65,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   @override
   void initState() {
     super.initState();
-    ref.read(engineSyncProvider);
+    ref
+      ..read(engineSyncProvider)
+      ..read(mediaSessionSyncProvider);
     final resume = ref.read(resumeControllerProvider.notifier);
     final history = ref.read(historyControllerProvider.notifier);
     ref.read(windowServiceProvider)

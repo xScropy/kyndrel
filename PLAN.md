@@ -132,7 +132,7 @@ Rules:
 - [x] 4.5 Network streams: HLS, DASH, RTSP, SMB/WebDAV sources.
 - [x] 4.6 Video quality: shader presets (e.g. upscaling), deband, HDR to SDR tone mapping, and a hardware-decoding selector.
 - [x] 4.7 Equalizer and audio normalization (`loudnorm`, `dynaudnorm`).
-- [ ] 4.8 OS integration: media keys, Windows SMTC, Linux MPRIS, macOS Now Playing.
+- [x] 4.8 OS integration: media keys, Windows SMTC, Linux MPRIS, macOS Now Playing.
 - [ ] 4.9 Plugin or script hook (mpv Lua/JS scripts) as an optional power-user feature.
 
 ### Phase 5: Polish, QA and release (2–3 weeks)

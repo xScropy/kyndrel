@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/app.dart';
 import 'package:kyndrel/app/launch_options.dart';
+import 'package:kyndrel/app/media_session_sync.dart';
+import 'package:kyndrel/core/platform/media_session.dart';
+import 'package:kyndrel/core/platform/mpris.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
@@ -32,6 +37,9 @@ Future<void> main(List<String> args) async {
   final window = await WindowManagerService.create();
   final settings = await SettingsRepository.create();
   final cacheDir = await getApplicationCacheDirectory();
+  final mediaSession = Platform.isLinux
+      ? await MprisMediaSession.start()
+      : platformMediaSession();
 
   runApp(
     ProviderScope(
@@ -39,6 +47,7 @@ Future<void> main(List<String> args) async {
         windowServiceProvider.overrideWithValue(window),
         settingsRepositoryProvider.overrideWithValue(settings),
         appCacheDirProvider.overrideWithValue(cacheDir),
+        mediaSessionProvider.overrideWithValue(mediaSession),
       ],
       child: KyndrelApp(launch: LaunchOptions.parse(args)),
     ),

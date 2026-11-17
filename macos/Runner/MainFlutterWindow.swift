@@ -2,6 +2,9 @@ import Cocoa
 import FlutterMacOS
 
 class MainFlutterWindow: NSWindow {
+  /// Now Playing and remote commands (task 4.8).
+  private var mediaSession: MediaSession?
+
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -25,6 +28,8 @@ class MainFlutterWindow: NSWindow {
         }
       }
     }
+
+    mediaSession = MediaSession(messenger: flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
   }

@@ -105,6 +105,32 @@ class PlayerShortcuts extends ConsumerWidget {
     }
 
     final skip = Duration(seconds: ref.read(settingsProvider).skipSeconds);
+    final playlist = ref.read(playlistProvider.notifier);
+    // Media keys (when the window has focus; elsewhere the OS media session
+    // delivers them).
+    switch (key) {
+      case LogicalKeyboardKey.mediaPlayPause:
+        if (!repeat) unawaited(service.playOrPause());
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.mediaPlay:
+        unawaited(service.play());
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.mediaPause || LogicalKeyboardKey.mediaStop:
+        unawaited(service.pause());
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.mediaTrackNext:
+        if (!repeat) unawaited(playlist.next());
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.mediaTrackPrevious:
+        if (!repeat) unawaited(playlist.previous());
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.mediaFastForward:
+        unawaited(service.seekBy(skip));
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.mediaRewind:
+        unawaited(service.seekBy(-skip));
+        return KeyEventResult.handled;
+    }
     switch (key) {
       case LogicalKeyboardKey.space:
         if (!repeat) unawaited(service.playOrPause());
