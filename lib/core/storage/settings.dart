@@ -18,6 +18,7 @@ class AppSettings {
     this.openSubtitlesApiKey = '',
     this.subtitleLanguages = 'en',
     this.boostWarningSeen = false,
+    this.autoPlayNextEpisode = true,
   });
 
   /// Last volume, 0–400.
@@ -41,6 +42,9 @@ class AppSettings {
   /// The one-time warning about boosting above 100 % has been shown.
   final bool boostWarningSeen;
 
+  /// Opening an episode queues the next ones from the same folder (3.2).
+  final bool autoPlayNextEpisode;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -53,6 +57,7 @@ class AppSettings {
     String? openSubtitlesApiKey,
     String? subtitleLanguages,
     bool? boostWarningSeen,
+    bool? autoPlayNextEpisode,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -64,6 +69,7 @@ class AppSettings {
       openSubtitlesApiKey: openSubtitlesApiKey ?? this.openSubtitlesApiKey,
       subtitleLanguages: subtitleLanguages ?? this.subtitleLanguages,
       boostWarningSeen: boostWarningSeen ?? this.boostWarningSeen,
+      autoPlayNextEpisode: autoPlayNextEpisode ?? this.autoPlayNextEpisode,
     );
   }
 }
@@ -105,6 +111,8 @@ class SettingsRepository {
           _prefs.getString('subtitleLanguages') ?? d.subtitleLanguages,
       boostWarningSeen:
           _prefs.getBool('boostWarningSeen') ?? d.boostWarningSeen,
+      autoPlayNextEpisode:
+          _prefs.getBool('autoPlayNextEpisode') ?? d.autoPlayNextEpisode,
     );
   }
 
@@ -121,6 +129,7 @@ class SettingsRepository {
     await _prefs.setString('openSubtitlesApiKey', s.openSubtitlesApiKey);
     await _prefs.setString('subtitleLanguages', s.subtitleLanguages);
     await _prefs.setBool('boostWarningSeen', s.boostWarningSeen);
+    await _prefs.setBool('autoPlayNextEpisode', s.autoPlayNextEpisode);
   }
 }
 

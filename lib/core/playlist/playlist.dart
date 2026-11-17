@@ -5,7 +5,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
-import 'package:kyndrel/core/utils/natural_sort.dart';
+import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/utils/episode_parser.dart';
 import 'package:path/path.dart' as p;
 
 enum QueueRepeat { off, all, one }
@@ -112,8 +113,27 @@ class PlaylistController extends Notifier<PlaylistState> {
     await _play(s);
   }
 
-  /// Plays one source (file picker, drop, command line).
-  Future<void> open(String source) => openAll([source]);
+  /// Plays one source (file picker, drop, command line). An episode also
+  /// queues the following episodes from its folder (task 3.2), if enabled.
+  Future<void> open(String source) async {
+    if (_autoNext && !source.contains('://') && File(source).existsSync()) {
+      final episodes = episodesFrom(source, listMedia(p.dirname(source)));
+      if (episodes.length > 1) {
+        await openAll(episodes);
+        return;
+      }
+    }
+    await openAll([source]);
+  }
+
+  bool get _autoNext {
+    try {
+      return ref.read(settingsProvider).autoPlayNextEpisode;
+    } on Object {
+      // No settings in some tests: default on.
+      return true;
+    }
+  }
 
   /// Queues every media file in [directory] (natural order) and plays the
   /// first, or [startWith] if given.
@@ -124,17 +144,18 @@ class PlaylistController extends Notifier<PlaylistState> {
     await openAll(files, start: start);
   }
 
-  /// Media files directly inside [directory], in natural order.
+  /// Media files directly inside [directory]: episodes in episode order,
+  /// then the rest in natural order.
   static List<String> listMedia(String directory) {
     final dir = Directory(directory);
     if (!dir.existsSync()) return const [];
-    return dir
-        .listSync()
-        .whereType<File>()
-        .map((f) => f.path)
-        .where((f) => mediaExtensions.contains(p.extension(f).toLowerCase()))
-        .toList()
-      ..sort((a, b) => compareNatural(p.basename(a), p.basename(b)));
+    return sortEpisodes(
+      dir
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.path)
+          .where((f) => mediaExtensions.contains(p.extension(f).toLowerCase())),
+    );
   }
 
   /// Adds [sources] to the end of the queue; starts playing if idle.

@@ -75,6 +75,17 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                             _update((x) => x.copyWith(skipSeconds: v)),
                       ),
                     ),
+                    SwitchListTile(
+                      key: const Key('settings-next-episode'),
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Play the next episode'),
+                      subtitle: const Text(
+                        'Opening S01E02 queues S01E03… from the same folder',
+                      ),
+                      value: s.autoPlayNextEpisode,
+                      onChanged: (v) =>
+                          _update((x) => x.copyWith(autoPlayNextEpisode: v)),
+                    ),
                     const SizedBox(height: 8),
                     const Text('AUDIO', style: KyndrelTheme.sectionLabel),
                     SwitchListTile(
