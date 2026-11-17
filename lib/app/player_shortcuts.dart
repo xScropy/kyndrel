@@ -9,6 +9,7 @@ import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
+import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
@@ -46,6 +47,7 @@ class PlayerShortcuts extends ConsumerWidget {
     ('N / P', 'Next / previous in the queue'),
     ('PgDn / PgUp', 'Next / previous chapter'),
     ('L', 'A-B loop: set A, set B, clear'),
+    ('I', 'Picture in picture'),
     ('. / ,', 'Next / previous frame'),
     ('Q', 'Queue'),
     ('Ctrl+O', 'Open file'),
@@ -110,8 +112,12 @@ class PlayerShortcuts extends ConsumerWidget {
         if (!repeat) unawaited(VolumeActions.toggleMute(ref));
       case LogicalKeyboardKey.keyF:
         if (!repeat) unawaited(FullscreenActions.toggle(ref));
+      case LogicalKeyboardKey.keyI:
+        if (!repeat) unawaited(ref.read(pipProvider.notifier).toggle());
       case LogicalKeyboardKey.escape:
-        if (ref.read(subtitlePanelProvider) != null) {
+        if (ref.read(pipProvider)) {
+          unawaited(ref.read(pipProvider.notifier).exit());
+        } else if (ref.read(subtitlePanelProvider) != null) {
           ref.read(subtitlePanelProvider.notifier).close();
         } else if (ref.read(playlistPanelProvider)) {
           ref.read(playlistPanelProvider.notifier).close();

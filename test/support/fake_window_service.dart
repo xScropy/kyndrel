@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 
 class FakeWindowService implements WindowService {
@@ -59,4 +60,29 @@ class FakeWindowService implements WindowService {
   @override
   void onClose(Future<void> Function() callback) =>
       closeCallbacks.add(callback);
+
+  Rect bounds = const Rect.fromLTWH(100, 100, 1280, 720);
+  bool alwaysOnTop = false;
+  double aspectRatio = 0;
+  Size minimumSize = const Size(720, 405);
+  Rect screen = const Rect.fromLTWH(0, 0, 1920, 1040);
+
+  @override
+  Future<Rect> getBounds() async => bounds;
+
+  @override
+  Future<void> setBounds(Rect b) async => bounds = b;
+
+  @override
+  Future<void> setAlwaysOnTop({required bool onTop}) async =>
+      alwaysOnTop = onTop;
+
+  @override
+  Future<void> setAspectRatio(double ratio) async => aspectRatio = ratio;
+
+  @override
+  Future<void> setMinimumSize(Size size) async => minimumSize = size;
+
+  @override
+  Future<Rect> workArea() async => screen;
 }

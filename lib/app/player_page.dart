@@ -21,6 +21,8 @@ import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
 import 'package:kyndrel/features/library/library_home.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
+import 'package:kyndrel/features/pip/pip_controller.dart';
+import 'package:kyndrel/features/pip/pip_view.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
@@ -165,6 +167,17 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final panelOpen = ref.watch(subtitlePanelProvider) != null;
     final queueOpen = ref.watch(playlistPanelProvider);
     final hasMedia = !idle && status != PlaybackStatus.error;
+    if (ref.watch(pipProvider)) {
+      return Scaffold(
+        backgroundColor: KyndrelColors.background,
+        body: PlayerShortcuts(
+          onOpenSettings: () {},
+          onShowInfo: () {},
+          onToggleQueue: () {},
+          child: const PipView(video: PlayerVideoView()),
+        ),
+      );
+    }
 
     Widget fade(Widget child) => IgnorePointer(
       ignoring: !visible,
@@ -269,13 +282,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                           ),
                           SubtitlesButton(),
                           SpeedSleepButton(),
-                          ControlButton(
-                            key: Key('pip'),
-                            icon: Icons.picture_in_picture_alt,
-                            tooltip:
-                                'Picture in picture (coming in a later '
-                                'version)',
-                          ),
+                          PipButton(),
                           ControlButton(
                             key: Key('cast'),
                             icon: Icons.cast,

@@ -125,7 +125,7 @@ Rules:
 - [x] 3.9 A-B loop and frame step.
 
 ### Phase 4: Advanced features (4–6 weeks)
-- [ ] 4.1 **Picture-in-picture:** small frameless always-on-top window with aspect-locked resize, a minimal control set, and double-click to restore. Same player instance, so no restart.
+- [x] 4.1 **Picture-in-picture:** small frameless always-on-top window with aspect-locked resize, a minimal control set, and double-click to restore. Same player instance, so no restart.
 - [ ] 4.2 **Subtitle translation (the translate icon):** take the active subtitle track, translate cue batches through a configurable provider (DeepL, Google, or an LLM API), cache by file hash and language, show as a secondary track, and handle failures gracefully.
 - [ ] 4.3 **Download button:** for network sources, a download manager with progress, pause/resume and a queue. Use HTTP range requests, and `yt-dlp` as an optional plugin for supported sites. Respect DRM and site terms by only offering it for sources the user is allowed to save.
 - [ ] 4.4 **Cast:** discover Chromecast and DLNA devices, serve the file over a local HTTP server, transcode when the codec is unsupported (FFmpeg), and sync play/pause/seek/volume. Do this last, as it is the hardest feature.

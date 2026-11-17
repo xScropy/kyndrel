@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Native window actions used by the custom title bar (task 1.2).
@@ -30,6 +32,18 @@ abstract interface class WindowService {
   /// Called before the window closes (e.g. to save the resume position).
   /// The window closes once [callback] completes.
   void onClose(Future<void> Function() callback);
+
+  // Picture-in-picture (task 4.1).
+  Future<Rect> getBounds();
+  Future<void> setBounds(Rect bounds);
+  Future<void> setAlwaysOnTop({required bool onTop});
+
+  /// Locks resizing to [ratio] (width / height); 0 unlocks.
+  Future<void> setAspectRatio(double ratio);
+  Future<void> setMinimumSize(Size size);
+
+  /// The usable area of the primary display (without task bars).
+  Future<Rect> workArea();
 }
 
 /// [WindowService] on the `window_manager` plugin.
@@ -113,6 +127,31 @@ class WindowManagerService with WindowListener implements WindowService {
       }
     }
     await windowManager.destroy();
+  }
+
+  @override
+  Future<Rect> getBounds() => windowManager.getBounds();
+
+  @override
+  Future<void> setBounds(Rect bounds) => windowManager.setBounds(bounds);
+
+  @override
+  Future<void> setAlwaysOnTop({required bool onTop}) =>
+      windowManager.setAlwaysOnTop(onTop);
+
+  @override
+  Future<void> setAspectRatio(double ratio) =>
+      windowManager.setAspectRatio(ratio);
+
+  @override
+  Future<void> setMinimumSize(Size size) => windowManager.setMinimumSize(size);
+
+  @override
+  Future<Rect> workArea() async {
+    final d = await screenRetriever.getPrimaryDisplay();
+    final pos = d.visiblePosition ?? Offset.zero;
+    final size = d.visibleSize ?? d.size;
+    return pos & size;
   }
 
   @override
