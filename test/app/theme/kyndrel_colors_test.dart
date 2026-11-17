@@ -1,21 +1,9 @@
-import 'dart:io';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:material_ui/material_ui.dart';
 
-Future<void> _loadInter() async {
-  final bytes = File('assets/fonts/Inter.ttf').readAsBytesSync();
-  final loader = FontLoader(KyndrelTokens.fontFamily)
-    ..addFont(Future.value(ByteData.sublistView(bytes)));
-  await loader.load();
-}
-
 void main() {
-  setUpAll(_loadInter);
-
   test('accent is the brand orange', () {
     expect(KyndrelColors.accent, const Color(0xFFF26A1B));
   });

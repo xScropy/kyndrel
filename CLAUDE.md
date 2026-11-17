@@ -20,3 +20,8 @@ Flutter video player on libmpv via media_kit. Dark UI, orange accent (#F26A1B).
 - Tests drive `PlayerService` through `test/support/fake_player_backend.dart`.
   In widget tests, create the service inside the test body (not `setUp`) so
   its streams run in the fake-async zone.
+- Window actions go through `core/platform/window_service.dart`
+  (`windowServiceProvider`, overridden in `main.dart`; `FakeWindowService`
+  in tests).
+- `test/flutter_test_config.dart` loads Inter and the Material icon font for
+  every test, so goldens show real glyphs.

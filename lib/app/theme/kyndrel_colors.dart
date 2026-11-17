@@ -41,6 +41,15 @@ abstract final class KyndrelColors {
   /// Highlight behind the active row in lists and popovers.
   static const Color rowActive = Color(0x29F26A1B);
 
+  /// Hover background of the minimize/maximize buttons.
+  static const Color windowButtonHover = Color(0x1FFFFFFF);
+
+  /// Hover background of the close button (Windows convention).
+  static const Color windowCloseHover = Color(0xFFE81123);
+
+  /// Top of the scrim behind the title bar, so it reads over bright video.
+  static const Color titleBarScrim = Color(0xB3000000);
+
   /// Error text and icons.
   static const Color error = Color(0xFFFF5A5F);
 
@@ -59,6 +68,9 @@ abstract final class KyndrelColors {
     'track': track,
     'trackBuffered': trackBuffered,
     'rowActive': rowActive,
+    'windowButtonHover': windowButtonHover,
+    'windowCloseHover': windowCloseHover,
+    'titleBarScrim': titleBarScrim,
     'error': error,
   };
 }
@@ -70,6 +82,9 @@ abstract final class KyndrelTokens {
 
   /// Letter spacing for small-caps section labels.
   static const double sectionLabelLetterSpacing = 1.4;
+
+  /// Height of the custom window title bar.
+  static const double titleBarHeight = 48;
 
   /// Bundled UI font family (assets/fonts/Inter.ttf, SIL OFL 1.1).
   static const String fontFamily = 'Inter';

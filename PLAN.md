@@ -80,7 +80,7 @@ Rules:
 
 ### Phase 1: Core player (2–3 weeks)
 - [x] 1.1 `PlayerService`: open file/URL, play, pause, seek, position/duration/buffering/state streams.
-- [ ] 1.2 Frameless window: custom title bar with drag area, minimize/maximize/close, double-click to maximize.
+- [x] 1.2 Frameless window: custom title bar with drag area, minimize/maximize/close, double-click to maximize.
 - [ ] 1.3 Top bar: back, title, year, quality badge (derived from video height: 480P, 720P, 1080P, 4K), info icon.
 - [ ] 1.4 Seek bar: progress, buffered segment, hover time tooltip, drag-to-seek with debounce, elapsed/total labels, toggle between total and remaining time.
 - [ ] 1.5 Transport: ±10 s buttons, play/pause with animated icon, and configurable skip length.
