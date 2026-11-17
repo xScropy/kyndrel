@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_service.dart';
+import 'package:kyndrel/core/player/subtitle_style.dart';
 
 import '../../support/fake_player_backend.dart';
 
@@ -243,5 +244,208 @@ void main() {
     await service.dispose();
     expect(backend.calls.where((c) => c == 'dispose'), hasLength(1));
     expect(backend.disposed, isTrue);
+  });
+
+  test('engine is configured for 400 % volume and pitch correction', () async {
+    await pumpEventQueue();
+    expect(backend.properties['volume-max'], '400');
+    expect(backend.properties['audio-pitch-correction'], 'yes');
+  });
+
+  group('volume', () {
+    test('clamps to 0–400', () async {
+      await service.setVolume(520);
+      expect(service.state.volume, 400);
+      await service.setVolume(-3);
+      expect(service.state.volume, 0);
+      expect(backend.calls, ['volume(400.0)', 'volume(0.0)']);
+    });
+
+    test('adds the limiter above 100 % and removes it below', () async {
+      await service.setVolume(150);
+      await service.setVolume(180);
+      await service.setVolume(90);
+      expect(backend.commands, [
+        ['af', 'add', '@kyndrel-limiter:lavfi=[alimiter=limit=0.9]'],
+        ['af', 'remove', '@kyndrel-limiter'],
+      ]);
+    });
+
+    test('limiter can be turned off', () async {
+      await service.setVolume(200);
+      await service.setLimiterEnabled(enabled: false);
+      expect(backend.commands.last, ['af', 'remove', '@kyndrel-limiter']);
+      await service.setVolume(250);
+      expect(backend.commands, hasLength(2));
+    });
+
+    test('mute toggles mpv mute and raising volume unmutes', () async {
+      await service.toggleMute();
+      expect(service.state.isMuted, isTrue);
+      expect(backend.properties['mute'], 'yes');
+      await service.changeVolumeBy(5);
+      expect(service.state.isMuted, isFalse);
+      expect(backend.properties['mute'], 'no');
+    });
+  });
+
+  test('rate is clamped to 0.1–4', () async {
+    await service.setRate(10);
+    await service.setRate(0);
+    await service.setRate(1.25);
+    expect(backend.calls, ['rate(4.0)', 'rate(0.1)', 'rate(1.25)']);
+    expect(service.state.rate, 1.25);
+  });
+
+  test('volume, mute and rate survive opening another file', () async {
+    await service.setVolume(250);
+    await service.setRate(1.5);
+    await service.open('b.mkv');
+    expect(service.state.volume, 250);
+    expect(service.state.rate, 1.5);
+  });
+
+  test('close stops and returns to idle', () async {
+    await service.open('a.mp4');
+    await service.close();
+    expect(backend.calls.last, 'stop');
+    expect(service.state.status, PlaybackStatus.idle);
+  });
+
+  group('tracks', () {
+    test('parses mpv track-list', () async {
+      backend.emitTracks([
+        {'id': '1', 'type': 'video', 'codec': 'h264'},
+        {
+          'id': '1',
+          'type': 'audio',
+          'lang': 'eng',
+          'title': 'Stereo',
+          'default': 'yes',
+          'demux-channel-count': '2',
+        },
+        {'id': '2', 'type': 'audio', 'lang': 'ara'},
+        {'id': '1', 'type': 'sub', 'lang': 'eng', 'codec': 'subrip'},
+        {
+          'id': '2',
+          'type': 'sub',
+          'codec': 'hdmv_pgs_subtitle',
+          'forced': 'yes',
+        },
+        {
+          'id': '3',
+          'type': 'sub',
+          'external': 'yes',
+          'external-filename': '/v/a.ar.srt',
+          'lang': 'ar',
+        },
+      ]);
+      await pumpEventQueue();
+      final t = service.tracks;
+      expect(t.video, hasLength(1));
+      expect(t.audio.map((a) => a.language), ['eng', 'ara']);
+      expect(t.audio.first.channels, 2);
+      expect(t.audio.first.isDefault, isTrue);
+      expect(t.subtitles, hasLength(3));
+      expect(t.subtitles[1].isImageSubtitle, isTrue);
+      expect(t.subtitles[1].isForced, isTrue);
+      expect(t.subtitles[2].isExternal, isTrue);
+      expect(t.subtitles[2].externalFilename, '/v/a.ar.srt');
+    });
+
+    test('selection and delays follow mpv properties', () async {
+      backend
+        ..emitProperty('sid', '2')
+        ..emitProperty('aid', '1')
+        ..emitProperty('secondary-sid', 'no')
+        ..emitProperty('sub-delay', '-0.500000')
+        ..emitProperty('audio-delay', '0.250000');
+      expect(service.tracks.subtitleId, 2);
+      expect(service.tracks.audioId, 1);
+      expect(service.tracks.secondarySubtitleId, isNull);
+      expect(service.tracks.subtitleDelay, const Duration(milliseconds: -500));
+      expect(service.tracks.audioDelay, const Duration(milliseconds: 250));
+      backend.emitProperty('sid', 'no');
+      expect(service.tracks.subtitleId, isNull);
+    });
+
+    test('commands map to mpv', () async {
+      await service.selectSubtitle(3);
+      expect(backend.properties['sid'], '3');
+      await service.selectSubtitle(null);
+      expect(backend.properties['sid'], 'no');
+      await service.selectSecondarySubtitle(1);
+      expect(backend.properties['secondary-sid'], '1');
+      await service.selectAudioTrack(2);
+      expect(backend.properties['aid'], '2');
+      await service.setSubtitleDelay(const Duration(milliseconds: 1500));
+      expect(backend.properties['sub-delay'], '1.500');
+      await service.setAudioDelay(const Duration(milliseconds: -100));
+      expect(backend.properties['audio-delay'], '-0.100');
+      await service.addSubtitle('/v/x.srt');
+      await service.addSubtitle('/v/y.srt', select: false, title: 'Y');
+      expect(backend.commands, [
+        ['sub-add', '/v/x.srt', 'select'],
+        ['sub-add', '/v/y.srt', 'auto', 'Y'],
+      ]);
+      await service.setAutoLoadSubtitles(enabled: true);
+      expect(backend.properties['sub-auto'], 'fuzzy');
+    });
+
+    test('subtitle style is applied as sub-* options', () async {
+      await service.applySubtitleStyle(
+        const SubtitleStyle(size: 50, position: 90, backgroundBox: true),
+      );
+      expect(backend.properties['sub-font-size'], '50');
+      expect(backend.properties['sub-pos'], '90');
+      expect(backend.properties['sub-border-style'], 'opaque-box');
+    });
+
+    test('opening a file clears the old track list', () async {
+      backend.emitTracks([
+        {'id': '1', 'type': 'sub'},
+      ]);
+      await pumpEventQueue();
+      await service.open('b.mkv');
+      expect(service.tracks.subtitles, isEmpty);
+    });
+  });
+
+  test('completions fire once per file end', () async {
+    final ends = <String>[];
+    service.completions.listen(ends.add);
+    await service.open('ep1.mkv');
+    backend
+      ..emitCompleted(value: true)
+      ..emitCompleted(value: true);
+    await pumpEventQueue();
+    expect(ends, ['ep1.mkv']);
+  });
+
+  test('log excerpt keeps recent warnings and errors only', () async {
+    await service.open('a.mp4');
+    backend
+      ..emitLog('info', 'cplayer', 'noise')
+      ..emitLog('warn', 'ffmpeg', 'Invalid data found')
+      ..emitLog('error', 'cplayer', 'Failed to recognize file format.');
+    expect(
+      service.logExcerpt(),
+      '[ffmpeg] Invalid data found\n'
+      '[cplayer] Failed to recognize file format.',
+    );
+    expect(service.recentLog, hasLength(3));
+  });
+
+  test('aspect override and rotation', () async {
+    await service.setAspectOverride('16:9');
+    expect(backend.properties['video-aspect-override'], '16:9');
+    await service.setAspectOverride(null);
+    expect(backend.properties['video-aspect-override'], 'no');
+    await service.setRotation(450);
+    expect(backend.properties['video-rotate'], '90');
+  });
+
+  test('limiter label constant', () {
+    expect(PlayerService.limiterLabel, startsWith('@'));
   });
 }

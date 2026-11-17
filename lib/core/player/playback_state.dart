@@ -36,6 +36,9 @@ class PlaybackState {
     this.videoWidth,
     this.videoHeight,
     this.errorMessage,
+    this.volume = 100,
+    this.isMuted = false,
+    this.rate = 1,
   });
 
   /// File path or URL currently opened, or null when idle.
@@ -62,6 +65,13 @@ class PlaybackState {
   /// device"), so this alone does not mean playback failed; see [status].
   final String? errorMessage;
 
+  /// 0–400 (mpv `volume`, with `volume-max=400`).
+  final double volume;
+  final bool isMuted;
+
+  /// Playback speed (mpv `speed`).
+  final double rate;
+
   static const PlaybackState initial = PlaybackState();
 
   PlaybackStatus get status {
@@ -85,6 +95,9 @@ class PlaybackState {
     int? videoWidth,
     int? videoHeight,
     String? errorMessage,
+    double? volume,
+    bool? isMuted,
+    double? rate,
   }) {
     return PlaybackState(
       source: source,
@@ -98,6 +111,9 @@ class PlaybackState {
       videoWidth: videoWidth ?? this.videoWidth,
       videoHeight: videoHeight ?? this.videoHeight,
       errorMessage: errorMessage ?? this.errorMessage,
+      volume: volume ?? this.volume,
+      isMuted: isMuted ?? this.isMuted,
+      rate: rate ?? this.rate,
     );
   }
 
@@ -114,7 +130,10 @@ class PlaybackState {
       other.isLoaded == isLoaded &&
       other.videoWidth == videoWidth &&
       other.videoHeight == videoHeight &&
-      other.errorMessage == errorMessage;
+      other.errorMessage == errorMessage &&
+      other.volume == volume &&
+      other.isMuted == isMuted &&
+      other.rate == rate;
 
   @override
   int get hashCode => Object.hash(
@@ -129,6 +148,9 @@ class PlaybackState {
     videoWidth,
     videoHeight,
     errorMessage,
+    volume,
+    isMuted,
+    rate,
   );
 
   @override

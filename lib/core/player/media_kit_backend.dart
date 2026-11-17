@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -7,18 +9,35 @@ import 'package:media_kit_video/media_kit_video.dart';
 /// Together with `PlayerVideoView`, this is the only code that imports
 /// media_kit.
 class MediaKitBackend implements PlayerBackend {
-  new() : player = Player() {
-    videoController = VideoController(
-      player,
-      configuration: const VideoControllerConfiguration(
-        // Let mpv pick a hardware decoder, falling back to software.
-        hwdec: 'auto-safe',
-      ),
-    );
+  /// [withVideo] is false only for headless engine tests.
+  new({bool withVideo = true})
+    : player = Player(
+        configuration: const PlayerConfiguration(
+          // mpv renders subtitles into the frame (libass). This is what makes
+          // image subtitles (PGS, VobSub) and the sub-* style options work.
+          libass: true,
+          logLevel: MPVLogLevel.warn,
+          title: 'Kyndrel',
+        ),
+      ) {
+    if (withVideo) {
+      videoController = VideoController(
+        player,
+        configuration: const VideoControllerConfiguration(
+          // Let mpv pick a hardware decoder, falling back to software.
+          hwdec: 'auto-safe',
+        ),
+      );
+    }
   }
 
   final Player player;
-  late final VideoController videoController;
+  VideoController? videoController;
+
+  NativePlayer? get _native {
+    final platform = player.platform;
+    return platform is NativePlayer ? platform : null;
+  }
 
   @override
   Stream<bool> get playing => player.stream.playing;
@@ -37,11 +56,47 @@ class MediaKitBackend implements PlayerBackend {
   @override
   Stream<int?> get height => player.stream.height;
   @override
+  Stream<double> get volume => player.stream.volume;
+  @override
+  Stream<double> get rate => player.stream.rate;
+  @override
   Stream<String> get error => player.stream.error;
+  @override
+  Stream<PlayerLogLine> get log => player.stream.log.map(
+    (l) => (level: l.level, prefix: l.prefix, text: l.text),
+  );
+  @override
+  Stream<void> get tracksChanged => player.stream.tracks.map((_) {});
+
+  final _observed = <String, StreamController<String>>{};
+  final _lastObserved = <String, String>{};
+
+  @override
+  Stream<String> observe(String property) {
+    final controller = _observed.putIfAbsent(property, () {
+      final c = StreamController<String>.broadcast();
+      unawaited(
+        _native?.observeProperty(property, (value) async {
+          _lastObserved[property] = value;
+          c.add(value);
+        }),
+      );
+      return c;
+    });
+    return Stream.multi((listener) {
+      final last = _lastObserved[property];
+      if (last != null) listener.add(last);
+      final sub = controller.stream.listen(listener.addSync);
+      listener.onCancel = sub.cancel;
+    });
+  }
 
   @override
   Future<void> open(String source, {required bool play}) =>
       player.open(Media(source), play: play);
+
+  @override
+  Future<void> stop() => player.stop();
 
   @override
   Future<void> play() => player.play();
@@ -53,16 +108,35 @@ class MediaKitBackend implements PlayerBackend {
   Future<void> seek(Duration position) => player.seek(position);
 
   @override
+  Future<void> setVolume(double volume) => player.setVolume(volume);
+
+  @override
+  Future<void> setRate(double rate) => player.setRate(rate);
+
+  @override
   Future<String?> getProperty(String name) async {
-    final platform = player.platform;
-    if (platform is! NativePlayer) return null;
+    final native = _native;
+    if (native == null) return null;
     try {
-      return await platform.getProperty(name);
+      return await native.getProperty(name);
     } on Object {
       return null;
     }
   }
 
   @override
-  Future<void> dispose() => player.dispose();
+  Future<void> setProperty(String name, String value) =>
+      _native?.setProperty(name, value) ?? Future.value();
+
+  @override
+  Future<void> command(List<String> args) =>
+      _native?.command(args) ?? Future.value();
+
+  @override
+  Future<void> dispose() async {
+    for (final c in _observed.values) {
+      await c.close();
+    }
+    await player.dispose();
+  }
 }

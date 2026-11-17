@@ -89,9 +89,19 @@ void main() {
     expect(window.calls, ['toggleMaximize']);
   });
 
-  testWidgets('the child area is draggable too', (tester) async {
-    await pumpBar(tester, child: const Center(child: Text('Title')));
-    await tester.drag(find.text('Title'), const Offset(40, 0));
+  testWidgets('non-interactive parts of the child drag the window', (
+    tester,
+  ) async {
+    // TopBarContent wraps its title in IgnorePointer the same way.
+    await pumpBar(
+      tester,
+      child: const Center(child: IgnorePointer(child: Text('Title'))),
+    );
+    await tester.drag(
+      find.text('Title'),
+      const Offset(40, 0),
+      warnIfMissed: false, // The hit lands on the drag area underneath.
+    );
     await tester.pump(kDoubleTapTimeout);
     expect(window.calls, ['startDragging']);
   });

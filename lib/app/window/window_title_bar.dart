@@ -11,9 +11,12 @@ import 'package:material_ui/material_ui.dart';
 /// maximizes or restores. [child] fills the draggable area (the top bar's
 /// back button, title and badges in task 1.3).
 class WindowTitleBar extends ConsumerWidget {
-  const new({this.child, super.key});
+  const new({this.child, this.showButtons = true, super.key});
 
   final Widget? child;
+
+  /// False in full screen, where there's no window to manage.
+  final bool showButtons;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,15 +34,23 @@ class WindowTitleBar extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: GestureDetector(
-              key: const Key('title-bar-drag-area'),
-              behavior: HitTestBehavior.translucent,
-              onPanStart: (_) => unawaited(window.startDragging()),
-              onDoubleTap: () => unawaited(window.toggleMaximize()),
-              child: child ?? const SizedBox.expand(),
+            // The drag area sits *under* the child, so the child's buttons
+            // get clicks straight away (no wait for a possible double-click)
+            // and empty space still drags the window.
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                GestureDetector(
+                  key: const Key('title-bar-drag-area'),
+                  behavior: HitTestBehavior.opaque,
+                  onPanStart: (_) => unawaited(window.startDragging()),
+                  onDoubleTap: () => unawaited(window.toggleMaximize()),
+                ),
+                ?child,
+              ],
             ),
           ),
-          const WindowButtons(),
+          if (showButtons) const WindowButtons(),
         ],
       ),
     );

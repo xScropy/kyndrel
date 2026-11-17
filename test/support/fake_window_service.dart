@@ -34,4 +34,29 @@ class FakeWindowService implements WindowService {
 
   @override
   Future<void> startDragging() async => calls.add('startDragging');
+
+  bool _isFullScreen = false;
+  final _fullScreenChanges = StreamController<bool>.broadcast(sync: true);
+  final closeCallbacks = <Future<void> Function()>[];
+
+  @override
+  bool get isFullScreen => _isFullScreen;
+
+  @override
+  Stream<bool> get fullScreen => Stream.multi((listener) {
+    listener.add(_isFullScreen);
+    final sub = _fullScreenChanges.stream.listen(listener.addSync);
+    listener.onCancel = sub.cancel;
+  });
+
+  @override
+  Future<void> setFullScreen({required bool fullScreen}) async {
+    calls.add('fullScreen($fullScreen)');
+    _isFullScreen = fullScreen;
+    _fullScreenChanges.add(fullScreen);
+  }
+
+  @override
+  void onClose(Future<void> Function() callback) =>
+      closeCallbacks.add(callback);
 }

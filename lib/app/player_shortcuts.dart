@@ -1,0 +1,125 @@
+import 'dart:async';
+
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/ui/controls_visibility.dart';
+import 'package:kyndrel/core/ui/osd.dart';
+import 'package:kyndrel/features/playback/fullscreen_actions.dart';
+import 'package:kyndrel/features/playback/open/open_actions.dart';
+import 'package:kyndrel/features/playback/volume_actions.dart';
+import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
+import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
+import 'package:material_ui/material_ui.dart';
+
+/// Keyboard shortcuts (task 1.9). A rebinding screen comes with the settings
+/// page (task 5.1); until then the bindings are fixed and listed in
+/// [PlayerShortcuts.help].
+class PlayerShortcuts extends ConsumerWidget {
+  const new({
+    required this.child,
+    required this.onOpenSettings,
+    required this.onShowInfo,
+    super.key,
+  });
+
+  final Widget child;
+  final VoidCallback onOpenSettings;
+  final VoidCallback onShowInfo;
+
+  static const help = <(String, String)>[
+    ('Space', 'Play / pause'),
+    ('← / →', 'Seek back / forward by the skip length'),
+    ('↑ / ↓', 'Volume up / down 5%'),
+    ('M', 'Mute'),
+    ('F', 'Full screen'),
+    ('Esc', 'Close panel / leave full screen'),
+    ('[ / ]', 'Slower / faster'),
+    ('S', 'Subtitles & audio panel'),
+    ('Ctrl+O', 'Open file'),
+    ('Ctrl+V', 'Open a pasted path or URL'),
+    ('Ctrl+I', 'Media info'),
+    ('Ctrl+,', 'Settings'),
+  ];
+
+  /// True while a text field has focus, so typing isn't hijacked.
+  static bool _typing() {
+    final context = FocusManager.instance.primaryFocus?.context;
+    if (context == null) return false;
+    return context.widget is EditableText ||
+        context.findAncestorWidgetOfExactType<EditableText>() != null;
+  }
+
+  KeyEventResult _onKey(WidgetRef ref, KeyEvent event) {
+    if (event is KeyUpEvent || _typing()) return KeyEventResult.ignored;
+    final repeat = event is KeyRepeatEvent;
+    final key = event.logicalKey;
+    final keys = HardwareKeyboard.instance;
+    final command = keys.isControlPressed || keys.isMetaPressed;
+    final service = ref.read(playerServiceProvider);
+    final osd = ref.read(osdProvider.notifier);
+    ref.read(controlsVisibilityProvider.notifier).show();
+
+    if (command) {
+      if (repeat) return KeyEventResult.handled;
+      switch (key) {
+        case LogicalKeyboardKey.keyO:
+          unawaited(OpenActions.pickFile(ref));
+        case LogicalKeyboardKey.keyV:
+          unawaited(OpenActions.pasteFromClipboard(ref));
+        case LogicalKeyboardKey.keyI:
+          onShowInfo();
+        case LogicalKeyboardKey.comma:
+          onOpenSettings();
+        default:
+          return KeyEventResult.ignored;
+      }
+      return KeyEventResult.handled;
+    }
+
+    final skip = Duration(seconds: ref.read(settingsProvider).skipSeconds);
+    switch (key) {
+      case LogicalKeyboardKey.space:
+        if (!repeat) unawaited(service.playOrPause());
+      case LogicalKeyboardKey.arrowLeft:
+        unawaited(service.seekBy(-skip));
+        osd.show('−${skip.inSeconds} s');
+      case LogicalKeyboardKey.arrowRight:
+        unawaited(service.seekBy(skip));
+        osd.show('+${skip.inSeconds} s');
+      case LogicalKeyboardKey.arrowUp:
+        unawaited(VolumeActions.changeBy(ref, VolumeActions.step));
+      case LogicalKeyboardKey.arrowDown:
+        unawaited(VolumeActions.changeBy(ref, -VolumeActions.step));
+      case LogicalKeyboardKey.keyM:
+        if (!repeat) unawaited(VolumeActions.toggleMute(ref));
+      case LogicalKeyboardKey.keyF:
+        if (!repeat) unawaited(FullscreenActions.toggle(ref));
+      case LogicalKeyboardKey.escape:
+        if (ref.read(subtitlePanelProvider) != null) {
+          ref.read(subtitlePanelProvider.notifier).close();
+        } else {
+          unawaited(FullscreenActions.exit(ref));
+        }
+      case LogicalKeyboardKey.bracketLeft:
+        unawaited(SpeedActions.stepDown(ref));
+      case LogicalKeyboardKey.bracketRight:
+        unawaited(SpeedActions.stepUp(ref));
+      case LogicalKeyboardKey.keyS:
+        if (!repeat) ref.read(subtitlePanelProvider.notifier).toggle();
+      default:
+        return KeyEventResult.ignored;
+    }
+    return KeyEventResult.handled;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (_, event) => _onKey(ref, event),
+      child: child,
+    );
+  }
+}

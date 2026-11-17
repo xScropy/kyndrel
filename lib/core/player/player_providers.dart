@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/media_kit_backend.dart';
+import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_service.dart';
 
@@ -11,7 +12,7 @@ final playerServiceProvider = Provider<PlayerService>((ref) {
 });
 
 /// Full playback snapshot. Rebuilds on every change, including position, so
-/// prefer the narrower providers below in widgets that don't need it all.
+/// prefer `.select` or the narrower providers below where possible.
 final playbackStateProvider = StreamProvider<PlaybackState>(
   (ref) => ref.watch(playerServiceProvider).states,
 );
@@ -30,4 +31,8 @@ final durationProvider = StreamProvider<Duration>(
 
 final bufferingProvider = StreamProvider<bool>(
   (ref) => ref.watch(playerServiceProvider).buffering,
+);
+
+final trackStateProvider = StreamProvider<TrackState>(
+  (ref) => ref.watch(playerServiceProvider).trackStates,
 );

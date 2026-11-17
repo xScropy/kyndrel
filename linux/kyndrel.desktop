@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kyndrel
+GenericName=Video Player
+Comment=Play videos and music
+Exec=kyndrel %f
+Icon=kyndrel
+Terminal=false
+Categories=AudioVideo;Video;Player;
+MimeType=video/mp4;video/x-matroska;video/webm;video/x-msvideo;video/quicktime;video/mpeg;video/x-flv;video/x-ms-wmv;video/3gpp;video/ogg;video/mp2t;application/vnd.apple.mpegurl;application/x-mpegurl;audio/mpeg;audio/flac;audio/ogg;audio/x-wav;audio/mp4;
+StartupWMClass=kyndrel

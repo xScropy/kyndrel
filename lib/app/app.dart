@@ -1,7 +1,6 @@
 import 'package:kyndrel/app/launch_options.dart';
+import 'package:kyndrel/app/player_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
-import 'package:kyndrel/app/window/window_title_bar.dart';
-import 'package:kyndrel/features/playback/player_screen.dart';
 import 'package:material_ui/material_ui.dart';
 
 class KyndrelApp extends StatelessWidget {
@@ -16,11 +15,7 @@ class KyndrelApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: KyndrelTheme.dark(),
       themeMode: ThemeMode.dark,
-      home: PlayerScreen(
-        initialSource: launch.source,
-        showDiagnostics: launch.showDiagnostics,
-        titleBar: const WindowTitleBar(),
-      ),
+      home: PlayerPage(launch: launch),
     );
   }
 }

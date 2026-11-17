@@ -19,22 +19,41 @@ abstract interface class WindowService {
 
   /// Starts a native window move; call from a drag start.
   Future<void> startDragging();
+
+  bool get isFullScreen;
+
+  /// Full-screen state, starting with the current value.
+  Stream<bool> get fullScreen;
+
+  Future<void> setFullScreen({required bool fullScreen});
+
+  /// Called before the window closes (e.g. to save the resume position).
+  /// The window closes once [callback] completes.
+  void onClose(Future<void> Function() callback);
 }
 
 /// [WindowService] on the `window_manager` plugin.
 class WindowManagerService with WindowListener implements WindowService {
-  new _(this._isMaximized);
+  new _(this._isMaximized, this._isFullScreen);
 
   /// Reads the initial state and starts listening to window events.
   /// Call after `windowManager.ensureInitialized()`.
   static Future<WindowManagerService> create() async {
-    final service = WindowManagerService._(await windowManager.isMaximized());
+    final service = WindowManagerService._(
+      await windowManager.isMaximized(),
+      await windowManager.isFullScreen(),
+    );
     windowManager.addListener(service);
+    // Let onWindowClose run the close callbacks first.
+    await windowManager.setPreventClose(true);
     return service;
   }
 
   bool _isMaximized;
+  bool _isFullScreen;
   final _changes = StreamController<bool>.broadcast();
+  final _fullScreenChanges = StreamController<bool>.broadcast();
+  final _closeCallbacks = <Future<void> Function()>[];
 
   @override
   bool get isMaximized => _isMaximized;
@@ -63,6 +82,50 @@ class WindowManagerService with WindowListener implements WindowService {
 
   @override
   Future<void> startDragging() => windowManager.startDragging();
+
+  @override
+  bool get isFullScreen => _isFullScreen;
+
+  @override
+  Stream<bool> get fullScreen => Stream.multi((listener) {
+    listener.add(_isFullScreen);
+    final sub = _fullScreenChanges.stream.listen(listener.addSync);
+    listener.onCancel = sub.cancel;
+  });
+
+  @override
+  Future<void> setFullScreen({required bool fullScreen}) async {
+    await windowManager.setFullScreen(fullScreen);
+    _setFullScreen(fullScreen);
+  }
+
+  @override
+  void onClose(Future<void> Function() callback) =>
+      _closeCallbacks.add(callback);
+
+  @override
+  Future<void> onWindowClose() async {
+    for (final callback in _closeCallbacks) {
+      try {
+        await callback().timeout(const Duration(seconds: 2));
+      } on Object {
+        // Never block closing on a failed save.
+      }
+    }
+    await windowManager.destroy();
+  }
+
+  @override
+  void onWindowEnterFullScreen() => _setFullScreen(true);
+
+  @override
+  void onWindowLeaveFullScreen() => _setFullScreen(false);
+
+  void _setFullScreen(bool value) {
+    if (value == _isFullScreen) return;
+    _isFullScreen = value;
+    _fullScreenChanges.add(value);
+  }
 
   @override
   void onWindowMaximize() => _set(maximized: true);
@@ -96,4 +159,8 @@ final windowServiceProvider = Provider<WindowService>(
 
 final isMaximizedProvider = StreamProvider<bool>(
   (ref) => ref.watch(windowServiceProvider).maximized,
+);
+
+final isFullScreenProvider = StreamProvider<bool>(
+  (ref) => ref.watch(windowServiceProvider).fullScreen,
 );
