@@ -9,6 +9,7 @@ import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
+import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
@@ -17,6 +18,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_player_backend.dart';
+import 'fake_preview_source.dart';
 import 'fake_window_service.dart';
 import 'test_database.dart';
 
@@ -30,6 +32,7 @@ class AppHarness {
   final FakeWindowService window;
   final KyndrelDatabase db;
   final SettingsRepository settings;
+  final FakePreviewSource previews = FakePreviewSource();
   late ProviderContainer container;
 
   /// Builds the harness inside the test body (fake-async zone).
@@ -56,6 +59,7 @@ class AppHarness {
     settingsRepositoryProvider.overrideWithValue(settings),
     databaseProvider.overrideWithValue(db),
     appCacheDirProvider.overrideWithValue(Directory.systemTemp),
+    previewSourceProvider.overrideWithValue(previews),
   ];
 
   Future<void> pump(

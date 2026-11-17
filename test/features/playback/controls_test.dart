@@ -108,6 +108,20 @@ void main() {
       expect(painter.marks, [0.5]);
     });
 
+    testWidgets('hovering asks for a preview frame', (tester) async {
+      final h = await setup(tester);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: Offset.zero);
+      for (final f in [0.1, 0.2, 0.5]) {
+        await mouse.moveTo(Offset(left + width * f, 60));
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+      await tester.pump(const Duration(milliseconds: 100));
+      // Debounced: only the resting position is rendered.
+      expect(h.previews.requests, [const Duration(minutes: 5)]);
+    });
+
     testWidgets('golden', (tester) async {
       await setup(tester);
       await expectLater(

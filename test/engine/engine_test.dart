@@ -8,6 +8,7 @@ import 'package:kyndrel/core/player/media_kit_backend.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_service.dart';
+import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path/path.dart' as p;
@@ -264,6 +265,23 @@ void main() {
     await service.chapterBy(1);
     await waitFor((s) => s.position >= const Duration(seconds: 3));
     await eventually(() async => service.tracks.chapterIndex == 1);
+  });
+
+  test('preview thumbnails are rendered by a second mpv and cached', () async {
+    final dir = Directory.systemTemp.createTempSync('kyndrel_prev');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final t = PreviewThumbnailer(cacheDir: dir);
+    addTearDown(t.dispose);
+    final file = p.join(media, 'clip.mp4');
+    const length = Duration(seconds: 8);
+    final a = await t.frameAt(file, const Duration(seconds: 5), length);
+    expect(a, isNotNull);
+    final bytes = File(a!).readAsBytesSync();
+    expect(bytes.sublist(0, 2), [0xFF, 0xD8], reason: 'JPEG');
+    final b = await t.frameAt(file, const Duration(seconds: 2), length);
+    expect(b, isNot(a));
+    // Cached: same path straight away.
+    expect(await t.frameAt(file, const Duration(seconds: 5), length), a);
   });
 
   test('track list types', () {

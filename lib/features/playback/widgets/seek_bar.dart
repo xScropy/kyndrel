@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:material_ui/material_ui.dart';
@@ -79,11 +81,32 @@ class _SeekBarState extends ConsumerState<SeekBar> {
   double? _dragFraction;
   Timer? _throttle;
   Duration? _pendingSeek;
+  Timer? _previewDebounce;
+  String? _preview;
+  int _previewRequest = 0;
 
   @override
   void dispose() {
     _throttle?.cancel();
+    _previewDebounce?.cancel();
     super.dispose();
+  }
+
+  /// Asks for a preview frame of the hovered time (task 3.7), debounced so
+  /// fast mouse moves don't queue renders.
+  void _requestPreview(Duration at, Duration duration) {
+    _previewDebounce?.cancel();
+    final source = ref.read(playerServiceProvider).state.source;
+    if (source == null) return;
+    final id = ++_previewRequest;
+    _previewDebounce = Timer(const Duration(milliseconds: 60), () async {
+      final path = await ref
+          .read(previewSourceProvider)
+          .frameAt(source, at, duration);
+      if (mounted && id == _previewRequest && path != null) {
+        setState(() => _preview = path);
+      }
+    });
   }
 
   void _seekThrottled(Duration target) {
@@ -124,8 +147,20 @@ class _SeekBarState extends ConsumerState<SeekBar> {
 
         return MouseRegion(
           cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
-          onHover: (e) => setState(() => _hoverX = e.localPosition.dx),
-          onExit: (_) => setState(() => _hoverX = null),
+          onHover: (e) {
+            setState(() => _hoverX = e.localPosition.dx);
+            if (enabled) {
+              _requestPreview(
+                _at(fractionAt(e.localPosition.dx), duration),
+                duration,
+              );
+            }
+          },
+          onExit: (_) => setState(() {
+            _hoverX = null;
+            _preview = null;
+            _previewRequest++;
+          }),
           child: GestureDetector(
             key: const Key('seek-bar'),
             behavior: HitTestBehavior.opaque,
@@ -150,6 +185,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                       _hoverX = d.localPosition.dx;
                     });
                     _seekThrottled(_at(f, duration));
+                    _requestPreview(_at(f, duration), duration);
                   }
                 : null,
             onHorizontalDragEnd: enabled
@@ -191,16 +227,40 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                         for (final c in chapters) {
                           if (c.start <= at) chapter = c.title;
                         }
-                        const bubble = 140.0;
+                        final preview = _preview;
+                        final bubble = preview == null ? 140.0 : 180.0;
                         return Positioned(
                           left: (hoverX - bubble / 2).clamp(0, width - bubble),
                           bottom: 30,
                           width: bubble,
-                          child: Center(
-                            child: _TimeBubble(
-                              text: formatDuration(at),
-                              chapter: chapter,
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (preview != null)
+                                Container(
+                                  key: const Key('seek-preview'),
+                                  margin: const EdgeInsets.only(bottom: 4),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: KyndrelColors.panelBorder,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Image.file(
+                                    File(preview),
+                                    width: 176,
+                                    fit: BoxFit.cover,
+                                    gaplessPlayback: true,
+                                    errorBuilder: (_, _, _) =>
+                                        const SizedBox.shrink(),
+                                  ),
+                                ),
+                              _TimeBubble(
+                                text: formatDuration(at),
+                                chapter: chapter,
+                              ),
+                            ],
                           ),
                         );
                       },
