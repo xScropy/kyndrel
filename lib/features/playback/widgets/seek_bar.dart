@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
@@ -106,6 +107,9 @@ class _SeekBarState extends ConsumerState<SeekBar> {
     final position = state?.position ?? Duration.zero;
     final buffered = position + (state?.buffered ?? Duration.zero);
     final enabled = duration > Duration.zero;
+    final chapters =
+        ref.watch(trackStateProvider.select((t) => t.value?.chapters)) ??
+        const [];
 
     double fractionOf(Duration d) => enabled
         ? (d.inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0)
@@ -172,16 +176,34 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                         progress: progress,
                         buffered: fractionOf(buffered),
                         hovering: hoverX != null || _dragFraction != null,
+                        marks: [
+                          for (final c in chapters)
+                            if (c.start > Duration.zero) fractionOf(c.start),
+                        ],
                       ),
                     ),
                   ),
                   if (hoverX != null && enabled)
-                    Positioned(
-                      left: (hoverX - 32).clamp(0, width - 64),
-                      bottom: 30,
-                      child: _TimeBubble(
-                        text: formatDuration(_at(fractionAt(hoverX), duration)),
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final at = _at(fractionAt(hoverX), duration);
+                        String? chapter;
+                        for (final c in chapters) {
+                          if (c.start <= at) chapter = c.title;
+                        }
+                        const bubble = 140.0;
+                        return Positioned(
+                          left: (hoverX - bubble / 2).clamp(0, width - bubble),
+                          bottom: 30,
+                          width: bubble,
+                          child: Center(
+                            child: _TimeBubble(
+                              text: formatDuration(at),
+                              chapter: chapter,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                 ],
               ),
@@ -194,39 +216,70 @@ class _SeekBarState extends ConsumerState<SeekBar> {
 }
 
 class _TimeBubble extends StatelessWidget {
-  const new({required this.text});
+  const new({required this.text, this.chapter});
 
   final String text;
+  final String? chapter;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       key: const Key('seek-hover-time'),
-      width: 64,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      constraints: const BoxConstraints(minWidth: 64, maxWidth: 140),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
         color: KyndrelColors.panel,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: KyndrelColors.panelBorder),
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 12,
-          fontFeatures: [FontFeature.tabularFigures()],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (chapter != null)
+            Text(
+              chapter!,
+              key: const Key('seek-hover-chapter'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 11,
+                color: KyndrelColors.textSecondary,
+              ),
+            ),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 12,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class SeekBarPainter extends CustomPainter {
-  new({required this.progress, required this.buffered, required this.hovering});
+  new({
+    required this.progress,
+    required this.buffered,
+    required this.hovering,
+    this.marks = const [],
+    this.loopA,
+    this.loopB,
+  });
 
   final double progress;
   final double buffered;
   final bool hovering;
+
+  /// Chapter starts as 0–1 fractions (task 3.6).
+  final List<double> marks;
+
+  /// A-B loop points as fractions (task 3.9).
+  final double? loopA;
+  final double? loopB;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -245,17 +298,59 @@ class SeekBarPainter extends CustomPainter {
       ..drawRRect(
         bar(size.width * progress),
         Paint()..color = KyndrelColors.accent,
-      )
-      ..drawCircle(
-        Offset(size.width * progress, y),
-        hovering ? 8 : 6,
-        Paint()..color = KyndrelColors.accent,
       );
+    // Chapter marks: small gaps in the bar.
+    final gap = Paint()..color = KyndrelColors.background;
+    for (final m in marks) {
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset(size.width * m, y),
+          width: 2,
+          height: track + 1,
+        ),
+        gap,
+      );
+    }
+    // A-B loop range.
+    final a = loopA;
+    if (a != null) {
+      final loopPaint = Paint()..color = KyndrelColors.textPrimary;
+      final b = loopB;
+      if (b != null) {
+        canvas.drawRect(
+          Rect.fromLTRB(
+            size.width * a,
+            y - track,
+            size.width * b,
+            y - track + 2,
+          ),
+          loopPaint,
+        );
+      }
+      for (final f in [a, ?b]) {
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: Offset(size.width * f, y),
+            width: 2,
+            height: 14,
+          ),
+          loopPaint,
+        );
+      }
+    }
+    canvas.drawCircle(
+      Offset(size.width * progress, y),
+      hovering ? 8 : 6,
+      Paint()..color = KyndrelColors.accent,
+    );
   }
 
   @override
   bool shouldRepaint(SeekBarPainter old) =>
       old.progress != progress ||
       old.buffered != buffered ||
-      old.hovering != hovering;
+      old.hovering != hovering ||
+      !listEquals(old.marks, marks) ||
+      old.loopA != loopA ||
+      old.loopB != loopB;
 }

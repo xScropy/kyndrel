@@ -42,6 +42,7 @@ class PlayerShortcuts extends ConsumerWidget {
     ('[ / ]', 'Slower / faster'),
     ('S', 'Subtitles & audio panel'),
     ('N / P', 'Next / previous in the queue'),
+    ('PgDn / PgUp', 'Next / previous chapter'),
     ('Q', 'Queue'),
     ('Ctrl+O', 'Open file'),
     ('Ctrl+V', 'Open a pasted path or URL'),
@@ -116,6 +117,10 @@ class PlayerShortcuts extends ConsumerWidget {
         unawaited(SpeedActions.stepUp(ref));
       case LogicalKeyboardKey.keyS:
         if (!repeat) ref.read(subtitlePanelProvider.notifier).toggle();
+      case LogicalKeyboardKey.pageDown:
+        unawaited(service.chapterBy(1));
+      case LogicalKeyboardKey.pageUp:
+        unawaited(service.chapterBy(-1));
       case LogicalKeyboardKey.keyN:
         if (!repeat) unawaited(ref.read(playlistProvider.notifier).next());
       case LogicalKeyboardKey.keyP:

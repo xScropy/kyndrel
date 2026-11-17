@@ -44,7 +44,10 @@ class PlayerService {
       backend.rate.listen((v) => _update(_state.copyWith(rate: v))),
       backend.error.listen(_onError),
       backend.log.listen(_onLog),
-      backend.tracksChanged.listen((_) => unawaited(refreshTracks())),
+      backend.tracksChanged.listen((_) {
+        unawaited(refreshTracks());
+        unawaited(refreshChapters());
+      }),
       backend
           .observe('mute')
           .listen((v) => _update(_state.copyWith(isMuted: v == 'yes'))),
@@ -70,6 +73,21 @@ class PlayerService {
           .listen(
             (v) => _updateTracks(_tracks.copyWith(subtitleDelay: _seconds(v))),
           ),
+      backend
+          .observe('chapter')
+          .listen(
+            (v) => _updateTracks(
+              _tracks.copyWith(
+                chapterIndex: () {
+                  final i = int.tryParse(v);
+                  return i == null || i < 0 ? null : i;
+                },
+              ),
+            ),
+          ),
+      backend
+          .observe('chapter-list/count')
+          .listen((_) => unawaited(refreshChapters())),
       backend
           .observe('audio-delay')
           .listen(
@@ -352,6 +370,33 @@ class PlayerService {
 
   Future<Map<String, String>> mediaInfo() =>
       _readProperties(mediaInfoProperties);
+
+  /// Re-reads mpv's `chapter-list` (task 3.6).
+  Future<void> refreshChapters() async {
+    final count =
+        int.tryParse(await backend.getProperty('chapter-list/count') ?? '') ??
+        0;
+    final chapters = <Chapter>[];
+    for (var i = 0; i < count; i++) {
+      final time = double.tryParse(
+        await backend.getProperty('chapter-list/$i/time') ?? '',
+      );
+      if (time == null) continue;
+      chapters.add(
+        Chapter(
+          start: Duration(microseconds: (time * 1e6).round()),
+          title: _nonEmpty(await backend.getProperty('chapter-list/$i/title')),
+        ),
+      );
+    }
+    _updateTracks(_tracks.copyWith(chapters: chapters));
+  }
+
+  /// Jumps to the next (or, with [delta] -1, previous) chapter.
+  Future<void> chapterBy(int delta) async {
+    if (_tracks.chapters.isEmpty) return;
+    await backend.command(['add', 'chapter', '$delta']);
+  }
 
   /// Re-reads mpv's `track-list`.
   Future<void> refreshTracks() async {

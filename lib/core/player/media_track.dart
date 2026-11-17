@@ -75,6 +75,22 @@ class MediaTrack {
   String toString() => 'MediaTrack(${type.name} #$id $language $title)';
 }
 
+/// A chapter mark (task 3.6).
+@immutable
+class Chapter {
+  const new({required this.start, this.title});
+
+  final Duration start;
+  final String? title;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Chapter && other.start == start && other.title == title;
+
+  @override
+  int get hashCode => Object.hash(start, title);
+}
+
 /// Tracks and the per-file sync offsets.
 @immutable
 class TrackState {
@@ -87,6 +103,8 @@ class TrackState {
     this.secondarySubtitleId,
     this.subtitleDelay = Duration.zero,
     this.audioDelay = Duration.zero,
+    this.chapters = const [],
+    this.chapterIndex,
   });
 
   final List<MediaTrack> video;
@@ -102,7 +120,21 @@ class TrackState {
   final Duration subtitleDelay;
   final Duration audioDelay;
 
+  final List<Chapter> chapters;
+
+  /// Current chapter, or null before the first / without chapters.
+  final int? chapterIndex;
+
   static const TrackState empty = TrackState();
+
+  /// The chapter containing [position], if any.
+  Chapter? chapterAt(Duration position) {
+    Chapter? found;
+    for (final c in chapters) {
+      if (c.start <= position) found = c;
+    }
+    return found;
+  }
 
   MediaTrack? get selectedSubtitle =>
       subtitles.where((t) => t.id == subtitleId).firstOrNull;
@@ -116,6 +148,8 @@ class TrackState {
     int? Function()? secondarySubtitleId,
     Duration? subtitleDelay,
     Duration? audioDelay,
+    List<Chapter>? chapters,
+    int? Function()? chapterIndex,
   }) {
     return TrackState(
       video: video ?? this.video,
@@ -128,6 +162,8 @@ class TrackState {
           : this.secondarySubtitleId,
       subtitleDelay: subtitleDelay ?? this.subtitleDelay,
       audioDelay: audioDelay ?? this.audioDelay,
+      chapters: chapters ?? this.chapters,
+      chapterIndex: chapterIndex != null ? chapterIndex() : this.chapterIndex,
     );
   }
 
@@ -141,7 +177,9 @@ class TrackState {
       other.subtitleId == subtitleId &&
       other.secondarySubtitleId == secondarySubtitleId &&
       other.subtitleDelay == subtitleDelay &&
-      other.audioDelay == audioDelay;
+      other.audioDelay == audioDelay &&
+      listEquals(other.chapters, chapters) &&
+      other.chapterIndex == chapterIndex;
 
   @override
   int get hashCode => Object.hash(
@@ -153,5 +191,7 @@ class TrackState {
     secondarySubtitleId,
     subtitleDelay,
     audioDelay,
+    Object.hashAll(chapters),
+    chapterIndex,
   );
 }

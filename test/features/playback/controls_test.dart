@@ -81,6 +81,33 @@ void main() {
       expect(last, closeTo(600000 * 610 / 656, 2));
     });
 
+    testWidgets('chapter marks and the chapter name on hover', (tester) async {
+      final h = await setup(tester);
+      h.backend.properties
+        ..['chapter-list/0/time'] = '0'
+        ..['chapter-list/0/title'] = 'Opening'
+        ..['chapter-list/1/time'] = '300'
+        ..['chapter-list/1/title'] = 'The Heist';
+      h.backend.emitProperty('chapter-list/count', '2');
+      await tester.pump();
+      await tester.pump();
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(const Offset(left + width * 0.75, 60));
+      await tester.pump();
+      expect(find.text('The Heist'), findsOneWidget);
+      await mouse.moveTo(const Offset(left + width * 0.25, 60));
+      await tester.pump();
+      expect(find.text('Opening'), findsOneWidget);
+      final painter = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((c) => c.painter)
+          .whereType<SeekBarPainter>()
+          .single;
+      expect(painter.marks, [0.5]);
+    });
+
     testWidgets('golden', (tester) async {
       await setup(tester);
       await expectLater(

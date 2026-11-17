@@ -47,6 +47,22 @@ python3 -I ../../scripts/make_pgs.py pgs.sup 1920 800
   -metadata:s:s:0 language=eng -metadata:s:s:1 language=fre \
   "The.Test.Film.2019.1080p.mkv"
 
+# Chapters (task 3.6).
+cat > chapters.txt <<'META'
+;FFMETADATA1
+[CHAPTER]
+TIMEBASE=1/1000
+START=0
+END=3000
+title=Opening
+[CHAPTER]
+TIMEBASE=1/1000
+START=3000
+END=8000
+title=The Heist
+META
+"${FF[@]}" -i clip.mp4 -i chapters.txt -map_metadata 1 -map_chapters 1 -c copy chapters.mkv
+
 # Not a video at all.
 echo "this is not a video" > broken.mkv
 echo "Generated in $OUT:"; ls -1

@@ -253,6 +253,19 @@ void main() {
     expect(service.state.status, PlaybackStatus.completed);
   });
 
+  test('chapters are listed and next chapter jumps', () async {
+    await service.open(p.join(media, 'chapters.mkv'));
+    await waitFor((s) => s.isPlaying && s.duration > Duration.zero);
+    await eventually(() async => service.tracks.chapters.length == 2);
+    expect(service.tracks.chapters.map((c) => c.title), [
+      'Opening',
+      'The Heist',
+    ]);
+    await service.chapterBy(1);
+    await waitFor((s) => s.position >= const Duration(seconds: 3));
+    await eventually(() async => service.tracks.chapterIndex == 1);
+  });
+
   test('track list types', () {
     expect(MediaTrackType.values, hasLength(3));
   });

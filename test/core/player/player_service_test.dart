@@ -479,6 +479,51 @@ void main() {
   test('limiter label constant', () {
     expect(PlayerService.limiterLabel, startsWith('@'));
   });
+
+  group('chapters', () {
+    void chapters() {
+      backend.properties
+        ..['chapter-list/0/time'] = '0.000000'
+        ..['chapter-list/0/title'] = 'Intro'
+        ..['chapter-list/1/time'] = '90.500000'
+        ..['chapter-list/1/title'] = 'Part 1'
+        ..['chapter-list/2/time'] = '600.000000';
+      backend.emitProperty('chapter-list/count', '3');
+    }
+
+    test('are read from chapter-list', () async {
+      chapters();
+      await pumpEventQueue();
+      final c = service.tracks.chapters;
+      expect(c.map((e) => e.title), ['Intro', 'Part 1', null]);
+      expect(c[1].start, const Duration(milliseconds: 90500));
+      expect(
+        service.tracks.chapterAt(const Duration(minutes: 5))?.title,
+        'Part 1',
+      );
+    });
+
+    test(
+      'current chapter follows mpv; next/previous use add chapter',
+      () async {
+        chapters();
+        await pumpEventQueue();
+        backend.emitProperty('chapter', '1');
+        expect(service.tracks.chapterIndex, 1);
+        await service.chapterBy(1);
+        await service.chapterBy(-1);
+        expect(backend.commands, [
+          ['add', 'chapter', '1'],
+          ['add', 'chapter', '-1'],
+        ]);
+      },
+    );
+
+    test('no chapters: next/previous do nothing', () async {
+      await service.chapterBy(1);
+      expect(backend.commands, isEmpty);
+    });
+  });
 }
 
 /// A backend whose mpv doesn't know `sub-border-style` (libmpv < 0.38).

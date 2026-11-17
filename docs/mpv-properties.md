@@ -44,6 +44,10 @@ uses them.
 | `sub-shadow-offset`, `sub-shadow-color` | option | write | Background box on libmpv < 0.38 (no `sub-border-style`) | 2.8 |
 | `video-aspect-override` | property | write | 16:9 / 4:3 / `no` | 2.12 |
 | `video-rotate` | property | write | 0/90/180/270 | 2.12 |
+| `chapter-list/count`, `chapter-list/N/{time,title}` | property | read | Chapter marks | 3.6 |
+| `chapter` | property | observed | Current chapter | 3.6 |
+| `add chapter ±1` | command | write | Next/previous chapter | 3.6 |
+| `screenshot-to-file <path> video\|subtitles` | command | write | History thumbnails (3.3), screenshots (3.8) | 3.3 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |
 | `filename`, `path`, `file-format`, `file-size`, `duration`, `chapters`, `audio-params/hr-channels`, `video-params/{w,h,pixelformat,colormatrix,primaries,gamma}`, `video-bitrate`, `audio-codec`, `audio-params/{channel-count,samplerate}`, `audio-bitrate` | property | read | Media info dialog | 1.3 |
 
