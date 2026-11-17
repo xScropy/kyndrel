@@ -130,8 +130,8 @@ Rules:
 - [x] 4.3 **Download button:** for network sources, a download manager with progress, pause/resume and a queue. Use HTTP range requests, and `yt-dlp` as an optional plugin for supported sites. Respect DRM and site terms by only offering it for sources the user is allowed to save.
 - [x] 4.4 **Cast:** discover Chromecast and DLNA devices, serve the file over a local HTTP server, transcode when the codec is unsupported (FFmpeg), and sync play/pause/seek/volume. Do this last, as it is the hardest feature.
 - [x] 4.5 Network streams: HLS, DASH, RTSP, SMB/WebDAV sources.
-- [ ] 4.6 Video quality: shader presets (e.g. upscaling), deband, HDR to SDR tone mapping, and a hardware-decoding selector.
-- [ ] 4.7 Equalizer and audio normalization (`loudnorm`, `dynaudnorm`).
+- [x] 4.6 Video quality: shader presets (e.g. upscaling), deband, HDR to SDR tone mapping, and a hardware-decoding selector.
+- [x] 4.7 Equalizer and audio normalization (`loudnorm`, `dynaudnorm`).
 - [ ] 4.8 OS integration: media keys, Windows SMTC, Linux MPRIS, macOS Now Playing.
 - [ ] 4.9 Plugin or script hook (mpv Lua/JS scripts) as an optional power-user feature.
 

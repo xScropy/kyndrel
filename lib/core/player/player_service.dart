@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
 
+import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
@@ -424,6 +425,61 @@ class PlayerService {
   /// One frame forward (pauses), or back with [forward] false.
   Future<void> frameStep({bool forward = true}) =>
       backend.command([if (forward) 'frame-step' else 'frame-back-step']);
+
+  // --------------------------------------------------------- video quality
+
+  /// Picture preset and optional shader files (task 4.6).
+  Future<void> applyVideoPreset(
+    VideoPreset preset, {
+    String? shaderPath,
+  }) async {
+    for (final e in preset.options.entries) {
+      await backend.setProperty(e.key, e.value);
+    }
+    await backend.setProperty(
+      'glsl-shaders',
+      preset.usesShader && shaderPath != null ? shaderPath : '',
+    );
+  }
+
+  Future<void> setDeband({required bool enabled}) =>
+      backend.setProperty('deband', enabled ? 'yes' : 'no');
+
+  /// HDR to SDR tone mapping curve; peak detection follows it.
+  Future<void> setToneMapping(String curve) async {
+    await backend.setProperty('tone-mapping', curve);
+    await backend.setProperty('hdr-compute-peak', 'auto');
+  }
+
+  /// mpv `hwdec`: `auto-safe`, `no`, or a specific API.
+  Future<void> setHardwareDecoding(String mode) =>
+      backend.setProperty('hwdec', mode);
+
+  // --------------------------------------------------------- audio effects
+
+  static const eqLabel = '@kyndrel-eq';
+  static const normLabel = '@kyndrel-norm';
+
+  /// 10-band equalizer gains in dB (task 4.7); all zeros removes it.
+  Future<void> setEqualizer(List<double> gains) =>
+      _setAudioFilter(eqLabel, Equalizer.filter(gains));
+
+  Future<void> setNormalization(Normalization mode) =>
+      _setAudioFilter(normLabel, mode.filter);
+
+  final _audioFilters = <String, String>{};
+
+  Future<void> _setAudioFilter(String label, String? graph) async {
+    if (_audioFilters[label] == graph) return;
+    if (_audioFilters.containsKey(label)) {
+      await backend.command(['af', 'remove', label]);
+      _audioFilters.remove(label);
+    }
+    if (graph != null) {
+      await backend.command(['af', 'add', '$label:lavfi=[$graph]']);
+      _audioFilters[label] = graph;
+    }
+  }
 
   // ------------------------------------------------------------ screenshots
 

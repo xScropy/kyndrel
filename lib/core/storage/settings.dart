@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,6 +33,12 @@ class AppSettings {
     this.downloadFolder = '',
     this.downloadTermsAccepted = false,
     this.recentUrls = const [],
+    this.videoPreset = VideoPreset.standard,
+    this.hwdec = 'auto-safe',
+    this.deband = false,
+    this.toneMapping = 'auto',
+    this.equalizer = const [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    this.normalization = Normalization.off,
   });
 
   /// Last volume, 0–400.
@@ -83,6 +90,16 @@ class AppSettings {
   /// Last network URLs opened, newest first, without passwords (4.5).
   final List<String> recentUrls;
 
+  // Video quality (4.6) and audio effects (4.7).
+  final VideoPreset videoPreset;
+  final String hwdec;
+  final bool deband;
+  final String toneMapping;
+
+  /// 10 band gains in dB.
+  final List<double> equalizer;
+  final Normalization normalization;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -107,6 +124,12 @@ class AppSettings {
     String? downloadFolder,
     bool? downloadTermsAccepted,
     List<String>? recentUrls,
+    VideoPreset? videoPreset,
+    String? hwdec,
+    bool? deband,
+    String? toneMapping,
+    List<double>? equalizer,
+    Normalization? normalization,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -133,6 +156,12 @@ class AppSettings {
       downloadTermsAccepted:
           downloadTermsAccepted ?? this.downloadTermsAccepted,
       recentUrls: recentUrls ?? this.recentUrls,
+      videoPreset: videoPreset ?? this.videoPreset,
+      hwdec: hwdec ?? this.hwdec,
+      deband: deband ?? this.deband,
+      toneMapping: toneMapping ?? this.toneMapping,
+      equalizer: equalizer ?? this.equalizer,
+      normalization: normalization ?? this.normalization,
     );
   }
 }
@@ -205,7 +234,33 @@ class SettingsRepository {
       googleTranslateApiKey:
           _prefs.getString('googleTranslateApiKey') ?? d.googleTranslateApiKey,
       anthropicApiKey: _prefs.getString('anthropicApiKey') ?? d.anthropicApiKey,
+      downloadFolder: _prefs.getString('downloadFolder') ?? d.downloadFolder,
+      downloadTermsAccepted:
+          _prefs.getBool('downloadTermsAccepted') ?? d.downloadTermsAccepted,
+      recentUrls: _prefs.getStringList('recentUrls') ?? d.recentUrls,
+      videoPreset: _enum(VideoPreset.values, 'videoPreset', d.videoPreset),
+      hwdec: _prefs.getString('hwdec') ?? d.hwdec,
+      deband: _prefs.getBool('deband') ?? d.deband,
+      toneMapping: _prefs.getString('toneMapping') ?? d.toneMapping,
+      equalizer: _gains() ?? d.equalizer,
+      normalization: _enum(
+        Normalization.values,
+        'normalization',
+        d.normalization,
+      ),
     );
+  }
+
+  T _enum<T extends Enum>(List<T> values, String key, T fallback) {
+    final name = _prefs.getString(key);
+    return values.where((v) => v.name == name).firstOrNull ?? fallback;
+  }
+
+  List<double>? _gains() {
+    final raw = _prefs.getStringList('equalizer');
+    if (raw == null || raw.length != 10) return null;
+    final g = raw.map(double.tryParse).toList();
+    return g.contains(null) ? null : g.cast<double>();
   }
 
   Future<void> save(AppSettings s) async {
@@ -233,6 +288,14 @@ class SettingsRepository {
     await _prefs.setString('downloadFolder', s.downloadFolder);
     await _prefs.setBool('downloadTermsAccepted', s.downloadTermsAccepted);
     await _prefs.setStringList('recentUrls', s.recentUrls);
+    await _prefs.setString('videoPreset', s.videoPreset.name);
+    await _prefs.setString('hwdec', s.hwdec);
+    await _prefs.setBool('deband', s.deband);
+    await _prefs.setString('toneMapping', s.toneMapping);
+    await _prefs.setStringList('equalizer', [
+      for (final g in s.equalizer) '$g',
+    ]);
+    await _prefs.setString('normalization', s.normalization.name);
   }
 }
 

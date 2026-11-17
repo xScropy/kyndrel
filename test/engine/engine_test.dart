@@ -4,6 +4,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/media_kit_backend.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
@@ -370,6 +371,34 @@ void main() {
       final s = await waitFor((s) => s.duration > Duration.zero);
       expect(s.errorMessage, isNull);
     });
+  });
+
+  test('video quality and audio effects are accepted by mpv', () async {
+    await service.open(p.join(media, 'clip.mp4'));
+    await waitFor((s) => s.isPlaying);
+    final shader = File(p.absolute('assets/shaders/sharpen.glsl')).path;
+    await service.applyVideoPreset(VideoPreset.sharpen, shaderPath: shader);
+    expect(await prop('scale'), 'ewa_lanczossharp');
+    expect(await prop('glsl-shaders'), contains('sharpen.glsl'));
+    await service.setToneMapping('hable');
+    expect(await prop('tone-mapping'), 'hable');
+    await service.setDeband(enabled: true);
+    expect(await prop('deband'), 'yes');
+    await service.setHardwareDecoding('no');
+    expect(await prop('hwdec'), 'no');
+    await service.setEqualizer(Equalizer.presets['Rock']!);
+    await service.setNormalization(Normalization.dynamic);
+    await eventually(() async {
+      final af = await prop('af') ?? '';
+      return af.contains('equalizer') && af.contains('dynaudnorm');
+    });
+    // Still playing with the filters in place.
+    final at = service.state.position;
+    await waitFor((s) => s.position > at);
+    await service.setEqualizer(Equalizer.presets['Flat']!);
+    await eventually(
+      () async => !(await prop('af') ?? '').contains('equalizer'),
+    );
   });
 
   test('track list types', () {

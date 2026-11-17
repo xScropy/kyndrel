@@ -17,6 +17,7 @@ import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/cast/cast_button.dart';
 import 'package:kyndrel/features/download/download_button.dart';
+import 'package:kyndrel/features/effects/effects_dialog.dart';
 import 'package:kyndrel/features/info/media_info_dialog.dart';
 import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
@@ -127,6 +128,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         PopupMenuItem(value: 'details', child: Text('Edit details…')),
         PopupMenuItem(value: 'screenshot', child: Text('Screenshot  (Ctrl+S)')),
         PopupMenuItem(value: 'subs', child: Text('Subtitles & audio')),
+        PopupMenuItem(value: 'effects', child: Text('Video & audio effects…')),
         PopupMenuItem(value: 'settings', child: Text('Settings…')),
       ],
     );
@@ -147,6 +149,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       case 'details':
         final source = ref.read(playerServiceProvider).state.source;
         if (source != null) unawaited(showEditDetailsDialog(context, source));
+      case 'effects':
+        unawaited(showEffectsDialog(context));
       case 'subs':
         ref.read(subtitlePanelProvider.notifier).open();
       case 'settings':
@@ -201,6 +205,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         onShowInfo: _showInfo,
         onToggleQueue: ref.read(playlistPanelProvider.notifier).toggle,
         onOpenUrl: () => unawaited(showOpenUrlDialog(context)),
+        onEffects: () => unawaited(showEffectsDialog(context)),
         child: DropTarget(
           onDragEntered: (_) => setState(() => _dragging = true),
           onDragExited: (_) => setState(() => _dragging = false),

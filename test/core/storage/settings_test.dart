@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,5 +49,78 @@ void main() {
   test('out-of-range volume is clamped', () async {
     SharedPreferences.setMockInitialValues({'volume': 999.0});
     expect((await SettingsRepository.create()).load().volume, 400);
+  });
+
+  test('every field survives a save and reload', () async {
+    SharedPreferences.setMockInitialValues({});
+    final repo = await SettingsRepository.create();
+    const changed = AppSettings(
+      volume: 150,
+      skipSeconds: 30,
+      limiterEnabled: false,
+      showRemainingTime: true,
+      autoLoadSubtitles: false,
+      subtitleStyle: SubtitleStyle(size: 60),
+      openSubtitlesApiKey: 'os',
+      subtitleLanguages: 'ar',
+      boostWarningSeen: true,
+      autoPlayNextEpisode: false,
+      tmdbApiKey: 'tm',
+      screenshotFolder: '/s',
+      screenshotWithSubtitles: true,
+      translateProvider: 'deepl',
+      translateTarget: 'fr',
+      deeplApiKey: 'dl',
+      googleTranslateApiKey: 'g',
+      anthropicApiKey: 'a',
+      downloadFolder: '/d',
+      downloadTermsAccepted: true,
+      recentUrls: ['https://x'],
+      videoPreset: VideoPreset.sharpen,
+      hwdec: 'no',
+      deband: true,
+      toneMapping: 'hable',
+      equalizer: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      normalization: Normalization.loudnorm,
+    );
+    await repo.save(changed);
+    final r = (await SettingsRepository.create()).load();
+    const defaults = AppSettings();
+    // Compare via a field dump so a forgotten field shows up by name.
+    Map<String, Object?> dump(AppSettings s) => {
+      'volume': s.volume,
+      'skipSeconds': s.skipSeconds,
+      'limiterEnabled': s.limiterEnabled,
+      'showRemainingTime': s.showRemainingTime,
+      'autoLoadSubtitles': s.autoLoadSubtitles,
+      'subtitleStyle': s.subtitleStyle.toJson(),
+      'openSubtitlesApiKey': s.openSubtitlesApiKey,
+      'subtitleLanguages': s.subtitleLanguages,
+      'boostWarningSeen': s.boostWarningSeen,
+      'autoPlayNextEpisode': s.autoPlayNextEpisode,
+      'tmdbApiKey': s.tmdbApiKey,
+      'screenshotFolder': s.screenshotFolder,
+      'screenshotWithSubtitles': s.screenshotWithSubtitles,
+      'translateProvider': s.translateProvider,
+      'translateTarget': s.translateTarget,
+      'deeplApiKey': s.deeplApiKey,
+      'googleTranslateApiKey': s.googleTranslateApiKey,
+      'anthropicApiKey': s.anthropicApiKey,
+      'downloadFolder': s.downloadFolder,
+      'downloadTermsAccepted': s.downloadTermsAccepted,
+      'recentUrls': s.recentUrls,
+      'videoPreset': s.videoPreset,
+      'hwdec': s.hwdec,
+      'deband': s.deband,
+      'toneMapping': s.toneMapping,
+      'equalizer': s.equalizer,
+      'normalization': s.normalization,
+    };
+    final want = dump(changed);
+    final got = dump(r);
+    for (final k in want.keys) {
+      expect(got[k], want[k], reason: k);
+      expect(want[k], isNot(dump(defaults)[k]), reason: 'test changes $k');
+    }
   });
 }

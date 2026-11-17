@@ -50,6 +50,9 @@ uses them.
 | `add chapter ±1` | command | write | Next/previous chapter | 3.6 |
 | `ab-loop-a`, `ab-loop-b` | property | read/write | A-B loop (`no` clears) | 3.9 |
 | `http-header-fields` | option | write | Per-source login headers (WebDAV, protected streams) | 4.5 |
+| `scale`, `cscale`, `dscale`, `correct-downscaling`, `sigmoid-upscaling`, `glsl-shaders` | option | write | Video presets and the sharpen shader | 4.6 |
+| `deband`, `tone-mapping`, `hdr-compute-peak`, `hwdec` | option | write | Deband, HDR to SDR, decoder choice | 4.6 |
+| `af add/remove @kyndrel-eq:lavfi=[equalizer=…]`, `@kyndrel-norm:lavfi=[loudnorm\|dynaudnorm]` | command | write | Equalizer and loudness normalization | 4.7 |
 | `frame-step`, `frame-back-step` | command | write | Frame stepping | 3.9 |
 | `screenshot-to-file <path> video\|subtitles` | command | write | History thumbnails (3.3), screenshots (3.8) | 3.3 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |
