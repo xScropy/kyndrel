@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Short on-screen message ("Volume 120 %", "Speed 1.25×") shown after a
@@ -18,6 +19,11 @@ class OsdNotifier extends Notifier<String?> {
   }
 
   void show(String message) {
+    try {
+      if (!ref.read(settingsProvider).showOsd) return;
+    } on Object {
+      // No settings (tests): show it.
+    }
     state = message;
     _timer?.cancel();
     _timer = Timer(duration, () => state = null);

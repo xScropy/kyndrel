@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 
 /// Whether the playback controls are showing (task 1.8).
 ///
@@ -10,6 +11,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// paused.
 class ControlsVisibility extends Notifier<bool> {
   static const hideDelay = Duration(seconds: 3);
+
+  /// From Settings › Appearance, or [hideDelay] without settings (tests).
+  Duration get _delay {
+    try {
+      return Duration(seconds: ref.read(settingsProvider).controlsHideSeconds);
+    } on Object {
+      return hideDelay;
+    }
+  }
 
   Timer? _timer;
   final _locks = <Object>{};
@@ -64,7 +74,7 @@ class ControlsVisibility extends Notifier<bool> {
   void _restart() {
     _timer?.cancel();
     if (!_autoHide || _locks.isNotEmpty) return;
-    _timer = Timer(hideDelay, () {
+    _timer = Timer(_delay, () {
       if (_locks.isEmpty && _autoHide) state = false;
     });
   }

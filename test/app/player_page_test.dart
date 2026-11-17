@@ -367,4 +367,69 @@ void main() {
     expect(h.container.read(settingsProvider).downloadTermsAccepted, isTrue);
     await tester.pump(const Duration(seconds: 2));
   });
+
+  testWidgets('settings page: every section renders', (tester) async {
+    final h = await AppHarness.create();
+    await h.pump(tester);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.comma);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    for (final name in [
+      'Playback', 'Subtitles', 'Audio', 'Video', 'Shortcuts', 'Library', //
+      'Appearance', 'Language', 'Advanced', 'About',
+    ]) {
+      await tester.tap(find.byKey(Key('settings-section-$name')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: name);
+    }
+  });
+
+  testWidgets('a rebound shortcut works and the old key stops', (tester) async {
+    final h = await AppHarness.create();
+    await h.pump(tester, launch: const LaunchOptions(source: '/v/Film.mkv'));
+    h.load();
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.comma);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-section-Shortcuts')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('shortcut-edit-mute')));
+    await tester.pump();
+    expect(find.text('Press keys…'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
+    await tester.pump();
+    expect(find.text('K'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyM);
+    expect(h.backend.properties['mute'], isNot('yes'));
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
+    expect(h.backend.properties['mute'], 'yes');
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('hide delay setting is used', (tester) async {
+    final h = await AppHarness.create(prefs: {'controlsHideSeconds': 10});
+    await h.pump(tester, launch: const LaunchOptions(source: '/v/Film.mkv'));
+    h.load();
+    await tester.pump();
+    double opacity() => tester
+        .widget<AnimatedOpacity>(
+          find
+              .ancestor(
+                of: find.byKey(const Key('play-pause')),
+                matching: find.byType(AnimatedOpacity),
+              )
+              .first,
+        )
+        .opacity;
+    await tester.pump(const Duration(seconds: 5));
+    expect(opacity(), 1);
+    await tester.pump(const Duration(seconds: 6));
+    expect(opacity(), 0);
+  });
 }

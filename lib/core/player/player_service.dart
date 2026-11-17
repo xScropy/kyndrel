@@ -482,6 +482,20 @@ class PlayerService {
     }
   }
 
+  /// Applies `mpv.conf`-style options (advanced settings, task 5.1).
+  /// Returns the options mpv rejected.
+  Future<List<String>> applyOptions(Map<String, String> options) async {
+    final rejected = <String>[];
+    for (final e in options.entries) {
+      try {
+        await backend.setProperty(e.key, e.value);
+      } on Object {
+        rejected.add(e.key);
+      }
+    }
+    return rejected;
+  }
+
   // ---------------------------------------------------------------- scripts
 
   /// Loads an mpv Lua or JavaScript user script (task 4.9).

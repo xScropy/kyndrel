@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/player/mpv_options.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
@@ -45,6 +46,8 @@ final engineSyncProvider = Provider<void>((ref) {
     await applyVideo(initial);
     await service.setEqualizer(initial.equalizer);
     await service.setNormalization(initial.normalization);
+    // Last, so the user's own options win.
+    await service.applyOptions(parseMpvOptions(initial.mpvOptions).options);
   }());
 
   ref
@@ -74,5 +77,8 @@ final engineSyncProvider = Provider<void>((ref) {
     })
     ..listen(settingsProvider.select((s) => s.normalization), (_, v) {
       unawaited(service.setNormalization(v));
+    })
+    ..listen(settingsProvider.select((s) => s.mpvOptions), (_, v) {
+      unawaited(service.applyOptions(parseMpvOptions(v).options));
     });
 });

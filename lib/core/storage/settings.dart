@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
+import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,6 +42,13 @@ class AppSettings {
     this.normalization = Normalization.off,
     this.scriptsEnabled = false,
     this.scriptsFolder = '',
+    this.keyBindings = const KeyBindings(),
+    this.controlsHideSeconds = 3,
+    this.showOsd = true,
+    this.language = 'system',
+    this.mpvOptions = '',
+    this.checkForUpdates = true,
+    this.offerCrashReports = true,
   });
 
   /// Last volume, 0–400.
@@ -108,6 +116,27 @@ class AppSettings {
   /// Empty means `<app support>/scripts`.
   final String scriptsFolder;
 
+  /// Shortcut overrides (5.1).
+  final KeyBindings keyBindings;
+
+  /// Appearance (5.1).
+  final int controlsHideSeconds;
+  final bool showOsd;
+
+  /// `system`, `en` or `ar` (5.2).
+  final String language;
+
+  /// `name=value` lines passed to mpv (5.1, advanced).
+  final String mpvOptions;
+
+  /// Look for a newer release on start (5.6).
+  final bool checkForUpdates;
+
+  /// After a crash, offer to open a pre-filled bug report (5.7).
+  final bool offerCrashReports;
+
+  static const hideChoices = [2, 3, 5, 10];
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -140,6 +169,13 @@ class AppSettings {
     Normalization? normalization,
     bool? scriptsEnabled,
     String? scriptsFolder,
+    KeyBindings? keyBindings,
+    int? controlsHideSeconds,
+    bool? showOsd,
+    String? language,
+    String? mpvOptions,
+    bool? checkForUpdates,
+    bool? offerCrashReports,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -174,6 +210,13 @@ class AppSettings {
       normalization: normalization ?? this.normalization,
       scriptsEnabled: scriptsEnabled ?? this.scriptsEnabled,
       scriptsFolder: scriptsFolder ?? this.scriptsFolder,
+      keyBindings: keyBindings ?? this.keyBindings,
+      controlsHideSeconds: controlsHideSeconds ?? this.controlsHideSeconds,
+      showOsd: showOsd ?? this.showOsd,
+      language: language ?? this.language,
+      mpvOptions: mpvOptions ?? this.mpvOptions,
+      checkForUpdates: checkForUpdates ?? this.checkForUpdates,
+      offerCrashReports: offerCrashReports ?? this.offerCrashReports,
     );
   }
 }
@@ -262,12 +305,33 @@ class SettingsRepository {
       ),
       scriptsEnabled: _prefs.getBool('scriptsEnabled') ?? d.scriptsEnabled,
       scriptsFolder: _prefs.getString('scriptsFolder') ?? d.scriptsFolder,
+      keyBindings: _bindings() ?? d.keyBindings,
+      controlsHideSeconds:
+          _prefs.getInt('controlsHideSeconds') ?? d.controlsHideSeconds,
+      showOsd: _prefs.getBool('showOsd') ?? d.showOsd,
+      language: _prefs.getString('language') ?? d.language,
+      mpvOptions: _prefs.getString('mpvOptions') ?? d.mpvOptions,
+      checkForUpdates: _prefs.getBool('checkForUpdates') ?? d.checkForUpdates,
+      offerCrashReports:
+          _prefs.getBool('offerCrashReports') ?? d.offerCrashReports,
     );
   }
 
   T _enum<T extends Enum>(List<T> values, String key, T fallback) {
     final name = _prefs.getString(key);
     return values.where((v) => v.name == name).firstOrNull ?? fallback;
+  }
+
+  KeyBindings? _bindings() {
+    final raw = _prefs.getString('keyBindings');
+    if (raw == null) return null;
+    try {
+      return KeyBindings(
+        (jsonDecode(raw) as Map).map((k, v) => MapEntry('$k', '$v')),
+      );
+    } on FormatException {
+      return null;
+    }
   }
 
   List<double>? _gains() {
@@ -312,6 +376,13 @@ class SettingsRepository {
     await _prefs.setString('normalization', s.normalization.name);
     await _prefs.setBool('scriptsEnabled', s.scriptsEnabled);
     await _prefs.setString('scriptsFolder', s.scriptsFolder);
+    await _prefs.setString('keyBindings', jsonEncode(s.keyBindings.overrides));
+    await _prefs.setInt('controlsHideSeconds', s.controlsHideSeconds);
+    await _prefs.setBool('showOsd', s.showOsd);
+    await _prefs.setString('language', s.language);
+    await _prefs.setString('mpvOptions', s.mpvOptions);
+    await _prefs.setBool('checkForUpdates', s.checkForUpdates);
+    await _prefs.setBool('offerCrashReports', s.offerCrashReports);
   }
 }
 

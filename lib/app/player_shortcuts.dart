@@ -7,6 +7,7 @@ import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
+import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
@@ -18,9 +19,8 @@ import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Keyboard shortcuts (task 1.9). A rebinding screen comes with the settings
-/// page (task 5.1); until then the bindings are fixed and listed in
-/// [PlayerShortcuts.help].
+/// Keyboard shortcuts (task 1.9); rebindable in Settings › Shortcuts
+/// (task 5.1). Bindings live in `core/ui/key_bindings.dart`.
 class PlayerShortcuts extends ConsumerWidget {
   const new({
     required this.child,
@@ -39,30 +39,6 @@ class PlayerShortcuts extends ConsumerWidget {
   final VoidCallback? onOpenUrl;
   final VoidCallback? onEffects;
 
-  static const help = <(String, String)>[
-    ('Space', 'Play / pause'),
-    ('← / →', 'Seek back / forward by the skip length'),
-    ('↑ / ↓', 'Volume up / down 5%'),
-    ('M', 'Mute'),
-    ('F', 'Full screen'),
-    ('Esc', 'Close panel / leave full screen'),
-    ('[ / ]', 'Slower / faster'),
-    ('S', 'Subtitles & audio panel'),
-    ('N / P', 'Next / previous in the queue'),
-    ('PgDn / PgUp', 'Next / previous chapter'),
-    ('L', 'A-B loop: set A, set B, clear'),
-    ('I', 'Picture in picture'),
-    ('. / ,', 'Next / previous frame'),
-    ('Q', 'Queue'),
-    ('Ctrl+O', 'Open file'),
-    ('Ctrl+V', 'Open a pasted path or URL'),
-    ('Ctrl+N', 'Open network stream'),
-    ('Ctrl+E', 'Video & audio effects'),
-    ('Ctrl+I', 'Media info'),
-    ('Ctrl+S', 'Screenshot'),
-    ('Ctrl+,', 'Settings'),
-  ];
-
   /// True while a text field has focus, so typing isn't hijacked.
   static bool _typing() {
     final context = FocusManager.instance.primaryFocus?.context;
@@ -74,41 +50,13 @@ class PlayerShortcuts extends ConsumerWidget {
   KeyEventResult _onKey(WidgetRef ref, KeyEvent event) {
     if (event is KeyUpEvent || _typing()) return KeyEventResult.ignored;
     final repeat = event is KeyRepeatEvent;
-    final key = event.logicalKey;
-    final keys = HardwareKeyboard.instance;
-    final command = keys.isControlPressed || keys.isMetaPressed;
     final service = ref.read(playerServiceProvider);
-    final osd = ref.read(osdProvider.notifier);
+    final playlist = ref.read(playlistProvider.notifier);
+    final skip = Duration(seconds: ref.read(settingsProvider).skipSeconds);
     ref.read(controlsVisibilityProvider.notifier).show();
 
-    if (command) {
-      if (repeat) return KeyEventResult.handled;
-      switch (key) {
-        case LogicalKeyboardKey.keyO:
-          unawaited(OpenActions.pickFile(ref));
-        case LogicalKeyboardKey.keyV:
-          unawaited(OpenActions.pasteFromClipboard(ref));
-        case LogicalKeyboardKey.keyN:
-          onOpenUrl?.call();
-        case LogicalKeyboardKey.keyE:
-          onEffects?.call();
-        case LogicalKeyboardKey.keyI:
-          onShowInfo();
-        case LogicalKeyboardKey.keyS:
-          unawaited(ScreenshotActions.take(ref));
-        case LogicalKeyboardKey.comma:
-          onOpenSettings();
-        default:
-          return KeyEventResult.ignored;
-      }
-      return KeyEventResult.handled;
-    }
-
-    final skip = Duration(seconds: ref.read(settingsProvider).skipSeconds);
-    final playlist = ref.read(playlistProvider.notifier);
-    // Media keys (when the window has focus; elsewhere the OS media session
-    // delivers them).
-    switch (key) {
+    // Media keys are fixed (elsewhere the OS media session delivers them).
+    switch (event.logicalKey) {
       case LogicalKeyboardKey.mediaPlayPause:
         if (!repeat) unawaited(service.playOrPause());
         return KeyEventResult.handled;
@@ -131,26 +79,37 @@ class PlayerShortcuts extends ConsumerWidget {
         unawaited(service.seekBy(-skip));
         return KeyEventResult.handled;
     }
-    switch (key) {
-      case LogicalKeyboardKey.space:
-        if (!repeat) unawaited(service.playOrPause());
-      case LogicalKeyboardKey.arrowLeft:
+
+    final combo = KeyCombo.fromEvent(event);
+    final action = ref.read(settingsProvider).keyBindings.actionFor(combo);
+    if (action == null) return KeyEventResult.ignored;
+    if (repeat && !action.repeats) return KeyEventResult.handled;
+    _run(ref, action, skip);
+    return KeyEventResult.handled;
+  }
+
+  void _run(WidgetRef ref, PlayerAction action, Duration skip) {
+    final service = ref.read(playerServiceProvider);
+    final playlist = ref.read(playlistProvider.notifier);
+    final osd = ref.read(osdProvider.notifier);
+    switch (action) {
+      case PlayerAction.playPause:
+        unawaited(service.playOrPause());
+      case PlayerAction.seekBack:
         unawaited(service.seekBy(-skip));
         osd.show('−${skip.inSeconds} s');
-      case LogicalKeyboardKey.arrowRight:
+      case PlayerAction.seekForward:
         unawaited(service.seekBy(skip));
         osd.show('+${skip.inSeconds} s');
-      case LogicalKeyboardKey.arrowUp:
+      case PlayerAction.volumeUp:
         unawaited(VolumeActions.changeBy(ref, VolumeActions.step));
-      case LogicalKeyboardKey.arrowDown:
+      case PlayerAction.volumeDown:
         unawaited(VolumeActions.changeBy(ref, -VolumeActions.step));
-      case LogicalKeyboardKey.keyM:
-        if (!repeat) unawaited(VolumeActions.toggleMute(ref));
-      case LogicalKeyboardKey.keyF:
-        if (!repeat) unawaited(FullscreenActions.toggle(ref));
-      case LogicalKeyboardKey.keyI:
-        if (!repeat) unawaited(ref.read(pipProvider.notifier).toggle());
-      case LogicalKeyboardKey.escape:
+      case PlayerAction.mute:
+        unawaited(VolumeActions.toggleMute(ref));
+      case PlayerAction.fullscreen:
+        unawaited(FullscreenActions.toggle(ref));
+      case PlayerAction.back:
         if (ref.read(pipProvider)) {
           unawaited(ref.read(pipProvider.notifier).exit());
         } else if (ref.read(subtitlePanelProvider) != null) {
@@ -160,43 +119,54 @@ class PlayerShortcuts extends ConsumerWidget {
         } else {
           unawaited(FullscreenActions.exit(ref));
         }
-      case LogicalKeyboardKey.bracketLeft:
+      case PlayerAction.slower:
         unawaited(SpeedActions.stepDown(ref));
-      case LogicalKeyboardKey.bracketRight:
+      case PlayerAction.faster:
         unawaited(SpeedActions.stepUp(ref));
-      case LogicalKeyboardKey.keyS:
-        if (!repeat) ref.read(subtitlePanelProvider.notifier).toggle();
-      case LogicalKeyboardKey.keyL:
-        if (!repeat) {
-          unawaited(() async {
-            final r = await service.cycleLoop();
-            osd.show(switch (r) {
-              PlayerService.loopSetA => 'Loop: A set',
-              PlayerService.loopSetB => 'Loop: A–B on',
-              _ => 'Loop off',
-            });
-          }());
-        }
-      case LogicalKeyboardKey.period:
+      case PlayerAction.subtitles:
+        ref.read(subtitlePanelProvider.notifier).toggle();
+      case PlayerAction.next:
+        unawaited(playlist.next());
+      case PlayerAction.previous:
+        unawaited(playlist.previous());
+      case PlayerAction.queue:
+        onToggleQueue();
+      case PlayerAction.nextChapter:
+        unawaited(service.chapterBy(1));
+      case PlayerAction.previousChapter:
+        unawaited(service.chapterBy(-1));
+      case PlayerAction.abLoop:
+        unawaited(() async {
+          final r = await service.cycleLoop();
+          osd.show(switch (r) {
+            PlayerService.loopSetA => 'Loop: A set',
+            PlayerService.loopSetB => 'Loop: A–B on',
+            _ => 'Loop off',
+          });
+        }());
+      case PlayerAction.nextFrame:
         unawaited(service.frameStep());
         osd.show('Next frame');
-      case LogicalKeyboardKey.comma:
+      case PlayerAction.previousFrame:
         unawaited(service.frameStep(forward: false));
         osd.show('Previous frame');
-      case LogicalKeyboardKey.pageDown:
-        unawaited(service.chapterBy(1));
-      case LogicalKeyboardKey.pageUp:
-        unawaited(service.chapterBy(-1));
-      case LogicalKeyboardKey.keyN:
-        if (!repeat) unawaited(ref.read(playlistProvider.notifier).next());
-      case LogicalKeyboardKey.keyP:
-        if (!repeat) unawaited(ref.read(playlistProvider.notifier).previous());
-      case LogicalKeyboardKey.keyQ:
-        if (!repeat) onToggleQueue();
-      default:
-        return KeyEventResult.ignored;
+      case PlayerAction.pip:
+        unawaited(ref.read(pipProvider.notifier).toggle());
+      case PlayerAction.openFile:
+        unawaited(OpenActions.pickFile(ref));
+      case PlayerAction.paste:
+        unawaited(OpenActions.pasteFromClipboard(ref));
+      case PlayerAction.openUrl:
+        onOpenUrl?.call();
+      case PlayerAction.effects:
+        onEffects?.call();
+      case PlayerAction.mediaInfo:
+        onShowInfo();
+      case PlayerAction.screenshot:
+        unawaited(ScreenshotActions.take(ref));
+      case PlayerAction.settings:
+        onOpenSettings();
     }
-    return KeyEventResult.handled;
   }
 
   @override

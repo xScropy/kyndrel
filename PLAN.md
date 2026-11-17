@@ -136,7 +136,7 @@ Rules:
 - [x] 4.9 Plugin or script hook (mpv Lua/JS scripts) as an optional power-user feature.
 
 ### Phase 5: Polish, QA and release (2–3 weeks)
-- [ ] 5.1 Settings page: playback, subtitles, audio, shortcuts, appearance, language, advanced (mpv.conf passthrough).
+- [x] 5.1 Settings page: playback, subtitles, audio, shortcuts, appearance, language, advanced (mpv.conf passthrough).
 - [ ] 5.2 Localisation: English and Arabic with RTL layout tests.
 - [ ] 5.3 Accessibility: keyboard focus order, screen-reader labels, and contrast checks.
 - [ ] 5.4 Performance: cold start time, memory over a 3-hour film, CPU in 4K, no frame drops while the overlay animates.

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -84,6 +85,13 @@ void main() {
       normalization: Normalization.loudnorm,
       scriptsEnabled: true,
       scriptsFolder: '/sc',
+      keyBindings: KeyBindings({'mute': ''}),
+      controlsHideSeconds: 5,
+      showOsd: false,
+      language: 'ar',
+      mpvOptions: 'cache=yes',
+      checkForUpdates: false,
+      offerCrashReports: false,
     );
     await repo.save(changed);
     final r = (await SettingsRepository.create()).load();
@@ -119,6 +127,13 @@ void main() {
       'normalization': s.normalization,
       'scriptsEnabled': s.scriptsEnabled,
       'scriptsFolder': s.scriptsFolder,
+      'keyBindings': s.keyBindings,
+      'controlsHideSeconds': s.controlsHideSeconds,
+      'showOsd': s.showOsd,
+      'language': s.language,
+      'mpvOptions': s.mpvOptions,
+      'checkForUpdates': s.checkForUpdates,
+      'offerCrashReports': s.offerCrashReports,
     };
     final want = dump(changed);
     final got = dump(r);

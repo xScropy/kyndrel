@@ -7,6 +7,7 @@ import 'package:kyndrel/app/engine_sync.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/media_session_sync.dart';
 import 'package:kyndrel/app/player_shortcuts.dart';
+import 'package:kyndrel/app/settings_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/window/window_title_bar.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
@@ -39,7 +40,6 @@ import 'package:kyndrel/features/playback/widgets/status_layer.dart';
 import 'package:kyndrel/features/playback/widgets/top_bar.dart';
 import 'package:kyndrel/features/playback/widgets/video_gesture_layer.dart';
 import 'package:kyndrel/features/scripts/script_manager.dart';
-import 'package:kyndrel/features/settings/settings_dialog.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
@@ -112,7 +112,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
   void _pickFile() => unawaited(OpenActions.pickFile(ref));
   void _showInfo() => unawaited(showMediaInfoDialog(context, ref));
-  void _showSettings() => unawaited(showSettingsDialog(context));
+  void _showSettings() => unawaited(showSettingsPage(context));
 
   Future<void> _contextMenu(Offset position) async {
     final choice = await showMenu<String>(

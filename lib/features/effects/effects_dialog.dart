@@ -36,7 +36,12 @@ class EffectsDialog extends ConsumerWidget {
                 ),
                 SizedBox(height: 12),
                 Flexible(
-                  child: TabBarView(children: [_VideoTab(), _AudioTab()]),
+                  child: TabBarView(
+                    children: [
+                      SingleChildScrollView(child: VideoEffectsSection()),
+                      SingleChildScrollView(child: AudioEffectsSection()),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -50,13 +55,15 @@ class EffectsDialog extends ConsumerWidget {
 void _update(WidgetRef ref, AppSettings Function(AppSettings) f) =>
     unawaited(ref.read(settingsProvider.notifier).update(f));
 
-class _VideoTab extends ConsumerWidget {
-  const new();
+/// Picture settings (task 4.6), also used on the settings page.
+class VideoEffectsSection extends ConsumerWidget {
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(settingsProvider);
-    return ListView(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text('QUALITY', style: KyndrelTheme.sectionLabel),
         const SizedBox(height: 8),
@@ -121,14 +128,16 @@ class _VideoTab extends ConsumerWidget {
   }
 }
 
-class _AudioTab extends ConsumerWidget {
-  const new();
+/// Equalizer and loudness (task 4.7), also used on the settings page.
+class AudioEffectsSection extends ConsumerWidget {
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(settingsProvider);
     final preset = Equalizer.presetName(s.equalizer);
-    return ListView(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
