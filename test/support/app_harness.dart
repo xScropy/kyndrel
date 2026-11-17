@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -19,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_player_backend.dart';
 import 'fake_window_service.dart';
+import 'test_database.dart';
 
 /// Everything a full-page test needs, with fakes for the engine, the window
 /// and storage.
@@ -42,7 +42,7 @@ class AppHarness {
       backend,
       PlayerService(backend),
       FakeWindowService(),
-      KyndrelDatabase(NativeDatabase.memory()),
+      testDatabase(),
       await SettingsRepository.create(),
     );
     addTearDown(h.service.dispose);

@@ -22,6 +22,7 @@ class ResumeController extends Notifier<ResumeOffer?> {
 
   PlaybackState _last = PlaybackState.initial;
   String? _checkedSource;
+  String? _autoResume;
   Timer? _timer;
 
   ResumeRepository get _repo => ref.read(resumeRepositoryProvider);
@@ -75,6 +76,11 @@ class ResumeController extends Notifier<ResumeOffer?> {
     if (!ResumeRepository.isResumable(point.position, duration)) return;
     // Don't offer if the user already moved well past the start.
     if (now.position > const Duration(seconds: 5)) return;
+    if (_autoResume == source) {
+      _autoResume = null;
+      await ref.read(playerServiceProvider).seek(point.position);
+      return;
+    }
     state = ResumeOffer(source: source, position: point.position);
   }
 
@@ -95,6 +101,11 @@ class ResumeController extends Notifier<ResumeOffer?> {
   }
 
   void dismiss() => state = null;
+
+  /// The next load of [source] jumps straight to its saved position instead
+  /// of asking (continue watching).
+  // ignore: use_setters_to_change_properties, reads better at call sites
+  void resumeNextLoadOf(String source) => _autoResume = source;
 }
 
 final resumeControllerProvider =

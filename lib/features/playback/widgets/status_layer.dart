@@ -10,9 +10,12 @@ import 'package:material_ui/material_ui.dart';
 /// Centre of the screen: open prompt when idle, spinner while loading or
 /// buffering, and the "can't play" message with mpv's log (task 1.13).
 class StatusLayer extends ConsumerWidget {
-  const new({required this.onPickFile, super.key});
+  const new({required this.onPickFile, this.idle, super.key});
 
   final VoidCallback onPickFile;
+
+  /// Replaces the plain open prompt when idle (the library home).
+  final Widget Function(Widget openPrompt)? idle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,9 +26,11 @@ class StatusLayer extends ConsumerWidget {
     final open = ref.read(playlistProvider.notifier).open;
 
     return switch (status) {
-      PlaybackStatus.idle => Center(
-        child: OpenSourcePrompt(onOpen: open, onPickFile: onPickFile),
-      ),
+      PlaybackStatus.idle =>
+        idle?.call(OpenSourcePrompt(onOpen: open, onPickFile: onPickFile)) ??
+            Center(
+              child: OpenSourcePrompt(onOpen: open, onPickFile: onPickFile),
+            ),
       PlaybackStatus.loading => const Center(
         child: CircularProgressIndicator(key: Key('loading')),
       ),

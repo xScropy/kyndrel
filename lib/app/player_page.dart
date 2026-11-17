@@ -12,10 +12,13 @@ import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_video_view.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/info/media_info_dialog.dart';
+import 'package:kyndrel/features/library/history_controller.dart';
+import 'package:kyndrel/features/library/library_home.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
@@ -55,7 +58,10 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.initState();
     ref.read(engineSyncProvider);
     final resume = ref.read(resumeControllerProvider.notifier);
-    ref.read(windowServiceProvider).onClose(resume.saveNow);
+    final history = ref.read(historyControllerProvider.notifier);
+    ref.read(windowServiceProvider)
+      ..onClose(resume.saveNow)
+      ..onClose(history.saveNow);
 
     final source = widget.launch.source;
     if (source != null) {
@@ -135,6 +141,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   Widget build(BuildContext context) {
     ref
       ..watch(resumeControllerProvider)
+      ..watch(historyControllerProvider)
       ..listen(playbackStatusProvider, (_, next) {
         ref
             .read(controlsVisibilityProvider.notifier)
@@ -188,7 +195,19 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
               children: [
                 const PlayerVideoView(),
                 if (hasMedia) VideoGestureLayer(onSecondaryTap: _contextMenu),
-                StatusLayer(onPickFile: _pickFile),
+                StatusLayer(
+                  onPickFile: _pickFile,
+                  idle: (prompt) => LibraryHome(
+                    openPrompt: prompt,
+                    onOpen: (s) => unawaited(OpenActions.openSource(ref, s)),
+                    onResume: (s) {
+                      ref
+                          .read(resumeControllerProvider.notifier)
+                          .resumeNextLoadOf(s);
+                      unawaited(ref.read(playlistProvider.notifier).open(s));
+                    },
+                  ),
+                ),
                 const Positioned(
                   top: 80,
                   left: 0,

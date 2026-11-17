@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Microsecond precision, so history entries saved in the same
+          # second still sort correctly.
+          store_date_time_values_as_text: true

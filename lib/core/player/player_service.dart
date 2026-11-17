@@ -289,6 +289,17 @@ class PlayerService {
   Future<void> setRotation(int degrees) =>
       backend.setProperty('video-rotate', '${degrees % 360}');
 
+  // ------------------------------------------------------------ screenshots
+
+  /// Saves the current frame to [path] (PNG or JPEG by extension).
+  /// [withSubtitles] includes the subtitles as shown.
+  Future<void> screenshotTo(String path, {bool withSubtitles = false}) =>
+      backend.command([
+        'screenshot-to-file',
+        path,
+        if (withSubtitles) 'subtitles' else 'video',
+      ]);
+
   // ------------------------------------------------------------------- info
 
   /// The hardware decoder mpv is using (e.g. `d3d11va`), or null if decoding

@@ -1,14 +1,15 @@
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
+
+import '../../support/test_database.dart';
 
 void main() {
   late KyndrelDatabase db;
   late ResumeRepository repo;
 
   setUp(() {
-    db = KyndrelDatabase(NativeDatabase.memory());
+    db = testDatabase();
     repo = ResumeRepository(db);
   });
 

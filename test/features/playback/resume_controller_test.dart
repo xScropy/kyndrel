@@ -1,4 +1,3 @@
-import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
@@ -8,6 +7,7 @@ import 'package:kyndrel/core/storage/resume_repository.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
 
 import '../../support/fake_player_backend.dart';
+import '../../support/test_database.dart';
 
 void main() {
   late FakePlayerBackend backend;
@@ -18,7 +18,7 @@ void main() {
   setUp(() {
     backend = FakePlayerBackend();
     service = PlayerService(backend);
-    db = KyndrelDatabase(NativeDatabase.memory());
+    db = testDatabase();
     container = ProviderContainer(
       overrides: [
         playerServiceProvider.overrideWithValue(service),
