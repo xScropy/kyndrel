@@ -135,3 +135,22 @@ String writeSrt(List<Cue> cues) {
   }
   return b.toString();
 }
+
+/// Writes cues as WebVTT (what Chromecast receivers read).
+String writeVtt(List<Cue> cues) {
+  String ts(Duration d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    final ms = (d.inMilliseconds % 1000).toString().padLeft(3, '0');
+    return '${two(d.inHours)}:${two(d.inMinutes % 60)}:'
+        '${two(d.inSeconds % 60)}.$ms';
+  }
+
+  final b = StringBuffer('WEBVTT\n\n');
+  for (final c in cues) {
+    b
+      ..writeln('${ts(c.start)} --> ${ts(c.end)}')
+      ..writeln(c.text)
+      ..writeln();
+  }
+  return b.toString();
+}

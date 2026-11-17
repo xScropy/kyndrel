@@ -13,9 +13,9 @@ import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_video_view.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
-import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
+import 'package:kyndrel/features/cast/cast_button.dart';
 import 'package:kyndrel/features/download/download_button.dart';
 import 'package:kyndrel/features/info/media_info_dialog.dart';
 import 'package:kyndrel/features/library/edit_details_dialog.dart';
@@ -232,6 +232,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     },
                   ),
                 ),
+                const Center(child: CastingBanner()),
                 const Positioned(
                   top: 80,
                   left: 0,
@@ -280,11 +281,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                           SubtitlesButton(),
                           SpeedSleepButton(),
                           PipButton(),
-                          ControlButton(
-                            key: Key('cast'),
-                            icon: Icons.cast,
-                            tooltip: 'Cast (coming in a later version)',
-                          ),
+                          CastButton(),
                           FullscreenButton(),
                         ],
                       ),

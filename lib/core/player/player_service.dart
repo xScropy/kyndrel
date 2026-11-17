@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
+import 'package:kyndrel/core/player/remote_target.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
 
 /// The single entry point to the playback engine (PLAN.md §2).
@@ -129,6 +130,11 @@ class PlayerService {
   bool _disposed = false;
   bool _limiterEnabled = true;
   bool _limiterActive = false;
+  RemoteTarget? _remote;
+  StreamSubscription<RemoteStatus>? _remoteSub;
+
+  /// The cast device playing instead of the local player, if any.
+  RemoteTarget? get remote => _remote;
 
   /// Current snapshot.
   PlaybackState get state => _state;
@@ -170,7 +176,11 @@ class PlayerService {
   // ---------------------------------------------------------------- opening
 
   /// Opens a local path or URL. Starts playing unless [play] is false.
+  /// Ends casting first.
   Future<void> open(String source, {bool play = true}) async {
+    // Only await when casting: the state reset below must happen
+    // synchronously, before any event about the new file arrives.
+    if (_remote != null) await detachRemote();
     final trimmed = source.trim();
     if (trimmed.isEmpty) {
       throw ArgumentError.value(source, 'source', 'must not be empty');
@@ -203,20 +213,65 @@ class PlayerService {
 
   // -------------------------------------------------------------- transport
 
+  /// Hands playback to [target] (task 4.4): the local player pauses and the
+  /// transport controls drive the device.
+  Future<void> attachRemote(RemoteTarget target) async {
+    await detachRemote();
+    await backend.pause();
+    _remote = target;
+    _remoteSub = target.status.listen((s) {
+      if (_remote != target) return;
+      _update(
+        _state.copyWith(
+          position: s.position,
+          isPlaying: s.playing,
+          duration: s.duration ?? _state.duration,
+        ),
+      );
+      if (s.finished && !_state.isCompleted) _onCompleted(true);
+    });
+  }
+
+  /// Takes playback back; the local player resumes at the device's position
+  /// when [resumeLocally] is set.
+  Future<void> detachRemote({bool resumeLocally = false}) async {
+    final r = _remote;
+    if (r == null) return;
+    _remote = null;
+    await _remoteSub?.cancel();
+    _remoteSub = null;
+    final at = _state.position;
+    try {
+      await r.stop();
+    } on Object {
+      // The device may already be gone.
+    }
+    await backend.seek(at);
+    if (resumeLocally) await backend.play();
+  }
+
   Future<void> play() async {
     if (_state.source == null) return;
+    if (_remote case final r?) {
+      await r.play();
+      return;
+    }
     // Pressing play at the end restarts from the beginning, like most players.
     if (_state.isCompleted) await backend.seek(Duration.zero);
     await backend.play();
   }
 
-  Future<void> pause() => backend.pause();
+  Future<void> pause() => _remote?.pause() ?? backend.pause();
 
   Future<void> playOrPause() => _state.isPlaying ? pause() : play();
 
   /// Seeks to [position], clamped to the file's length when it is known.
   Future<void> seek(Duration position) async {
     if (_state.source == null) return;
+    if (_remote case final r?) {
+      await r.seek(_clamp(position));
+      return;
+    }
     await backend.seek(_clamp(position));
   }
 
@@ -229,6 +284,11 @@ class PlayerService {
   Future<void> setVolume(double volume) async {
     final v = volume.clamp(0, maxVolume).toDouble();
     _update(_state.copyWith(volume: v));
+    if (_remote case final r?) {
+      // Devices go to 100 %; boost stays local-only.
+      await r.setVolume((v / 100).clamp(0, 1));
+      return;
+    }
     await backend.setVolume(v);
     if (v > 0 && _state.isMuted) await setMuted(muted: false);
     await _syncLimiter();
@@ -495,6 +555,7 @@ class PlayerService {
     for (final s in _subscriptions) {
       await s.cancel();
     }
+    await _remoteSub?.cancel();
     await _controller.close();
     await _trackController.close();
     await _completions.close();
