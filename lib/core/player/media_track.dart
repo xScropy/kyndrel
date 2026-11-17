@@ -105,6 +105,8 @@ class TrackState {
     this.audioDelay = Duration.zero,
     this.chapters = const [],
     this.chapterIndex,
+    this.loopA,
+    this.loopB,
   });
 
   final List<MediaTrack> video;
@@ -124,6 +126,10 @@ class TrackState {
 
   /// Current chapter, or null before the first / without chapters.
   final int? chapterIndex;
+
+  /// A-B loop points (task 3.9); null when unset.
+  final Duration? loopA;
+  final Duration? loopB;
 
   static const TrackState empty = TrackState();
 
@@ -150,6 +156,8 @@ class TrackState {
     Duration? audioDelay,
     List<Chapter>? chapters,
     int? Function()? chapterIndex,
+    Duration? Function()? loopA,
+    Duration? Function()? loopB,
   }) {
     return TrackState(
       video: video ?? this.video,
@@ -164,6 +172,8 @@ class TrackState {
       audioDelay: audioDelay ?? this.audioDelay,
       chapters: chapters ?? this.chapters,
       chapterIndex: chapterIndex != null ? chapterIndex() : this.chapterIndex,
+      loopA: loopA != null ? loopA() : this.loopA,
+      loopB: loopB != null ? loopB() : this.loopB,
     );
   }
 
@@ -179,7 +189,9 @@ class TrackState {
       other.subtitleDelay == subtitleDelay &&
       other.audioDelay == audioDelay &&
       listEquals(other.chapters, chapters) &&
-      other.chapterIndex == chapterIndex;
+      other.chapterIndex == chapterIndex &&
+      other.loopA == loopA &&
+      other.loopB == loopB;
 
   @override
   int get hashCode => Object.hash(
@@ -193,5 +205,7 @@ class TrackState {
     audioDelay,
     Object.hashAll(chapters),
     chapterIndex,
+    loopA,
+    loopB,
   );
 }

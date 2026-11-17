@@ -133,6 +133,9 @@ class _SeekBarState extends ConsumerState<SeekBar> {
     final chapters =
         ref.watch(trackStateProvider.select((t) => t.value?.chapters)) ??
         const [];
+    final (loopA, loopB) = ref.watch(
+      trackStateProvider.select((t) => (t.value?.loopA, t.value?.loopB)),
+    );
 
     double fractionOf(Duration d) => enabled
         ? (d.inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0)
@@ -216,6 +219,8 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                           for (final c in chapters)
                             if (c.start > Duration.zero) fractionOf(c.start),
                         ],
+                        loopA: loopA == null ? null : fractionOf(loopA),
+                        loopB: loopB == null ? null : fractionOf(loopB),
                       ),
                     ),
                   ),

@@ -86,6 +86,16 @@ class PlayerService {
             ),
           ),
       backend
+          .observe('ab-loop-a')
+          .listen(
+            (v) => _updateTracks(_tracks.copyWith(loopA: () => _optSeconds(v))),
+          ),
+      backend
+          .observe('ab-loop-b')
+          .listen(
+            (v) => _updateTracks(_tracks.copyWith(loopB: () => _optSeconds(v))),
+          ),
+      backend
           .observe('chapter-list/count')
           .listen((_) => unawaited(refreshChapters())),
       backend
@@ -306,6 +316,44 @@ class PlayerService {
   /// Rotates the picture clockwise by 0, 90, 180 or 270 degrees.
   Future<void> setRotation(int degrees) =>
       backend.setProperty('video-rotate', '${degrees % 360}');
+
+  // ------------------------------------------------------- A-B loop, frames
+
+  /// What [cycleLoop] did, for the on-screen message.
+  static const loopSetA = 'A';
+  static const loopSetB = 'B';
+  static const loopCleared = 'off';
+
+  /// First press sets A at the current position, the second sets B, the
+  /// third clears the loop (task 3.9). Returns [loopSetA], [loopSetB] or
+  /// [loopCleared].
+  Future<String> cycleLoop() async {
+    final pos = _formatSeconds(_state.position);
+    if (_tracks.loopA == null) {
+      await backend.setProperty('ab-loop-a', pos);
+      return loopSetA;
+    }
+    if (_tracks.loopB == null) {
+      if (_state.position <= _tracks.loopA!) {
+        // B before A: start over from here.
+        await backend.setProperty('ab-loop-a', pos);
+        return loopSetA;
+      }
+      await backend.setProperty('ab-loop-b', pos);
+      return loopSetB;
+    }
+    await clearLoop();
+    return loopCleared;
+  }
+
+  Future<void> clearLoop() async {
+    await backend.setProperty('ab-loop-a', 'no');
+    await backend.setProperty('ab-loop-b', 'no');
+  }
+
+  /// One frame forward (pauses), or back with [forward] false.
+  Future<void> frameStep({bool forward = true}) =>
+      backend.command([if (forward) 'frame-step' else 'frame-back-step']);
 
   // ------------------------------------------------------------ screenshots
 
@@ -538,6 +586,11 @@ class PlayerService {
       });
 
   static int? _id(String value) => int.tryParse(value);
+
+  static Duration? _optSeconds(String value) {
+    final s = double.tryParse(value);
+    return s == null ? null : Duration(microseconds: (s * 1e6).round());
+  }
 
   static Duration _seconds(String value) {
     final s = double.tryParse(value) ?? 0;

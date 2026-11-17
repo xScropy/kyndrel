@@ -284,6 +284,27 @@ void main() {
     expect(await t.frameAt(file, const Duration(seconds: 5), length), a);
   });
 
+  test('A-B loop and frame stepping in mpv', () async {
+    await service.open(p.join(media, 'clip.mp4'));
+    await waitFor((s) => s.isPlaying && s.duration > Duration.zero);
+    await service.seek(const Duration(seconds: 2));
+    await waitFor((s) => s.position >= const Duration(seconds: 2));
+    await service.cycleLoop();
+    await waitFor((s) => s.position >= const Duration(seconds: 3));
+    await service.cycleLoop();
+    await eventually(() async => service.tracks.loopB != null);
+    // Playback stays inside A–B.
+    await Future<void>.delayed(const Duration(seconds: 2));
+    expect(service.state.position, lessThan(const Duration(seconds: 5)));
+    await service.clearLoop();
+    await service.pause();
+    final before = double.parse((await prop('time-pos'))!);
+    await service.frameStep();
+    await eventually(
+      () async => double.parse((await prop('time-pos'))!) > before,
+    );
+  });
+
   test('track list types', () {
     expect(MediaTrackType.values, hasLength(3));
   });

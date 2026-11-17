@@ -524,6 +524,42 @@ void main() {
       expect(backend.commands, isEmpty);
     });
   });
+
+  group('A-B loop and frame step', () {
+    test('L cycles A, B, clear', () async {
+      await service.open('a.mp4');
+      backend
+        ..emitDuration(const Duration(minutes: 10))
+        ..emitPosition(const Duration(seconds: 30));
+      expect(await service.cycleLoop(), PlayerService.loopSetA);
+      expect(service.tracks.loopA, const Duration(seconds: 30));
+      backend.emitPosition(const Duration(seconds: 45));
+      expect(await service.cycleLoop(), PlayerService.loopSetB);
+      expect(service.tracks.loopB, const Duration(seconds: 45));
+      expect(await service.cycleLoop(), PlayerService.loopCleared);
+      expect(backend.properties['ab-loop-a'], 'no');
+      expect(service.tracks.loopA, isNull);
+      expect(service.tracks.loopB, isNull);
+    });
+
+    test('B before A restarts from the new point', () async {
+      await service.open('a.mp4');
+      backend.emitPosition(const Duration(seconds: 30));
+      await service.cycleLoop();
+      backend.emitPosition(const Duration(seconds: 10));
+      expect(await service.cycleLoop(), PlayerService.loopSetA);
+      expect(service.tracks.loopA, const Duration(seconds: 10));
+    });
+
+    test('frame step commands', () async {
+      await service.frameStep();
+      await service.frameStep(forward: false);
+      expect(backend.commands, [
+        ['frame-step'],
+        ['frame-back-step'],
+      ]);
+    });
+  });
 }
 
 /// A backend whose mpv doesn't know `sub-border-style` (libmpv < 0.38).

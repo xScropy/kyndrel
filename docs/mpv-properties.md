@@ -48,6 +48,8 @@ uses them.
 | `chapter` | property | observed | Current chapter | 3.6 |
 | second mpv: `vo=image`, `vo-image-{format,jpeg-quality,outdir}`, `vf=scale`, `frames=1`, `start`, `loadfile` | options/command | write | Seek-bar preview frames | 3.7 |
 | `add chapter ±1` | command | write | Next/previous chapter | 3.6 |
+| `ab-loop-a`, `ab-loop-b` | property | read/write | A-B loop (`no` clears) | 3.9 |
+| `frame-step`, `frame-back-step` | command | write | Frame stepping | 3.9 |
 | `screenshot-to-file <path> video\|subtitles` | command | write | History thumbnails (3.3), screenshots (3.8) | 3.3 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |
 | `filename`, `path`, `file-format`, `file-size`, `duration`, `chapters`, `audio-params/hr-channels`, `video-params/{w,h,pixelformat,colormatrix,primaries,gamma}`, `video-bitrate`, `audio-codec`, `audio-params/{channel-count,samplerate}`, `audio-bitrate` | property | read | Media info dialog | 1.3 |

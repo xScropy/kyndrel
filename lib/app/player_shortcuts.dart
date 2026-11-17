@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
@@ -44,6 +45,8 @@ class PlayerShortcuts extends ConsumerWidget {
     ('S', 'Subtitles & audio panel'),
     ('N / P', 'Next / previous in the queue'),
     ('PgDn / PgUp', 'Next / previous chapter'),
+    ('L', 'A-B loop: set A, set B, clear'),
+    ('. / ,', 'Next / previous frame'),
     ('Q', 'Queue'),
     ('Ctrl+O', 'Open file'),
     ('Ctrl+V', 'Open a pasted path or URL'),
@@ -121,6 +124,23 @@ class PlayerShortcuts extends ConsumerWidget {
         unawaited(SpeedActions.stepUp(ref));
       case LogicalKeyboardKey.keyS:
         if (!repeat) ref.read(subtitlePanelProvider.notifier).toggle();
+      case LogicalKeyboardKey.keyL:
+        if (!repeat) {
+          unawaited(() async {
+            final r = await service.cycleLoop();
+            osd.show(switch (r) {
+              PlayerService.loopSetA => 'Loop: A set',
+              PlayerService.loopSetB => 'Loop: A–B on',
+              _ => 'Loop off',
+            });
+          }());
+        }
+      case LogicalKeyboardKey.period:
+        unawaited(service.frameStep());
+        osd.show('Next frame');
+      case LogicalKeyboardKey.comma:
+        unawaited(service.frameStep(forward: false));
+        osd.show('Previous frame');
       case LogicalKeyboardKey.pageDown:
         unawaited(service.chapterBy(1));
       case LogicalKeyboardKey.pageUp:

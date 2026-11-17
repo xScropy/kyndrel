@@ -122,7 +122,7 @@ Rules:
 - [x] 3.6 Chapters: markers on the seek bar and next/previous chapter.
 - [x] 3.7 Seek-bar thumbnails: generate preview frames with a second headless mpv or FFmpeg and cache them.
 - [x] 3.8 Screenshot: mpv `screenshot` command to a configured folder, with a toast.
-- [ ] 3.9 A-B loop and frame step.
+- [x] 3.9 A-B loop and frame step.
 
 ### Phase 4: Advanced features (4–6 weeks)
 - [ ] 4.1 **Picture-in-picture:** small frameless always-on-top window with aspect-locked resize, a minimal control set, and double-click to restore. Same player instance, so no restart.
