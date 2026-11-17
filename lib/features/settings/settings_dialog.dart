@@ -177,6 +177,52 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    const Text(
+                      'SUBTITLE TRANSLATION',
+                      style: KyndrelTheme.sectionLabel,
+                    ),
+                    DropdownButton<String>(
+                      key: const Key('settings-translate-provider'),
+                      value: s.translateProvider,
+                      dropdownColor: KyndrelColors.surface,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'claude',
+                          child: Text('Claude'),
+                        ),
+                        DropdownMenuItem(value: 'deepl', child: Text('DeepL')),
+                        DropdownMenuItem(
+                          value: 'google',
+                          child: Text('Google Translate'),
+                        ),
+                      ],
+                      onChanged: (v) =>
+                          _update((x) => x.copyWith(translateProvider: v)),
+                    ),
+                    _KeyField(
+                      fieldKey: const Key('settings-translate-key'),
+                      label: switch (s.translateProvider) {
+                        'deepl' => 'DeepL API key',
+                        'google' => 'Google Cloud API key',
+                        _ => 'Anthropic API key',
+                      },
+                      value: switch (s.translateProvider) {
+                        'deepl' => s.deeplApiKey,
+                        'google' => s.googleTranslateApiKey,
+                        _ => s.anthropicApiKey,
+                      },
+                      obscure: !_showKey,
+                      onChanged: (v) => _update(
+                        (x) => switch (x.translateProvider) {
+                          'deepl' => x.copyWith(deeplApiKey: v.trim()),
+                          'google' => x.copyWith(
+                            googleTranslateApiKey: v.trim(),
+                          ),
+                          _ => x.copyWith(anthropicApiKey: v.trim()),
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     const Text('LIBRARY', style: KyndrelTheme.sectionLabel),
                     TextField(
                       key: const Key('settings-tmdb-key'),
@@ -208,4 +254,49 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
       ),
     );
   }
+}
+
+/// A key field that keeps its text when the provider switches.
+class _KeyField extends StatefulWidget {
+  const new({
+    required this.fieldKey,
+    required this.label,
+    required this.value,
+    required this.obscure,
+    required this.onChanged,
+  });
+
+  final Key fieldKey;
+  final String label;
+  final String value;
+  final bool obscure;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_KeyField> createState() => _KeyFieldState();
+}
+
+class _KeyFieldState extends State<_KeyField> {
+  late final _c = TextEditingController(text: widget.value);
+
+  @override
+  void didUpdateWidget(_KeyField old) {
+    super.didUpdateWidget(old);
+    if (old.label != widget.label) _c.text = widget.value;
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    key: widget.fieldKey,
+    controller: _c,
+    obscureText: widget.obscure,
+    decoration: InputDecoration(labelText: widget.label),
+    onChanged: widget.onChanged,
+  );
 }

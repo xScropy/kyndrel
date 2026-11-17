@@ -24,6 +24,11 @@ class AppSettings {
     this.tmdbApiKey = '',
     this.screenshotFolder = '',
     this.screenshotWithSubtitles = false,
+    this.translateProvider = 'claude',
+    this.translateTarget = 'en',
+    this.deeplApiKey = '',
+    this.googleTranslateApiKey = '',
+    this.anthropicApiKey = '',
   });
 
   /// Last volume, 0–400.
@@ -57,6 +62,15 @@ class AppSettings {
   final String screenshotFolder;
   final bool screenshotWithSubtitles;
 
+  /// Subtitle translation (4.2): `deepl`, `google` or `claude`.
+  final String translateProvider;
+
+  /// ISO 639-1 target language.
+  final String translateTarget;
+  final String deeplApiKey;
+  final String googleTranslateApiKey;
+  final String anthropicApiKey;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -73,6 +87,11 @@ class AppSettings {
     String? tmdbApiKey,
     String? screenshotFolder,
     bool? screenshotWithSubtitles,
+    String? translateProvider,
+    String? translateTarget,
+    String? deeplApiKey,
+    String? googleTranslateApiKey,
+    String? anthropicApiKey,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -89,6 +108,12 @@ class AppSettings {
       screenshotFolder: screenshotFolder ?? this.screenshotFolder,
       screenshotWithSubtitles:
           screenshotWithSubtitles ?? this.screenshotWithSubtitles,
+      translateProvider: translateProvider ?? this.translateProvider,
+      translateTarget: translateTarget ?? this.translateTarget,
+      deeplApiKey: deeplApiKey ?? this.deeplApiKey,
+      googleTranslateApiKey:
+          googleTranslateApiKey ?? this.googleTranslateApiKey,
+      anthropicApiKey: anthropicApiKey ?? this.anthropicApiKey,
     );
   }
 }
@@ -146,6 +171,13 @@ class SettingsRepository {
       screenshotWithSubtitles:
           _prefs.getBool('screenshotWithSubtitles') ??
           d.screenshotWithSubtitles,
+      translateProvider:
+          _prefs.getString('translateProvider') ?? d.translateProvider,
+      translateTarget: _prefs.getString('translateTarget') ?? d.translateTarget,
+      deeplApiKey: _prefs.getString('deeplApiKey') ?? d.deeplApiKey,
+      googleTranslateApiKey:
+          _prefs.getString('googleTranslateApiKey') ?? d.googleTranslateApiKey,
+      anthropicApiKey: _prefs.getString('anthropicApiKey') ?? d.anthropicApiKey,
     );
   }
 
@@ -166,6 +198,11 @@ class SettingsRepository {
     await _prefs.setString('tmdbApiKey', s.tmdbApiKey);
     await _prefs.setString('screenshotFolder', s.screenshotFolder);
     await _prefs.setBool('screenshotWithSubtitles', s.screenshotWithSubtitles);
+    await _prefs.setString('translateProvider', s.translateProvider);
+    await _prefs.setString('translateTarget', s.translateTarget);
+    await _prefs.setString('deeplApiKey', s.deeplApiKey);
+    await _prefs.setString('googleTranslateApiKey', s.googleTranslateApiKey);
+    await _prefs.setString('anthropicApiKey', s.anthropicApiKey);
   }
 }
 

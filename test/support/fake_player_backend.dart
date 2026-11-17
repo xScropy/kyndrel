@@ -135,8 +135,15 @@ class FakePlayerBackend implements PlayerBackend {
     emitProperty(name, value);
   }
 
+  /// Lets a test react to commands like mpv would (e.g. sub-add adding a
+  /// track).
+  void Function(List<String> args)? onCommand;
+
   @override
-  Future<void> command(List<String> args) async => _commands.add(args);
+  Future<void> command(List<String> args) async {
+    _commands.add(args);
+    onCommand?.call(args);
+  }
 
   @override
   Future<void> dispose() async {

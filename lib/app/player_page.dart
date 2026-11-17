@@ -38,6 +38,7 @@ import 'package:kyndrel/features/settings/settings_dialog.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
+import 'package:kyndrel/features/translate/translate_button.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The player screen: composes the features (the only place that may import
@@ -273,13 +274,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                         rightActions: [
                           PlaylistButton(),
                           FitMenuButton(),
-                          ControlButton(
-                            key: Key('translate'),
-                            icon: Icons.translate,
-                            tooltip:
-                                'Translate subtitles (coming in a later '
-                                'version)',
-                          ),
+                          TranslateButton(),
                           SubtitlesButton(),
                           SpeedSleepButton(),
                           PipButton(),

@@ -10,6 +10,7 @@ import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
+import 'package:kyndrel/features/translate/translate_controller.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path/path.dart' as p;
 
@@ -303,6 +304,21 @@ void main() {
     await eventually(
       () async => double.parse((await prop('time-pos'))!) > before,
     );
+  });
+
+  test('FFmpeg extracts an embedded text track for translation', () async {
+    await service.open(p.join(media, 'The.Test.Film.2019.1080p.mkv'));
+    await waitFor((s) => s.isPlaying);
+    await eventually(() async => service.tracks.subtitles.length >= 2);
+    final srt = service.tracks.subtitles.firstWhere(
+      (t) => t.codec == 'subrip' && !t.isExternal,
+    );
+    final cues = await const DefaultSubtitleExtractor().cues(
+      p.join(media, 'The.Test.Film.2019.1080p.mkv'),
+      srt,
+      service.tracks.subtitles,
+    );
+    expect(cues.single.text, 'Hello from the embedded English track');
   });
 
   test('track list types', () {
