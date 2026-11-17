@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/features/playback/widgets/open_source_prompt.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -19,10 +20,11 @@ class StatusLayer extends ConsumerWidget {
         ref.watch(playbackStatusProvider).value ?? PlaybackStatus.idle;
     final buffering = ref.watch(bufferingProvider).value ?? false;
     final service = ref.read(playerServiceProvider);
+    final open = ref.read(playlistProvider.notifier).open;
 
     return switch (status) {
       PlaybackStatus.idle => Center(
-        child: OpenSourcePrompt(onOpen: service.open, onPickFile: onPickFile),
+        child: OpenSourcePrompt(onOpen: open, onPickFile: onPickFile),
       ),
       PlaybackStatus.loading => const Center(
         child: CircularProgressIndicator(key: Key('loading')),
@@ -34,7 +36,7 @@ class StatusLayer extends ConsumerWidget {
             child: _ErrorMessage(
               message: service.state.errorMessage ?? '',
               log: service.logExcerpt(),
-              onOpen: service.open,
+              onOpen: open,
               onPickFile: onPickFile,
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 
 /// A sleep timer choice (task 2.3).
 @immutable
@@ -96,6 +97,7 @@ class SleepTimer extends Notifier<SleepTimerState?> {
   StreamSubscription<String>? _completions;
 
   PlayerService get _player => ref.read(playerServiceProvider);
+  PlaylistController get _playlist => ref.read(playlistProvider.notifier);
 
   @override
   SleepTimerState? build() {
@@ -117,12 +119,17 @@ class SleepTimer extends Notifier<SleepTimerState?> {
       case SleepAtEndOfEpisode(:final extraEpisodes):
         state = SleepTimerState(option: option, episodesLeft: extraEpisodes);
         _completions = _player.completions.listen((_) => _onEpisodeEnd());
+        // Keep the queue from moving on after the final episode.
+        if (extraEpisodes == 0) _playlist.setStopAfterCurrent(value: true);
     }
     _ticker = Timer.periodic(tick, (_) => unawaited(_onTick()));
     await _onTick();
   }
 
   Future<void> cancel() async {
+    if (state?.option is SleepAtEndOfEpisode) {
+      _playlist.setStopAfterCurrent(value: false);
+    }
     _stop();
     await _restoreVolume();
     state = null;

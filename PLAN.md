@@ -114,7 +114,7 @@ Rules:
   - Notes: audio tracks and audio delay (2.11) live in the same panel ("Subtitles & audio"). Fit/Fill/Stretch/Original are applied to the Flutter video texture (media_kit sizes the texture to the video, so mpv's `panscan` has no visible effect); 16:9/4:3 use `video-aspect-override`.
 
 ### Phase 3: Library and media intelligence (3–4 weeks)
-- [ ] 3.1 Playlist: queue, next/previous, shuffle, repeat, drag to reorder, and open a whole folder.
+- [x] 3.1 Playlist: queue, next/previous, shuffle, repeat, drag to reorder, and open a whole folder.
 - [ ] 3.2 Episode detection: parse filenames (`S01E02`, `1x02`) to group episodes. This powers "End of next episode" and auto-play of the next episode.
 - [ ] 3.3 History and continue-watching list with thumbnails and progress.
 - [ ] 3.4 Metadata: TMDB lookup for title, year, poster and episode names, with local cache and a manual override.

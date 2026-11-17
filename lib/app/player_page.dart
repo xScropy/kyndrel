@@ -16,6 +16,7 @@ import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/info/media_info_dialog.dart';
+import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
@@ -58,11 +59,14 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
     final source = widget.launch.source;
     if (source != null) {
-      unawaited(ref.read(playerServiceProvider).open(source));
+      // The queue is provider state: change it after the first frame.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(OpenActions.openSource(ref, source)),
+      );
     }
     PlayerPage.openFileChannel.setMethodCallHandler((call) async {
       if (call.method == 'open' && call.arguments is String) {
-        await ref.read(playerServiceProvider).open(call.arguments as String);
+        await OpenActions.openSource(ref, call.arguments as String);
       }
     });
     unawaited(_openPendingMacFiles());
@@ -74,7 +78,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         'pending',
       );
       if (files != null && files.isNotEmpty && mounted) {
-        await ref.read(playerServiceProvider).open(files.first);
+        await OpenActions.openPaths(ref, files);
       }
     } on MissingPluginException {
       // Only macOS implements the channel.
@@ -103,6 +107,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       color: KyndrelColors.surface,
       items: const [
         PopupMenuItem(value: 'open', child: Text('Open file…')),
+        PopupMenuItem(value: 'folder', child: Text('Open folder…')),
         PopupMenuItem(value: 'paste', child: Text('Open from clipboard')),
         PopupMenuItem(value: 'info', child: Text('Media info')),
         PopupMenuItem(value: 'subs', child: Text('Subtitles & audio')),
@@ -113,6 +118,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     switch (choice) {
       case 'open':
         _pickFile();
+      case 'folder':
+        unawaited(OpenActions.pickFolder(ref));
       case 'paste':
         unawaited(OpenActions.pasteFromClipboard(ref));
       case 'info':
@@ -140,6 +147,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final visible = ref.watch(controlsVisibilityProvider) || idle;
     final fullScreen = ref.watch(isFullScreenProvider).value ?? false;
     final panelOpen = ref.watch(subtitlePanelProvider) != null;
+    final queueOpen = ref.watch(playlistPanelProvider);
     final hasMedia = !idle && status != PlaybackStatus.error;
 
     Widget fade(Widget child) => IgnorePointer(
@@ -156,16 +164,18 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       body: PlayerShortcuts(
         onOpenSettings: _showSettings,
         onShowInfo: _showInfo,
+        onToggleQueue: ref.read(playlistPanelProvider.notifier).toggle,
         child: DropTarget(
           onDragEntered: (_) => setState(() => _dragging = true),
           onDragExited: (_) => setState(() => _dragging = false),
           onDragDone: (details) {
             setState(() => _dragging = false);
-            if (details.files.isNotEmpty) {
-              unawaited(
-                ref.read(playerServiceProvider).open(details.files.first.path),
-              );
-            }
+            unawaited(
+              OpenActions.openPaths(
+                ref,
+                details.files.map((f) => f.path).toList(),
+              ),
+            );
           },
           child: MouseRegion(
             cursor: !visible && fullScreen
@@ -220,6 +230,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     child: fade(
                       const BottomControls(
                         rightActions: [
+                          PlaylistButton(),
                           FitMenuButton(),
                           ControlButton(
                             key: Key('translate'),
@@ -252,6 +263,16 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     right: 20,
                     bottom: 130,
                     child: SubtitlePanel(),
+                  ),
+                if (queueOpen && hasMedia && !panelOpen)
+                  Positioned(
+                    right: 20,
+                    bottom: 130,
+                    child: PlaylistPanel(
+                      onAddFiles: () => unawaited(OpenActions.pickToQueue(ref)),
+                      onOpenFolder: () =>
+                          unawaited(OpenActions.pickFolder(ref)),
+                    ),
                   ),
                 if (_dragging) const IgnorePointer(child: _DropHint()),
               ],

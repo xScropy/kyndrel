@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
+import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
@@ -21,12 +23,14 @@ class PlayerShortcuts extends ConsumerWidget {
     required this.child,
     required this.onOpenSettings,
     required this.onShowInfo,
+    required this.onToggleQueue,
     super.key,
   });
 
   final Widget child;
   final VoidCallback onOpenSettings;
   final VoidCallback onShowInfo;
+  final VoidCallback onToggleQueue;
 
   static const help = <(String, String)>[
     ('Space', 'Play / pause'),
@@ -37,6 +41,8 @@ class PlayerShortcuts extends ConsumerWidget {
     ('Esc', 'Close panel / leave full screen'),
     ('[ / ]', 'Slower / faster'),
     ('S', 'Subtitles & audio panel'),
+    ('N / P', 'Next / previous in the queue'),
+    ('Q', 'Queue'),
     ('Ctrl+O', 'Open file'),
     ('Ctrl+V', 'Open a pasted path or URL'),
     ('Ctrl+I', 'Media info'),
@@ -99,6 +105,8 @@ class PlayerShortcuts extends ConsumerWidget {
       case LogicalKeyboardKey.escape:
         if (ref.read(subtitlePanelProvider) != null) {
           ref.read(subtitlePanelProvider.notifier).close();
+        } else if (ref.read(playlistPanelProvider)) {
+          ref.read(playlistPanelProvider.notifier).close();
         } else {
           unawaited(FullscreenActions.exit(ref));
         }
@@ -108,6 +116,12 @@ class PlayerShortcuts extends ConsumerWidget {
         unawaited(SpeedActions.stepUp(ref));
       case LogicalKeyboardKey.keyS:
         if (!repeat) ref.read(subtitlePanelProvider.notifier).toggle();
+      case LogicalKeyboardKey.keyN:
+        if (!repeat) unawaited(ref.read(playlistProvider.notifier).next());
+      case LogicalKeyboardKey.keyP:
+        if (!repeat) unawaited(ref.read(playlistProvider.notifier).previous());
+      case LogicalKeyboardKey.keyQ:
+        if (!repeat) onToggleQueue();
       default:
         return KeyEventResult.ignored;
     }

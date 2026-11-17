@@ -1,7 +1,9 @@
+import 'dart:io';
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 
 /// Ways to open media (task 1.11). Command-line arguments and "Open with"
@@ -14,22 +16,51 @@ abstract final class OpenActions {
   ];
 
   static Future<void> openSource(WidgetRef ref, String source) =>
-      ref.read(playerServiceProvider).open(source);
+      ref.read(playlistProvider.notifier).open(source);
 
-  /// Shows the system file picker.
+  /// Opens dropped or picked paths: one folder plays the whole folder,
+  /// several files become the queue.
+  static Future<void> openPaths(WidgetRef ref, List<String> paths) async {
+    if (paths.isEmpty) return;
+    final playlist = ref.read(playlistProvider.notifier);
+    if (paths.length == 1 && FileSystemEntity.isDirectorySync(paths.first)) {
+      await playlist.openFolder(paths.first);
+      return;
+    }
+    final files = paths
+        .where((p) => !FileSystemEntity.isDirectorySync(p))
+        .toList();
+    await playlist.openAll(files);
+  }
+
+  /// Picks a folder and plays everything in it (task 3.1).
+  static Future<void> pickFolder(WidgetRef ref) async {
+    final dir = await getDirectoryPath();
+    if (dir != null) await ref.read(playlistProvider.notifier).openFolder(dir);
+  }
+
+  /// Picks files to add to the end of the queue.
+  static Future<void> pickToQueue(WidgetRef ref) async {
+    final files = await openFiles(acceptedTypeGroups: _types);
+    await ref
+        .read(playlistProvider.notifier)
+        .enqueue(files.map((f) => f.path).toList());
+  }
+
+  static const _types = [
+    XTypeGroup(
+      label: 'Video and audio',
+      extensions: videoExtensions,
+      uniformTypeIdentifiers: ['public.movie', 'public.audio'],
+      mimeTypes: ['video/*', 'audio/*'],
+    ),
+    XTypeGroup(label: 'All files'),
+  ];
+
+  /// Shows the system file picker; several files become the queue.
   static Future<void> pickFile(WidgetRef ref) async {
-    final file = await openFile(
-      acceptedTypeGroups: const [
-        XTypeGroup(
-          label: 'Video and audio',
-          extensions: videoExtensions,
-          uniformTypeIdentifiers: ['public.movie', 'public.audio'],
-          mimeTypes: ['video/*', 'audio/*'],
-        ),
-        XTypeGroup(label: 'All files'),
-      ],
-    );
-    if (file != null) await openSource(ref, file.path);
+    final files = await openFiles(acceptedTypeGroups: _types);
+    await openPaths(ref, files.map((f) => f.path).toList());
   }
 
   /// Opens a URL or path from the clipboard. Returns false if the clipboard

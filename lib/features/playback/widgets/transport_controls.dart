@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:material_ui/material_ui.dart';
@@ -16,9 +17,21 @@ class TransportControls extends ConsumerWidget {
     final skip = ref.watch(settingsProvider.select((s) => s.skipSeconds));
     final service = ref.read(playerServiceProvider);
     final offset = Duration(seconds: skip);
+    final queue = ref.watch(playlistProvider);
+    final playlist = ref.read(playlistProvider.notifier);
+    final showQueue = queue.items.length > 1;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (showQueue) ...[
+          ControlButton(
+            key: const Key('previous'),
+            icon: Icons.skip_previous,
+            tooltip: 'Previous (P)',
+            onPressed: () => unawaited(playlist.previous()),
+          ),
+          const SizedBox(width: 4),
+        ],
         ControlButton(
           key: const Key('skip-back'),
           icon: Icons.replay,
@@ -36,6 +49,15 @@ class TransportControls extends ConsumerWidget {
           onPressed: () => unawaited(service.seekBy(offset)),
           child: SkipIcon(seconds: skip, forward: true),
         ),
+        if (showQueue) ...[
+          const SizedBox(width: 4),
+          ControlButton(
+            key: const Key('next'),
+            icon: Icons.skip_next,
+            tooltip: 'Next (N)',
+            onPressed: queue.hasNext ? () => unawaited(playlist.next()) : null,
+          ),
+        ],
       ],
     );
   }
