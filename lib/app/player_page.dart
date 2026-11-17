@@ -24,6 +24,7 @@ import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
+import 'package:kyndrel/features/playback/screenshot_actions.dart';
 import 'package:kyndrel/features/playback/widgets/bottom_controls.dart';
 import 'package:kyndrel/features/playback/widgets/diagnostics_overlay.dart';
 import 'package:kyndrel/features/playback/widgets/fit_menu.dart';
@@ -118,6 +119,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         PopupMenuItem(value: 'paste', child: Text('Open from clipboard')),
         PopupMenuItem(value: 'info', child: Text('Media info')),
         PopupMenuItem(value: 'details', child: Text('Edit details…')),
+        PopupMenuItem(value: 'screenshot', child: Text('Screenshot  (Ctrl+S)')),
         PopupMenuItem(value: 'subs', child: Text('Subtitles & audio')),
         PopupMenuItem(value: 'settings', child: Text('Settings…')),
       ],
@@ -132,6 +134,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         unawaited(OpenActions.pasteFromClipboard(ref));
       case 'info':
         _showInfo();
+      case 'screenshot':
+        unawaited(ScreenshotActions.take(ref));
       case 'details':
         final source = ref.read(playerServiceProvider).state.source;
         if (source != null) unawaited(showEditDetailsDialog(context, source));

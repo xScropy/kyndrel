@@ -121,7 +121,7 @@ Rules:
 - [x] 3.5 Media info dialog (the "i" icon): container, codecs, bitrate, resolution, HDR, audio channels, file size, and a copy button.
 - [x] 3.6 Chapters: markers on the seek bar and next/previous chapter.
 - [x] 3.7 Seek-bar thumbnails: generate preview frames with a second headless mpv or FFmpeg and cache them.
-- [ ] 3.8 Screenshot: mpv `screenshot` command to a configured folder, with a toast.
+- [x] 3.8 Screenshot: mpv `screenshot` command to a configured folder, with a toast.
 - [ ] 3.9 A-B loop and frame step.
 
 ### Phase 4: Advanced features (4–6 weeks)

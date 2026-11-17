@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
@@ -89,6 +90,33 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                       value: s.autoPlayNextEpisode,
                       onChanged: (v) =>
                           _update((x) => x.copyWith(autoPlayNextEpisode: v)),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Screenshot folder'),
+                      subtitle: Text(
+                        s.screenshotFolder.isEmpty
+                            ? defaultScreenshotFolder()
+                            : s.screenshotFolder,
+                      ),
+                      trailing: TextButton(
+                        key: const Key('settings-screenshot-folder'),
+                        onPressed: () async {
+                          final dir = await getDirectoryPath();
+                          if (dir != null) {
+                            _update((x) => x.copyWith(screenshotFolder: dir));
+                          }
+                        },
+                        child: const Text('Change'),
+                      ),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Include subtitles in screenshots'),
+                      value: s.screenshotWithSubtitles,
+                      onChanged: (v) => _update(
+                        (x) => x.copyWith(screenshotWithSubtitles: v),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text('AUDIO', style: KyndrelTheme.sectionLabel),

@@ -10,6 +10,7 @@ import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
+import 'package:kyndrel/features/playback/screenshot_actions.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
@@ -47,6 +48,7 @@ class PlayerShortcuts extends ConsumerWidget {
     ('Ctrl+O', 'Open file'),
     ('Ctrl+V', 'Open a pasted path or URL'),
     ('Ctrl+I', 'Media info'),
+    ('Ctrl+S', 'Screenshot'),
     ('Ctrl+,', 'Settings'),
   ];
 
@@ -77,6 +79,8 @@ class PlayerShortcuts extends ConsumerWidget {
           unawaited(OpenActions.pasteFromClipboard(ref));
         case LogicalKeyboardKey.keyI:
           onShowInfo();
+        case LogicalKeyboardKey.keyS:
+          unawaited(ScreenshotActions.take(ref));
         case LogicalKeyboardKey.comma:
           onOpenSettings();
         default:

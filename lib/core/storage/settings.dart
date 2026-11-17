@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// User preferences (shared_preferences). Persisted on every change.
@@ -20,6 +22,8 @@ class AppSettings {
     this.boostWarningSeen = false,
     this.autoPlayNextEpisode = true,
     this.tmdbApiKey = '',
+    this.screenshotFolder = '',
+    this.screenshotWithSubtitles = false,
   });
 
   /// Last volume, 0–400.
@@ -49,6 +53,10 @@ class AppSettings {
   /// TMDB v3 key or v4 read token for titles and posters (3.4).
   final String tmdbApiKey;
 
+  /// Where screenshots go; empty means `~/Pictures/Kyndrel` (3.8).
+  final String screenshotFolder;
+  final bool screenshotWithSubtitles;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -63,6 +71,8 @@ class AppSettings {
     bool? boostWarningSeen,
     bool? autoPlayNextEpisode,
     String? tmdbApiKey,
+    String? screenshotFolder,
+    bool? screenshotWithSubtitles,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -76,8 +86,19 @@ class AppSettings {
       boostWarningSeen: boostWarningSeen ?? this.boostWarningSeen,
       autoPlayNextEpisode: autoPlayNextEpisode ?? this.autoPlayNextEpisode,
       tmdbApiKey: tmdbApiKey ?? this.tmdbApiKey,
+      screenshotFolder: screenshotFolder ?? this.screenshotFolder,
+      screenshotWithSubtitles:
+          screenshotWithSubtitles ?? this.screenshotWithSubtitles,
     );
   }
+}
+
+/// `~/Pictures/Kyndrel` (Windows: `%USERPROFILE%\Pictures\Kyndrel`), the
+/// screenshot folder when none is set (task 3.8).
+String defaultScreenshotFolder([Map<String, String>? env]) {
+  final e = env ?? Platform.environment;
+  final home = e['USERPROFILE'] ?? e['HOME'] ?? Directory.systemTemp.path;
+  return p.join(home, 'Pictures', 'Kyndrel');
 }
 
 /// Reads and writes [AppSettings].
@@ -120,6 +141,11 @@ class SettingsRepository {
       autoPlayNextEpisode:
           _prefs.getBool('autoPlayNextEpisode') ?? d.autoPlayNextEpisode,
       tmdbApiKey: _prefs.getString('tmdbApiKey') ?? d.tmdbApiKey,
+      screenshotFolder:
+          _prefs.getString('screenshotFolder') ?? d.screenshotFolder,
+      screenshotWithSubtitles:
+          _prefs.getBool('screenshotWithSubtitles') ??
+          d.screenshotWithSubtitles,
     );
   }
 
@@ -138,6 +164,8 @@ class SettingsRepository {
     await _prefs.setBool('boostWarningSeen', s.boostWarningSeen);
     await _prefs.setBool('autoPlayNextEpisode', s.autoPlayNextEpisode);
     await _prefs.setString('tmdbApiKey', s.tmdbApiKey);
+    await _prefs.setString('screenshotFolder', s.screenshotFolder);
+    await _prefs.setBool('screenshotWithSubtitles', s.screenshotWithSubtitles);
   }
 }
 
