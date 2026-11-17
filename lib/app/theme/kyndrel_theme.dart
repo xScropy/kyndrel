@@ -18,6 +18,7 @@ abstract final class KyndrelTheme {
       brightness: Brightness.dark,
       colorScheme: colors,
       fontFamily: KyndrelTokens.fontFamily,
+      fontFamilyFallback: KyndrelTokens.fontFamilyFallback,
       scaffoldBackgroundColor: KyndrelColors.background,
       canvasColor: KyndrelColors.background,
     );
@@ -66,6 +67,7 @@ abstract final class KyndrelTheme {
   /// Muted small-caps label used for panel sections ("SLEEP TIMER").
   static const TextStyle sectionLabel = TextStyle(
     fontFamily: KyndrelTokens.fontFamily,
+    fontFamilyFallback: KyndrelTokens.fontFamilyFallback,
     color: KyndrelColors.sectionLabel,
     fontSize: 11,
     fontWeight: FontWeight.w600,

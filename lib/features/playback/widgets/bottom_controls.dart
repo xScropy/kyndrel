@@ -33,7 +33,12 @@ class BottomControls extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SeekBarRow(),
+          // Timelines and transport keep tape direction in RTL locales
+          // (Material bidirectionality guidance); the side groups mirror.
+          const Directionality(
+            textDirection: TextDirection.ltr,
+            child: SeekBarRow(),
+          ),
           const SizedBox(height: 6),
           SizedBox(
             height: 60,
@@ -41,15 +46,24 @@ class BottomControls extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Align(
-                  alignment: Alignment.centerLeft,
+                  alignment: AlignmentDirectional.centerStart,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [const VolumeControl(), ...leftActions],
+                    children: [
+                      const Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: VolumeControl(),
+                      ),
+                      ...leftActions,
+                    ],
                   ),
                 ),
-                const TransportControls(),
+                const Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: TransportControls(),
+                ),
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerEnd,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: rightActions,

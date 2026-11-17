@@ -8,6 +8,7 @@ import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/utils/media_title.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Whether the queue panel is open.
@@ -33,7 +34,9 @@ class PlaylistButton extends ConsumerWidget {
     return ControlButton(
       key: const Key('queue-button'),
       icon: Icons.playlist_play,
-      tooltip: count > 1 ? 'Queue · $count (Q)' : 'Queue (Q)',
+      tooltip: count > 1
+          ? context.l10n.queueCountTooltip(count)
+          : context.l10n.queueTooltip,
       active: open,
       onPressed: ref.read(playlistPanelProvider.notifier).toggle,
     );
@@ -93,7 +96,7 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
                 Row(
                   children: [
                     Text(
-                      'Queue · ${queue.items.length}',
+                      context.l10n.queueTitle(queue.items.length),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -103,7 +106,9 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
                     ControlButton(
                       key: const Key('shuffle'),
                       icon: Icons.shuffle,
-                      tooltip: queue.shuffle ? 'Shuffle on' : 'Shuffle off',
+                      tooltip: queue.shuffle
+                          ? context.l10n.shuffleOn
+                          : context.l10n.shuffleOff,
                       active: queue.shuffle,
                       onPressed: playlist.toggleShuffle,
                     ),
@@ -113,9 +118,9 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
                           ? Icons.repeat_one
                           : Icons.repeat,
                       tooltip: switch (queue.repeat) {
-                        QueueRepeat.off => 'Repeat off',
-                        QueueRepeat.all => 'Repeat all',
-                        QueueRepeat.one => 'Repeat one',
+                        QueueRepeat.off => context.l10n.repeatOff,
+                        QueueRepeat.all => context.l10n.repeatAll,
+                        QueueRepeat.one => context.l10n.repeatOne,
                       },
                       active: queue.repeat != QueueRepeat.off,
                       onPressed: playlist.cycleRepeat,
@@ -123,7 +128,7 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
                     ControlButton(
                       key: const Key('queue-close'),
                       icon: Icons.close,
-                      tooltip: 'Close (Esc)',
+                      tooltip: context.l10n.closeEsc,
                       onPressed: close,
                     ),
                   ],
@@ -131,10 +136,10 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
                 const SizedBox(height: 8),
                 Expanded(
                   child: queue.items.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'The queue is empty.',
-                            style: TextStyle(
+                            context.l10n.queueEmpty,
+                            style: const TextStyle(
                               color: KyndrelColors.textSecondary,
                             ),
                           ),
@@ -157,20 +162,20 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
                   children: [
                     TextButton(
                       onPressed: queue.items.isEmpty ? null : playlist.clear,
-                      child: const Text('Clear'),
+                      child: Text(context.l10n.clear),
                     ),
                     TextButton.icon(
                       key: const Key('queue-open-folder'),
                       onPressed: widget.onOpenFolder,
                       icon: const Icon(Icons.folder_open, size: 18),
-                      label: const Text('Folder'),
+                      label: Text(context.l10n.folder),
                     ),
                     const SizedBox(width: 4),
                     FilledButton.icon(
                       key: const Key('queue-add'),
                       onPressed: widget.onAddFiles,
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Add'),
+                      label: Text(context.l10n.add),
                     ),
                   ],
                 ),
@@ -207,7 +212,7 @@ class _QueueTile extends ConsumerWidget {
         onTap: () => unawaited(playlist.playAt(index)),
         child: Container(
           height: 48,
-          padding: const EdgeInsets.only(left: 4),
+          padding: const EdgeInsetsDirectional.only(start: 4),
           decoration: BoxDecoration(
             color: current ? KyndrelColors.rowActive : null,
             borderRadius: BorderRadius.circular(12),
@@ -227,7 +232,7 @@ class _QueueTile extends ConsumerWidget {
               ),
               if (current)
                 const Padding(
-                  padding: EdgeInsets.only(right: 6),
+                  padding: EdgeInsetsDirectional.only(end: 6),
                   child: Icon(
                     Icons.play_arrow,
                     size: 16,
@@ -260,7 +265,7 @@ class _QueueTile extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'Remove',
+                tooltip: context.l10n.remove,
                 iconSize: 16,
                 onPressed: () => playlist.remove(index),
                 icon: const Icon(Icons.close),

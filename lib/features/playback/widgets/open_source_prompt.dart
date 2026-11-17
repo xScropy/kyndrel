@@ -1,5 +1,6 @@
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Idle / error screen prompt: open a file, paste a path or URL, or drop a
@@ -39,7 +40,7 @@ class _OpenSourcePromptState extends State<OpenSourcePrompt> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('OPEN MEDIA', style: KyndrelTheme.sectionLabel),
+          Text(context.l10n.openMediaHeader, style: KyndrelTheme.sectionLabel),
           const SizedBox(height: 12),
           if (widget.onPickFile != null) ...[
             SizedBox(
@@ -48,7 +49,7 @@ class _OpenSourcePromptState extends State<OpenSourcePrompt> {
                 key: const Key('open-file'),
                 onPressed: widget.onPickFile,
                 icon: const Icon(Icons.folder_open),
-                label: const Text('Open file…  (Ctrl+O)'),
+                label: Text(context.l10n.openFileShortcut),
               ),
             ),
             const SizedBox(height: 16),
@@ -59,22 +60,27 @@ class _OpenSourcePromptState extends State<OpenSourcePrompt> {
                 child: TextField(
                   key: const Key('open-source-field'),
                   controller: _controller,
-                  decoration: const InputDecoration(
-                    hintText: 'Paste a path or URL',
+                  decoration: InputDecoration(
+                    hintText: context.l10n.pastePathOrUrl,
                     isDense: true,
                   ),
                   onSubmitted: (_) => _submit(),
                 ),
               ),
               const SizedBox(width: 12),
-              OutlinedButton(onPressed: _submit, child: const Text('Open')),
+              OutlinedButton(
+                onPressed: _submit,
+                child: Text(context.l10n.open),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Or drop a file anywhere in the window. Ctrl+N opens streams, '
-            'shares and WebDAV folders.',
-            style: TextStyle(color: KyndrelColors.textSecondary, fontSize: 12),
+          Text(
+            context.l10n.dropHint,
+            style: const TextStyle(
+              color: KyndrelColors.textSecondary,
+              fontSize: 12,
+            ),
           ),
         ],
       ),

@@ -9,6 +9,7 @@ import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:kyndrel/core/ui/settings_widgets.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 class PlaybackSettings extends ConsumerWidget {
@@ -192,7 +193,7 @@ class LibrarySettings extends ConsumerWidget {
           ),
         ),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: TextButton(
             key: const Key('settings-clear-history'),
             onPressed: () =>
@@ -245,13 +246,18 @@ class AppearanceSettings extends ConsumerWidget {
 class LanguageSettings extends ConsumerWidget {
   const new({super.key});
 
-  static const choices = {'system': 'System', 'en': 'English', 'ar': 'العربية'};
+  /// Language names are written in their own language, except "System".
+  static const Map<String, String?> choices = {
+    'system': null,
+    'en': 'English',
+    'ar': 'العربية',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(settingsProvider);
     return SettingsSection(
-      title: 'Language',
+      title: context.l10n.settingsLanguage,
       children: [
         RadioGroup<String>(
           groupValue: s.language,
@@ -264,7 +270,7 @@ class LanguageSettings extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                   value: e.key,
-                  title: Text(e.value),
+                  title: Text(e.value ?? context.l10n.languageSystem),
                 ),
             ],
           ),
@@ -322,7 +328,7 @@ class AdvancedSettings extends ConsumerWidget {
               updateSettings(ref, (x) => x.copyWith(offerCrashReports: v)),
         ),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: TextButton(
             key: const Key('settings-reset-all'),
             onPressed: () async {
@@ -439,7 +445,7 @@ class _ShortcutSettingsState extends ConsumerState<ShortcutSettings> {
               ),
             ),
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: TextButton(
               key: const Key('shortcuts-reset'),
               onPressed: () => updateSettings(

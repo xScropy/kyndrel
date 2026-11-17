@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Custom title bar for the frameless window (task 1.2).
@@ -72,20 +73,20 @@ class WindowButtons extends ConsumerWidget {
       children: [
         _WindowButton(
           key: const Key('window-minimize'),
-          tooltip: 'Minimize',
+          tooltip: context.l10n.minimize,
           icon: Icons.remove,
           onPressed: window.minimize,
         ),
         _WindowButton(
           key: const Key('window-maximize'),
-          tooltip: maximized ? 'Restore' : 'Maximize',
+          tooltip: maximized ? context.l10n.restore : context.l10n.maximize,
           icon: maximized ? Icons.filter_none : Icons.crop_square,
           iconSize: maximized ? 14 : 16,
           onPressed: window.toggleMaximize,
         ),
         _WindowButton(
           key: const Key('window-close'),
-          tooltip: 'Close',
+          tooltip: context.l10n.close,
           icon: Icons.close,
           hoverColor: KyndrelColors.windowCloseHover,
           onPressed: window.close,

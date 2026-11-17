@@ -72,7 +72,7 @@ class StyleView extends ConsumerWidget {
           _Row(
             label: 'Bold',
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Switch(
                 value: style.bold,
                 onChanged: (v) => update((s) => s.copyWith(bold: v)),
@@ -82,7 +82,7 @@ class StyleView extends ConsumerWidget {
           _Row(
             label: 'Background box',
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Switch(
                 key: const Key('style-box'),
                 value: style.backgroundBox,
@@ -145,7 +145,7 @@ class StyleView extends ConsumerWidget {
             title: const Text('Also restyle styled (ASS/SSA) subtitles'),
           ),
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: TextButton(
               key: const Key('style-reset'),
               onPressed: () => update((_) => const SubtitleStyle()),

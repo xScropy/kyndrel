@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Live mpv readout (decoder, codec, fps, drops), shown with `--diagnostics`.
@@ -51,10 +52,15 @@ class _DiagnosticsOverlayState extends ConsumerState<DiagnosticsOverlay> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('DIAGNOSTICS', style: KyndrelTheme.sectionLabel),
+          Text(
+            context.l10n.diagnosticsHeader,
+            style: KyndrelTheme.sectionLabel,
+          ),
           const SizedBox(height: 8),
           Text(
-            hardware ? 'Hardware decoding: $hwdec' : 'Software decoding',
+            hardware
+                ? context.l10n.hardwareDecoding(hwdec)
+                : context.l10n.softwareDecoding,
             style: TextStyle(
               color: hardware ? KyndrelColors.accent : KyndrelColors.error,
               fontWeight: FontWeight.w600,

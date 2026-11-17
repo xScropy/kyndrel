@@ -7,6 +7,7 @@ import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Mute button, 0–400 % slider and orange percentage (task 1.6).
@@ -36,7 +37,9 @@ class VolumeControl extends ConsumerWidget {
         ControlButton(
           key: const Key('mute'),
           icon: icon,
-          tooltip: muted ? 'Unmute (M)' : 'Mute (M)',
+          tooltip: muted
+              ? context.l10n.unmuteTooltip
+              : context.l10n.muteTooltip,
           onPressed: () => unawaited(VolumeActions.toggleMute(ref)),
         ),
         SizedBox(
@@ -105,7 +108,7 @@ class _VolumeSliderState extends State<VolumeSlider> {
     final value = _drag ?? widget.value;
     return Semantics(
       slider: true,
-      label: 'Volume',
+      label: context.l10n.volume,
       value: '${value.round()}%',
       child: LayoutBuilder(
         builder: (context, c) {

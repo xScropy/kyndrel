@@ -140,7 +140,7 @@ class DownloadsPanel extends ConsumerWidget {
                 t.status == DownloadStatus.cancelled,
           ))
             Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: TextButton(
                 onPressed: manager.clearFinished,
                 child: const Text('Clear finished'),

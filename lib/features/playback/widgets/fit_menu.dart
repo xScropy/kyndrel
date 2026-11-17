@@ -6,6 +6,7 @@ import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/player/video_view_settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/popover.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Fit/aspect icon and its popover: fit modes, zoom and rotate (task 2.12).
@@ -22,7 +23,7 @@ class FitMenuButton extends ConsumerWidget {
       anchorBuilder: (context, toggle) => ControlButton(
         key: const Key('fit-button'),
         icon: Icons.aspect_ratio,
-        tooltip: 'Fit & aspect',
+        tooltip: context.l10n.fitAndAspect,
         active: changed,
         onPressed: toggle,
       ),
@@ -44,7 +45,7 @@ class FitMenu extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('FIT', style: KyndrelTheme.sectionLabel),
+          Text(context.l10n.fitHeader, style: KyndrelTheme.sectionLabel),
           const SizedBox(height: 8),
           for (final fit in VideoFit.values)
             PopoverOption(
@@ -54,12 +55,12 @@ class FitMenu extends ConsumerWidget {
               onTap: () => unawaited(notifier.setFit(fit)),
             ),
           const SizedBox(height: 12),
-          const Text('ZOOM', style: KyndrelTheme.sectionLabel),
+          Text(context.l10n.zoomHeader, style: KyndrelTheme.sectionLabel),
           Row(
             children: [
               IconButton(
                 key: const Key('zoom-out'),
-                tooltip: 'Zoom out',
+                tooltip: context.l10n.zoomOut,
                 onPressed: view.zoom > VideoViewSettings.minZoom
                     ? () => notifier.zoomBy(-VideoViewSettings.zoomStep)
                     : null,
@@ -74,7 +75,7 @@ class FitMenu extends ConsumerWidget {
               ),
               IconButton(
                 key: const Key('zoom-in'),
-                tooltip: 'Zoom in',
+                tooltip: context.l10n.zoomIn,
                 onPressed: view.zoom < VideoViewSettings.maxZoom
                     ? () => notifier.zoomBy(VideoViewSettings.zoomStep)
                     : null,
@@ -82,12 +83,12 @@ class FitMenu extends ConsumerWidget {
               ),
             ],
           ),
-          const Text('ROTATE', style: KyndrelTheme.sectionLabel),
+          Text(context.l10n.rotateHeader, style: KyndrelTheme.sectionLabel),
           Row(
             children: [
               IconButton(
                 key: const Key('rotate'),
-                tooltip: 'Rotate 90° clockwise',
+                tooltip: context.l10n.rotateClockwise,
                 onPressed: () => unawaited(notifier.rotateClockwise()),
                 icon: const Icon(Icons.rotate_right),
               ),
@@ -101,9 +102,9 @@ class FitMenu extends ConsumerWidget {
               TextButton(
                 key: const Key('view-reset'),
                 onPressed: () => unawaited(notifier.reset()),
-                child: const Text(
-                  'Reset',
-                  style: TextStyle(color: KyndrelColors.accent),
+                child: Text(
+                  context.l10n.reset,
+                  style: const TextStyle(color: KyndrelColors.accent),
                 ),
               ),
             ],

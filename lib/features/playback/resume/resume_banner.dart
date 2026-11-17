@@ -5,6 +5,7 @@ import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// "Resume from 12:34?" with Resume / Start over. Disappears by itself
@@ -50,20 +51,20 @@ class _ResumeBannerState extends ConsumerState<ResumeBanner> {
         children: [
           const Icon(Icons.history, color: KyndrelColors.accent, size: 20),
           const SizedBox(width: 10),
-          Text('Resume from ${formatDuration(offer.position)}?'),
+          Text(context.l10n.resumeFrom(formatDuration(offer.position))),
           const SizedBox(width: 12),
           TextButton(
             key: const Key('resume-start-over'),
             onPressed: controller.dismiss,
-            child: const Text(
-              'Start over',
-              style: TextStyle(color: KyndrelColors.textSecondary),
+            child: Text(
+              context.l10n.startOver,
+              style: const TextStyle(color: KyndrelColors.textSecondary),
             ),
           ),
           FilledButton(
             key: const Key('resume-accept'),
             onPressed: () => unawaited(controller.accept()),
-            child: const Text('Resume'),
+            child: Text(context.l10n.resume),
           ),
         ],
       ),

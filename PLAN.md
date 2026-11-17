@@ -137,7 +137,7 @@ Rules:
 
 ### Phase 5: Polish, QA and release (2–3 weeks)
 - [x] 5.1 Settings page: playback, subtitles, audio, shortcuts, appearance, language, advanced (mpv.conf passthrough).
-- [ ] 5.2 Localisation: English and Arabic with RTL layout tests.
+- [x] 5.2 Localisation: English and Arabic with RTL layout tests.
 - [ ] 5.3 Accessibility: keyboard focus order, screen-reader labels, and contrast checks.
 - [ ] 5.4 Performance: cold start time, memory over a 3-hour film, CPU in 4K, no frame drops while the overlay animates.
 - [ ] 5.5 Test matrix: HDR, 4K HEVC/AV1, 10-bit, VFR, broken MKVs, multi-audio files, image subtitles, huge subtitle files, network drops mid-stream.

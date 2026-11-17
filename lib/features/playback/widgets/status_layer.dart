@@ -5,6 +5,7 @@ import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/features/playback/widgets/open_source_prompt.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Centre of the screen: open prompt when idle, spinner while loading or
@@ -102,7 +103,7 @@ class _ErrorMessage extends StatelessWidget {
             child: Stack(
               children: [
                 SingleChildScrollView(
-                  padding: const EdgeInsets.only(right: 32),
+                  padding: const EdgeInsetsDirectional.only(end: 32),
                   child: SelectableText(
                     log,
                     style: const TextStyle(
@@ -112,11 +113,11 @@ class _ErrorMessage extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
+                PositionedDirectional(
                   top: 0,
-                  right: 0,
+                  end: 0,
                   child: IconButton(
-                    tooltip: 'Copy log',
+                    tooltip: context.l10n.copyLog,
                     iconSize: 16,
                     onPressed: () => Clipboard.setData(
                       ClipboardData(text: '$message\n$log'),

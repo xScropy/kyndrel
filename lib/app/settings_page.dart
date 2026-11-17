@@ -6,6 +6,7 @@ import 'package:kyndrel/features/effects/effects_dialog.dart';
 import 'package:kyndrel/features/scripts/scripts_settings.dart';
 import 'package:kyndrel/features/settings/settings_sections.dart';
 import 'package:kyndrel/features/translate/translate_settings.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Opens the settings page (task 5.1).
@@ -26,35 +27,70 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   int _index = 0;
 
-  static final sections = <(String, IconData, List<Widget>)>[
-    ('Playback', Icons.play_circle_outline, const [PlaybackSettings()]),
-    (
-      'Subtitles',
-      Icons.closed_caption_outlined,
-      const [SubtitleSettings(), TranslateSettings()],
-    ),
-    (
-      'Audio',
-      Icons.graphic_eq,
-      const [
-        AudioSettings(),
-        SettingsSection(title: 'Effects', children: [AudioEffectsSection()]),
-      ],
-    ),
-    (
-      'Video',
-      Icons.high_quality_outlined,
-      const [
-        SettingsSection(title: 'Picture', children: [VideoEffectsSection()]),
-      ],
-    ),
-    ('Shortcuts', Icons.keyboard_outlined, const [ShortcutSettings()]),
-    ('Library', Icons.video_library_outlined, const [LibrarySettings()]),
-    ('Appearance', Icons.palette_outlined, const [AppearanceSettings()]),
-    ('Language', Icons.language, const [LanguageSettings()]),
-    ('Advanced', Icons.tune, const [AdvancedSettings(), ScriptsSettings()]),
-    ('About', Icons.info_outline, const [AboutSection()]),
-  ];
+  /// (stable id, label, icon, content). Ids key the tiles for tests.
+  static final sections =
+      <(String, String Function(AppLocalizations), IconData, List<Widget>)>[
+        (
+          'Playback',
+          (l) => l.settingsPlayback,
+          Icons.play_circle_outline,
+          const [PlaybackSettings()],
+        ),
+        (
+          'Subtitles',
+          (l) => l.settingsSubtitles,
+          Icons.closed_caption_outlined,
+          const [SubtitleSettings(), TranslateSettings()],
+        ),
+        (
+          'Audio',
+          (l) => l.settingsAudio,
+          Icons.graphic_eq,
+          const [AudioSettings(), _AudioEffects()],
+        ),
+        (
+          'Video',
+          (l) => l.settingsVideo,
+          Icons.high_quality_outlined,
+          const [_Picture()],
+        ),
+        (
+          'Shortcuts',
+          (l) => l.settingsShortcuts,
+          Icons.keyboard_outlined,
+          const [ShortcutSettings()],
+        ),
+        (
+          'Library',
+          (l) => l.settingsLibrary,
+          Icons.video_library_outlined,
+          const [LibrarySettings()],
+        ),
+        (
+          'Appearance',
+          (l) => l.settingsAppearance,
+          Icons.palette_outlined,
+          const [AppearanceSettings()],
+        ),
+        (
+          'Language',
+          (l) => l.settingsLanguage,
+          Icons.language,
+          const [LanguageSettings()],
+        ),
+        (
+          'Advanced',
+          (l) => l.settingsAdvanced,
+          Icons.tune,
+          const [AdvancedSettings(), ScriptsSettings()],
+        ),
+        (
+          'About',
+          (l) => l.settingsAbout,
+          Icons.info_outline,
+          const [AboutSection()],
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +103,7 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Scaffold(
         backgroundColor: KyndrelColors.background,
         appBar: AppBar(
-          title: const Text('Settings'),
+          title: Text(context.l10n.settings),
           backgroundColor: KyndrelColors.background,
         ),
         body: Row(
@@ -81,8 +117,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   for (final (i, s) in sections.indexed)
                     ListTile(
                       key: Key('settings-section-${s.$1}'),
-                      leading: Icon(s.$2, size: 20),
-                      title: Text(s.$1),
+                      leading: Icon(s.$3, size: 20),
+                      title: Text(s.$2(context.l10n)),
                       selected: i == _index,
                       selectedColor: KyndrelColors.accent,
                       selectedTileColor: KyndrelColors.rowActive,
@@ -94,13 +130,13 @@ class _SettingsPageState extends State<SettingsPage> {
             const VerticalDivider(width: 1, color: KyndrelColors.panelBorder),
             Expanded(
               child: Align(
-                alignment: Alignment.topLeft,
+                alignment: AlignmentDirectional.topStart,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 720),
                   child: ListView(
                     key: ValueKey(current.$1),
                     padding: const EdgeInsets.all(28),
-                    children: current.$3,
+                    children: current.$4,
                   ),
                 ),
               ),
@@ -119,7 +155,7 @@ class AboutSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsSection(
-      title: 'About',
+      title: context.l10n.settingsAbout,
       children: [
         const ListTile(
           contentPadding: EdgeInsets.zero,
@@ -127,7 +163,7 @@ class AboutSection extends StatelessWidget {
           subtitle: Text('GPL-3.0 · $appRepository'),
         ),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: TextButton(
             key: const Key('settings-licenses'),
             onPressed: () => showLicensePage(
@@ -135,10 +171,30 @@ class AboutSection extends StatelessWidget {
               applicationName: appName,
               applicationVersion: appVersion,
             ),
-            child: const Text('Open-source licences'),
+            child: Text(context.l10n.openSourceLicences),
           ),
         ),
       ],
     );
   }
+}
+
+class _AudioEffects extends StatelessWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context) => SettingsSection(
+    title: context.l10n.settingsEffects,
+    children: const [AudioEffectsSection()],
+  );
+}
+
+class _Picture extends StatelessWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context) => SettingsSection(
+    title: context.l10n.settingsPicture,
+    children: const [VideoEffectsSection()],
+  );
 }

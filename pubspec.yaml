@@ -16,8 +16,11 @@ dependencies:
   file_selector: ^1.1.0
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_riverpod: ^3.5.0
   http: ^1.6.0
+  intl: ^0.20.3
   material_ui: ^1.1.0
   media_kit: ^1.2.6
   media_kit_libs_video: ^1.0.7
@@ -42,6 +45,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/shaders/
@@ -50,6 +54,9 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter.ttf
+    - family: Noto Sans Arabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic.ttf
 
 hooks:
   user_defines:

@@ -32,7 +32,7 @@ class ScriptsSettings extends ConsumerWidget {
         ),
         if (s.scriptsEnabled)
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: TextButton(
               key: const Key('settings-scripts-reload'),
               onPressed: () =>

@@ -10,6 +10,7 @@ import 'package:kyndrel/core/ui/popover.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/features/speed_sleep/sleep_timer.dart';
 import 'package:kyndrel/features/speed_sleep/speed_options.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Speed changes from the popover and `[` / `]`.
@@ -44,7 +45,7 @@ class SpeedSleepButton extends ConsumerWidget {
       anchorBuilder: (context, toggle) => ControlButton(
         key: const Key('speed-button'),
         icon: Icons.speed,
-        tooltip: 'Speed & sleep',
+        tooltip: context.l10n.speedAndSleep,
         active: rate != 1 || sleep != null,
         onPressed: toggle,
         child: Row(
@@ -94,7 +95,10 @@ class SpeedSleepPanel extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('PLAYBACK SPEED', style: KyndrelTheme.sectionLabel),
+                Text(
+                  context.l10n.playbackSpeedHeader,
+                  style: KyndrelTheme.sectionLabel,
+                ),
                 const SizedBox(height: 8),
                 for (final v in SpeedOptions.values)
                   PopoverOption(
@@ -117,7 +121,10 @@ class SpeedSleepPanel extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('SLEEP TIMER', style: KyndrelTheme.sectionLabel),
+                Text(
+                  context.l10n.sleepTimerHeader,
+                  style: KyndrelTheme.sectionLabel,
+                ),
                 const SizedBox(height: 8),
                 for (final option in SleepOption.all)
                   PopoverOption(
@@ -145,7 +152,7 @@ class SpeedSleepPanel extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      'Choose the same option again to cancel.',
+                      context.l10n.sleepCancelHint,
                       style: TextStyle(
                         fontSize: 11,
                         color: KyndrelColors.textSecondary.withValues(
@@ -174,9 +181,9 @@ class _DefaultTag extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         color: const Color(0x1FFFFFFF),
       ),
-      child: const Text(
-        'DEFAULT',
-        style: TextStyle(
+      child: Text(
+        context.l10n.defaultBadge,
+        style: const TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.w700,
           letterSpacing: 1,
@@ -222,12 +229,12 @@ class _CustomSpeedFieldState extends ConsumerState<_CustomSpeedField> {
       controller: _controller,
       decoration: InputDecoration(
         isDense: true,
-        labelText: 'Custom',
+        labelText: context.l10n.custom,
         hintText: 'e.g. 1.1',
         errorText: _error,
         suffixText: '×',
         suffixIcon: IconButton(
-          tooltip: 'Apply',
+          tooltip: context.l10n.apply,
           icon: const Icon(Icons.check, size: 18),
           onPressed: _apply,
         ),

@@ -15,6 +15,7 @@ import 'package:kyndrel/features/subtitles/track_labels.dart';
 import 'package:kyndrel/features/subtitles/views/online_results_view.dart';
 import 'package:kyndrel/features/subtitles/views/style_view.dart';
 import 'package:kyndrel/features/subtitles/views/sync_view.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Subtitles button for the bottom-right group.
@@ -30,7 +31,7 @@ class SubtitlesButton extends ConsumerWidget {
     return ControlButton(
       key: const Key('subtitles-button'),
       icon: on ? Icons.closed_caption : Icons.closed_caption_off_outlined,
-      tooltip: 'Subtitles & audio (S)',
+      tooltip: context.l10n.subtitlesAudioTooltip,
       active: on || open,
       onPressed: ref.read(subtitlePanelProvider.notifier).toggle,
     );
@@ -88,9 +89,9 @@ class _SubtitlePanelState extends ConsumerState<SubtitlePanel> {
               children: [
                 Row(
                   children: [
-                    const Text(
-                      'Subtitles',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.subtitles,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -99,21 +100,21 @@ class _SubtitlePanelState extends ConsumerState<SubtitlePanel> {
                     ControlButton(
                       key: const Key('panel-sync'),
                       icon: Icons.timer_outlined,
-                      tooltip: 'Sync offset',
+                      tooltip: context.l10n.syncOffset,
                       active: view == SubtitlePanelView.sync,
                       onPressed: () => panel.show(SubtitlePanelView.sync),
                     ),
                     ControlButton(
                       key: const Key('panel-style'),
                       icon: Icons.tune,
-                      tooltip: 'Style',
+                      tooltip: context.l10n.style,
                       active: view == SubtitlePanelView.style,
                       onPressed: () => panel.show(SubtitlePanelView.style),
                     ),
                     ControlButton(
                       key: const Key('panel-close'),
                       icon: Icons.close,
-                      tooltip: 'Close (Esc)',
+                      tooltip: context.l10n.closeEsc,
                       onPressed: panel.close,
                     ),
                   ],
@@ -158,11 +159,11 @@ class _TrackColumn extends ConsumerWidget {
     final service = ref.read(playerServiceProvider);
     return ListView(
       children: [
-        const Text('SUBTITLES', style: KyndrelTheme.sectionLabel),
+        Text(context.l10n.subtitlesHeader, style: KyndrelTheme.sectionLabel),
         const SizedBox(height: 6),
         PopoverOption(
           key: const Key('sub-off'),
-          label: 'Off',
+          label: context.l10n.off,
           selected: tracks.subtitleId == null,
           onTap: () => unawaited(service.selectSubtitle(null)),
         ),
@@ -175,7 +176,7 @@ class _TrackColumn extends ConsumerWidget {
           ),
         if (tracks.audio.isNotEmpty) ...[
           const SizedBox(height: 16),
-          const Text('AUDIO', style: KyndrelTheme.sectionLabel),
+          Text(context.l10n.audioHeader, style: KyndrelTheme.sectionLabel),
           const SizedBox(height: 6),
           for (final t in tracks.audio)
             _TrackOption(
@@ -264,9 +265,9 @@ class _FooterState extends ConsumerState<_Footer> {
               key: const Key('subtitle-query'),
               controller: _query,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 isDense: true,
-                hintText: 'Title, or "Show S01E02"',
+                hintText: context.l10n.subtitleSearchHint,
               ),
               onSubmitted: (_) => _search(),
             ),
@@ -283,14 +284,16 @@ class _FooterState extends ConsumerState<_Footer> {
             }
           },
           icon: const Icon(Icons.search, size: 18),
-          label: Text(_searching ? 'Search' : 'Find more subtitles'),
+          label: Text(
+            _searching ? context.l10n.search : context.l10n.findMoreSubtitles,
+          ),
         ),
         const SizedBox(width: 8),
         FilledButton.icon(
           key: const Key('load-file'),
           onPressed: () => unawaited(SubtitleFileActions.loadFile(ref)),
           icon: const Icon(Icons.file_open_outlined, size: 18),
-          label: const Text('Load file'),
+          label: Text(context.l10n.loadFile),
         ),
       ],
     );

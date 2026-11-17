@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kyndrel/app/app.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/player_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
@@ -14,6 +15,7 @@ import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -74,11 +76,7 @@ class AppHarness {
     await tester.pumpWidget(
       ProviderScope(
         overrides: overrides,
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: KyndrelTheme.dark(),
-          home: PlayerPage(launch: launch),
-        ),
+        child: KyndrelApp(launch: launch),
       ),
     );
     container = ProviderScope.containerOf(
@@ -93,6 +91,7 @@ class AppHarness {
     WidgetTester tester,
     Widget child, {
     Size size = const Size(800, 200),
+    Locale? locale,
   }) async {
     tester.view
       ..physicalSize = size
@@ -104,6 +103,9 @@ class AppHarness {
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: KyndrelTheme.dark(),
+          locale: locale,
+          supportedLocales: L10n.supportedLocales,
+          localizationsDelegates: L10n.delegates,
           home: Scaffold(body: child),
         ),
       ),

@@ -9,6 +9,10 @@ import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
   await _loadFont(KyndrelTokens.fontFamily, 'assets/fonts/Inter.ttf');
+  await _loadFont(
+    KyndrelTokens.fontFamilyFallback.first,
+    'assets/fonts/NotoSansArabic.ttf',
+  );
   await _loadFont('MaterialIcons', 'fonts/MaterialIcons-Regular.otf');
   await testMain();
 }

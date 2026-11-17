@@ -4,6 +4,7 @@ import 'package:kyndrel/core/metadata/metadata_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/utils/media_title.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Back arrow, title with year, quality badge and info button (task 1.3).
@@ -42,7 +43,7 @@ class TopBarContent extends ConsumerWidget {
         ControlButton(
           key: const Key('top-back'),
           icon: Icons.arrow_back,
-          tooltip: 'Back',
+          tooltip: context.l10n.back,
           onPressed: onBack,
         ),
         const SizedBox(width: 4),
@@ -86,7 +87,7 @@ class TopBarContent extends ConsumerWidget {
         ControlButton(
           key: const Key('top-info'),
           icon: Icons.info_outline,
-          tooltip: 'Media info',
+          tooltip: context.l10n.mediaInfo,
           size: 20,
           onPressed: onInfo,
         ),

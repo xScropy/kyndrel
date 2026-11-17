@@ -7,6 +7,7 @@ import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/metadata/metadata_service.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Start screen: open prompt, continue watching and recent history
@@ -44,8 +45,8 @@ class LibraryHome extends ConsumerWidget {
               Center(child: openPrompt),
               if (continuing.isNotEmpty) ...[
                 const SizedBox(height: 32),
-                const Text(
-                  'CONTINUE WATCHING',
+                Text(
+                  context.l10n.continueWatching,
                   style: KyndrelTheme.sectionLabel,
                 ),
                 const SizedBox(height: 12),
@@ -67,14 +68,14 @@ class LibraryHome extends ConsumerWidget {
                 const SizedBox(height: 28),
                 Row(
                   children: [
-                    const Text('RECENT', style: KyndrelTheme.sectionLabel),
+                    Text(context.l10n.recent, style: KyndrelTheme.sectionLabel),
                     const Spacer(),
                     TextButton(
                       key: const Key('history-clear'),
                       onPressed: () => unawaited(
                         ref.read(historyRepositoryProvider).clear(),
                       ),
-                      child: const Text('Clear history'),
+                      child: Text(context.l10n.clearHistory),
                     ),
                   ],
                 ),
@@ -149,17 +150,21 @@ class _ContinueCard extends ConsumerWidget {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    child: LinearProgressIndicator(
-                      value: item.progress ?? 0,
-                      minHeight: 4,
-                      backgroundColor: KyndrelColors.track,
+                    // Watched progress follows the timeline: always LTR.
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: LinearProgressIndicator(
+                        value: item.progress ?? 0,
+                        minHeight: 4,
+                        backgroundColor: KyndrelColors.track,
+                      ),
                     ),
                   ),
-                  Positioned(
+                  PositionedDirectional(
                     top: 4,
-                    right: 4,
+                    end: 4,
                     child: IconButton(
-                      tooltip: 'Remove from history',
+                      tooltip: context.l10n.removeFromHistory,
                       iconSize: 16,
                       style: IconButton.styleFrom(
                         backgroundColor: const Color(0x99000000),

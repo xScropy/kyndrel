@@ -44,6 +44,7 @@ import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
 import 'package:kyndrel/features/translate/translate_button.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The player screen: composes the features (the only place that may import
@@ -115,6 +116,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   void _showSettings() => unawaited(showSettingsPage(context));
 
   Future<void> _contextMenu(Offset position) async {
+    final l = context.l10n;
     final choice = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -124,17 +126,17 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         position.dy,
       ),
       color: KyndrelColors.surface,
-      items: const [
-        PopupMenuItem(value: 'open', child: Text('Open file…')),
-        PopupMenuItem(value: 'folder', child: Text('Open folder…')),
-        PopupMenuItem(value: 'paste', child: Text('Open from clipboard')),
-        PopupMenuItem(value: 'url', child: Text('Open network stream…')),
-        PopupMenuItem(value: 'info', child: Text('Media info')),
-        PopupMenuItem(value: 'details', child: Text('Edit details…')),
-        PopupMenuItem(value: 'screenshot', child: Text('Screenshot  (Ctrl+S)')),
-        PopupMenuItem(value: 'subs', child: Text('Subtitles & audio')),
-        PopupMenuItem(value: 'effects', child: Text('Video & audio effects…')),
-        PopupMenuItem(value: 'settings', child: Text('Settings…')),
+      items: [
+        PopupMenuItem(value: 'open', child: Text(l.menuOpenFile)),
+        PopupMenuItem(value: 'folder', child: Text(l.menuOpenFolder)),
+        PopupMenuItem(value: 'paste', child: Text(l.menuOpenClipboard)),
+        PopupMenuItem(value: 'url', child: Text(l.menuOpenStream)),
+        PopupMenuItem(value: 'info', child: Text(l.mediaInfo)),
+        PopupMenuItem(value: 'details', child: Text(l.menuEditDetails)),
+        PopupMenuItem(value: 'screenshot', child: Text(l.menuScreenshot)),
+        PopupMenuItem(value: 'subs', child: Text(l.menuSubtitlesAudio)),
+        PopupMenuItem(value: 'effects', child: Text(l.menuEffects)),
+        PopupMenuItem(value: 'settings', child: Text(l.menuSettings)),
       ],
     );
     if (!mounted) return;
@@ -255,9 +257,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   child: Center(child: OsdView()),
                 ),
                 if (widget.launch.showDiagnostics)
-                  const Positioned(
+                  const PositionedDirectional(
                     top: 56,
-                    right: 12,
+                    end: 12,
                     child: DiagnosticsOverlay(),
                   ),
                 const Positioned(
@@ -303,14 +305,14 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     ),
                   ),
                 if (panelOpen && hasMedia)
-                  const Positioned(
-                    right: 20,
+                  const PositionedDirectional(
+                    end: 20,
                     bottom: 130,
                     child: SubtitlePanel(),
                   ),
                 if (queueOpen && hasMedia && !panelOpen)
-                  Positioned(
-                    right: 20,
+                  PositionedDirectional(
+                    end: 20,
                     bottom: 130,
                     child: PlaylistPanel(
                       onAddFiles: () => unawaited(OpenActions.pickToQueue(ref)),
@@ -342,9 +344,9 @@ class _DropHint extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: KyndrelColors.accent, width: 2),
         ),
-        child: const Text(
-          'Drop to play',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        child: Text(
+          context.l10n.dropToPlay,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
       ),
     );

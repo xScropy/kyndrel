@@ -65,7 +65,14 @@ class _PopoverState extends ConsumerState<Popover> {
 
   @override
   Widget build(BuildContext context) {
-    final (target, follower) = switch (widget.align) {
+    // Mirror the anchor in RTL, where the trigger sits on the other side.
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final align = switch (widget.align) {
+      PopoverAlign.left when rtl => PopoverAlign.right,
+      PopoverAlign.right when rtl => PopoverAlign.left,
+      final a => a,
+    };
+    final (target, follower) = switch (align) {
       PopoverAlign.left => (Alignment.topLeft, Alignment.bottomLeft),
       PopoverAlign.center => (Alignment.topCenter, Alignment.bottomCenter),
       PopoverAlign.right => (Alignment.topRight, Alignment.bottomRight),

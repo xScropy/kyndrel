@@ -9,6 +9,7 @@ import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Seek bar with elapsed and total/remaining labels (task 1.4).
@@ -23,7 +24,7 @@ class SeekBarRow extends ConsumerWidget {
       settingsProvider.select((s) => s.showRemainingTime),
     );
     final right = duration <= Duration.zero
-        ? 'LIVE'
+        ? context.l10n.live
         : remaining
         ? formatDuration(-(duration - position))
         : formatDuration(duration);
@@ -47,7 +48,9 @@ class SeekBarRow extends ConsumerWidget {
         SizedBox(
           width: 64,
           child: Tooltip(
-            message: remaining ? 'Show total time' : 'Show remaining time',
+            message: remaining
+                ? context.l10n.showTotalTime
+                : context.l10n.showRemainingTime,
             child: InkWell(
               key: const Key('seek-total'),
               borderRadius: BorderRadius.circular(6),

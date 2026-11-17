@@ -1,0 +1,158 @@
+{
+  "@@locale": "en",
+  "play": "Play",
+  "pause": "Pause",
+  "playTooltip": "Play (Space)",
+  "pauseTooltip": "Pause (Space)",
+  "previousTooltip": "Previous (P)",
+  "nextTooltip": "Next (N)",
+  "backSeconds": "Back {seconds} s",
+  "@backSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "forwardSeconds": "Forward {seconds} s",
+  "@forwardSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "muteTooltip": "Mute (M)",
+  "unmuteTooltip": "Unmute (M)",
+  "volume": "Volume",
+  "fullscreenTooltip": "Full screen (F)",
+  "exitFullscreenTooltip": "Exit full screen (F)",
+  "showTotalTime": "Show total time",
+  "showRemainingTime": "Show remaining time",
+  "live": "LIVE",
+  "back": "Back",
+  "mediaInfo": "Media info",
+  "minimize": "Minimize",
+  "maximize": "Maximize",
+  "restore": "Restore",
+  "close": "Close",
+  "closeEsc": "Close (Esc)",
+  "copyLog": "Copy log",
+  "fitAndAspect": "Fit & aspect",
+  "fitHeader": "FIT",
+  "zoomHeader": "ZOOM",
+  "rotateHeader": "ROTATE",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "rotateClockwise": "Rotate 90° clockwise",
+  "reset": "Reset",
+  "openMediaHeader": "OPEN MEDIA",
+  "openFileShortcut": "Open file…  (Ctrl+O)",
+  "pastePathOrUrl": "Paste a path or URL",
+  "open": "Open",
+  "dropHint": "Or drop a file anywhere in the window. Ctrl+N opens streams, shares and WebDAV folders.",
+  "resumeFrom": "Resume from {time}?",
+  "@resumeFrom": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "startOver": "Start over",
+  "resume": "Resume",
+  "speedAndSleep": "Speed & sleep",
+  "speedOsd": "Speed {rate}",
+  "@speedOsd": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackSpeedHeader": "PLAYBACK SPEED",
+  "sleepTimerHeader": "SLEEP TIMER",
+  "sleepCancelHint": "Choose the same option again to cancel.",
+  "defaultBadge": "DEFAULT",
+  "custom": "Custom",
+  "apply": "Apply",
+  "queueTooltip": "Queue (Q)",
+  "queueCountTooltip": "Queue · {count} (Q)",
+  "@queueCountTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "queueTitle": "Queue · {count}",
+  "@queueTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shuffleOn": "Shuffle on",
+  "shuffleOff": "Shuffle off",
+  "repeatOff": "Repeat off",
+  "repeatAll": "Repeat all",
+  "repeatOne": "Repeat one",
+  "queueEmpty": "The queue is empty.",
+  "clear": "Clear",
+  "folder": "Folder",
+  "add": "Add",
+  "remove": "Remove",
+  "continueWatching": "CONTINUE WATCHING",
+  "recent": "RECENT",
+  "clearHistory": "Clear history",
+  "removeFromHistory": "Remove from history",
+  "justNow": "Just now",
+  "yesterday": "Yesterday",
+  "menuOpenFile": "Open file…",
+  "menuOpenFolder": "Open folder…",
+  "menuOpenClipboard": "Open from clipboard",
+  "menuOpenStream": "Open network stream…",
+  "menuEditDetails": "Edit details…",
+  "menuScreenshot": "Screenshot  (Ctrl+S)",
+  "menuSubtitlesAudio": "Subtitles & audio",
+  "menuEffects": "Video & audio effects…",
+  "menuSettings": "Settings…",
+  "dropToPlay": "Drop to play",
+  "subtitlesAudioTooltip": "Subtitles & audio (S)",
+  "subtitles": "Subtitles",
+  "subtitlesHeader": "SUBTITLES",
+  "audioHeader": "AUDIO",
+  "syncOffset": "Sync offset",
+  "style": "Style",
+  "off": "Off",
+  "subtitleSearchHint": "Title, or \"Show S01E02\"",
+  "search": "Search",
+  "findMoreSubtitles": "Find more subtitles",
+  "loadFile": "Load file",
+  "settings": "Settings",
+  "settingsPlayback": "Playback",
+  "settingsSubtitles": "Subtitles",
+  "settingsAudio": "Audio",
+  "settingsEffects": "Effects",
+  "settingsVideo": "Video",
+  "settingsPicture": "Picture",
+  "settingsShortcuts": "Shortcuts",
+  "settingsLibrary": "Library",
+  "settingsAppearance": "Appearance",
+  "settingsLanguage": "Language",
+  "settingsAdvanced": "Advanced",
+  "settingsAbout": "About",
+  "languageSystem": "System",
+  "openSourceLicences": "Open-source licences",
+  "diagnosticsHeader": "DIAGNOSTICS",
+  "hardwareDecoding": "Hardware decoding: {hwdec}",
+  "@hardwareDecoding": {
+    "placeholders": {
+      "hwdec": {
+        "type": "String"
+      }
+    }
+  },
+  "softwareDecoding": "Software decoding"
+}

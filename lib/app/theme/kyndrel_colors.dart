@@ -90,4 +90,7 @@ abstract final class KyndrelTokens {
 
   /// Bundled UI font family (assets/fonts/Inter.ttf, SIL OFL 1.1).
   static const String fontFamily = 'Inter';
+
+  /// Glyphs Inter lacks (Arabic, task 5.2) come from the bundled Noto.
+  static const List<String> fontFamilyFallback = ['Noto Sans Arabic'];
 }

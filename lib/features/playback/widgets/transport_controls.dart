@@ -6,6 +6,7 @@ import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Back N s, play/pause, forward N s (task 1.5). N comes from settings.
@@ -27,7 +28,7 @@ class TransportControls extends ConsumerWidget {
           ControlButton(
             key: const Key('previous'),
             icon: Icons.skip_previous,
-            tooltip: 'Previous (P)',
+            tooltip: context.l10n.previousTooltip,
             onPressed: () => unawaited(playlist.previous()),
           ),
           const SizedBox(width: 4),
@@ -35,7 +36,7 @@ class TransportControls extends ConsumerWidget {
         ControlButton(
           key: const Key('skip-back'),
           icon: Icons.replay,
-          tooltip: 'Back $skip s',
+          tooltip: context.l10n.backSeconds(skip),
           onPressed: () => unawaited(service.seekBy(-offset)),
           child: SkipIcon(seconds: skip, forward: false),
         ),
@@ -45,7 +46,7 @@ class TransportControls extends ConsumerWidget {
         ControlButton(
           key: const Key('skip-forward'),
           icon: Icons.forward,
-          tooltip: 'Forward $skip s',
+          tooltip: context.l10n.forwardSeconds(skip),
           onPressed: () => unawaited(service.seekBy(offset)),
           child: SkipIcon(seconds: skip, forward: true),
         ),
@@ -54,7 +55,7 @@ class TransportControls extends ConsumerWidget {
           ControlButton(
             key: const Key('next'),
             icon: Icons.skip_next,
-            tooltip: 'Next (N)',
+            tooltip: context.l10n.nextTooltip,
             onPressed: queue.hasNext ? () => unawaited(playlist.next()) : null,
           ),
         ],
@@ -124,10 +125,10 @@ class _PlayPauseButtonState extends ConsumerState<PlayPauseButton>
     );
     unawaited(playing ? _anim.forward() : _anim.reverse());
     return Tooltip(
-      message: playing ? 'Pause (Space)' : 'Play (Space)',
+      message: playing ? context.l10n.pauseTooltip : context.l10n.playTooltip,
       child: Semantics(
         button: true,
-        label: playing ? 'Pause' : 'Play',
+        label: playing ? context.l10n.pause : context.l10n.play,
         child: Material(
           color: KyndrelColors.accent,
           shape: const CircleBorder(),
