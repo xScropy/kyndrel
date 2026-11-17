@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/features/scripts/script_manager.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The settings that Phases 1–2 need (skip length, limiter, subtitles,
@@ -45,6 +46,7 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(settingsProvider);
+    final scripts = ref.watch(scriptManagerProvider);
     return Dialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
@@ -222,6 +224,33 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const Text('ADVANCED', style: KyndrelTheme.sectionLabel),
+                    SwitchListTile(
+                      key: const Key('settings-scripts'),
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Load mpv scripts (Lua / JavaScript)'),
+                      subtitle: Text(
+                        'From ${scripts.folder}. Scripts can do anything '
+                        'mpv can: only use scripts you trust. '
+                        '${scripts.loaded.length}/${scripts.found.length} loaded.',
+                      ),
+                      value: s.scriptsEnabled,
+                      onChanged: (v) {
+                        _update((x) => x.copyWith(scriptsEnabled: v));
+                      },
+                    ),
+                    if (s.scriptsEnabled)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          key: const Key('settings-scripts-reload'),
+                          onPressed: () => unawaited(
+                            ref.read(scriptManagerProvider.notifier).loadAll(),
+                          ),
+                          child: const Text('Load new scripts'),
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     const Text('LIBRARY', style: KyndrelTheme.sectionLabel),
                     TextField(

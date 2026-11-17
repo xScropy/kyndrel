@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:kyndrel/core/player/effects.dart';
@@ -478,6 +479,34 @@ class PlayerService {
     if (graph != null) {
       await backend.command(['af', 'add', '$label:lavfi=[$graph]']);
       _audioFilters[label] = graph;
+    }
+  }
+
+  // ---------------------------------------------------------------- scripts
+
+  /// Loads an mpv Lua or JavaScript user script (task 4.9).
+  Future<void> loadScript(String path) =>
+      backend.command(['load-script', path]);
+
+  /// Sends `script-message <args>` to every loaded script.
+  Future<void> scriptMessage(List<String> args) =>
+      backend.command(['script-message', ...args]);
+
+  /// Text scripts ask Kyndrel to show: a script sets the mpv property
+  /// `user-data/kyndrel/osd` (e.g. `mp.set_property("user-data/kyndrel/osd",
+  /// "Hi")`).
+  Stream<String> get scriptOsd => backend
+      .observe('user-data/kyndrel/osd')
+      .map(_decodeUserData)
+      .where((t) => t.isNotEmpty);
+
+  /// mpv returns `user-data` nodes JSON-formatted (`"text"`).
+  static String _decodeUserData(String raw) {
+    if (!raw.startsWith('"')) return raw;
+    try {
+      return jsonDecode(raw) as String;
+    } on FormatException {
+      return raw;
     }
   }
 

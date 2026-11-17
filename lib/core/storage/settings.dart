@@ -39,6 +39,8 @@ class AppSettings {
     this.toneMapping = 'auto',
     this.equalizer = const [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     this.normalization = Normalization.off,
+    this.scriptsEnabled = false,
+    this.scriptsFolder = '',
   });
 
   /// Last volume, 0–400.
@@ -100,6 +102,12 @@ class AppSettings {
   final List<double> equalizer;
   final Normalization normalization;
 
+  /// mpv user scripts (4.9): off by default, scripts can do anything.
+  final bool scriptsEnabled;
+
+  /// Empty means `<app support>/scripts`.
+  final String scriptsFolder;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -130,6 +138,8 @@ class AppSettings {
     String? toneMapping,
     List<double>? equalizer,
     Normalization? normalization,
+    bool? scriptsEnabled,
+    String? scriptsFolder,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -162,6 +172,8 @@ class AppSettings {
       toneMapping: toneMapping ?? this.toneMapping,
       equalizer: equalizer ?? this.equalizer,
       normalization: normalization ?? this.normalization,
+      scriptsEnabled: scriptsEnabled ?? this.scriptsEnabled,
+      scriptsFolder: scriptsFolder ?? this.scriptsFolder,
     );
   }
 }
@@ -248,6 +260,8 @@ class SettingsRepository {
         'normalization',
         d.normalization,
       ),
+      scriptsEnabled: _prefs.getBool('scriptsEnabled') ?? d.scriptsEnabled,
+      scriptsFolder: _prefs.getString('scriptsFolder') ?? d.scriptsFolder,
     );
   }
 
@@ -296,6 +310,8 @@ class SettingsRepository {
       for (final g in s.equalizer) '$g',
     ]);
     await _prefs.setString('normalization', s.normalization.name);
+    await _prefs.setBool('scriptsEnabled', s.scriptsEnabled);
+    await _prefs.setString('scriptsFolder', s.scriptsFolder);
   }
 }
 

@@ -401,6 +401,28 @@ void main() {
     );
   });
 
+  test('a Lua user script runs and talks back through user-data', () async {
+    final dir = Directory.systemTemp.createTempSync('kyndrel_lua');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final script = File(p.join(dir.path, 'hello.lua'))
+      ..writeAsStringSync('''
+mp.register_event("file-loaded", function()
+  mp.set_property("user-data/kyndrel/osd", "Loaded " .. mp.get_property("filename"))
+end)
+mp.register_script_message("kyndrel-ping", function(x)
+  mp.set_property("user-data/kyndrel/osd", "pong " .. x)
+end)
+''');
+    final messages = <String>[];
+    service.scriptOsd.listen(messages.add);
+    await service.loadScript(script.path);
+    await service.open(p.join(media, 'clip.mp4'));
+    await waitFor((s) => s.isPlaying);
+    await eventually(() async => messages.contains('Loaded clip.mp4'));
+    await service.scriptMessage(['kyndrel-ping', '42']);
+    await eventually(() async => messages.contains('pong 42'));
+  });
+
   test('track list types', () {
     expect(MediaTrackType.values, hasLength(3));
   });

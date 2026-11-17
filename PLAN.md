@@ -133,7 +133,7 @@ Rules:
 - [x] 4.6 Video quality: shader presets (e.g. upscaling), deband, HDR to SDR tone mapping, and a hardware-decoding selector.
 - [x] 4.7 Equalizer and audio normalization (`loudnorm`, `dynaudnorm`).
 - [x] 4.8 OS integration: media keys, Windows SMTC, Linux MPRIS, macOS Now Playing.
-- [ ] 4.9 Plugin or script hook (mpv Lua/JS scripts) as an optional power-user feature.
+- [x] 4.9 Plugin or script hook (mpv Lua/JS scripts) as an optional power-user feature.
 
 ### Phase 5: Polish, QA and release (2–3 weeks)
 - [ ] 5.1 Settings page: playback, subtitles, audio, shortcuts, appearance, language, advanced (mpv.conf passthrough).

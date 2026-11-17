@@ -38,6 +38,7 @@ import 'package:kyndrel/features/playback/widgets/fullscreen_button.dart';
 import 'package:kyndrel/features/playback/widgets/status_layer.dart';
 import 'package:kyndrel/features/playback/widgets/top_bar.dart';
 import 'package:kyndrel/features/playback/widgets/video_gesture_layer.dart';
+import 'package:kyndrel/features/scripts/script_manager.dart';
 import 'package:kyndrel/features/settings/settings_dialog.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel.dart';
@@ -67,7 +68,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.initState();
     ref
       ..read(engineSyncProvider)
-      ..read(mediaSessionSyncProvider);
+      ..read(mediaSessionSyncProvider)
+      ..read(scriptManagerProvider);
     final resume = ref.read(resumeControllerProvider.notifier);
     final history = ref.read(historyControllerProvider.notifier);
     ref.read(windowServiceProvider)

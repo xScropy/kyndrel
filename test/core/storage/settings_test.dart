@@ -82,6 +82,8 @@ void main() {
       toneMapping: 'hable',
       equalizer: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       normalization: Normalization.loudnorm,
+      scriptsEnabled: true,
+      scriptsFolder: '/sc',
     );
     await repo.save(changed);
     final r = (await SettingsRepository.create()).load();
@@ -115,6 +117,8 @@ void main() {
       'toneMapping': s.toneMapping,
       'equalizer': s.equalizer,
       'normalization': s.normalization,
+      'scriptsEnabled': s.scriptsEnabled,
+      'scriptsFolder': s.scriptsFolder,
     };
     final want = dump(changed);
     final got = dump(r);
