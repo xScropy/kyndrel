@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -331,5 +332,39 @@ void main() {
     await tester.pump();
     expect(h.service.state.status, PlaybackStatus.idle);
     expect(find.text('OPEN MEDIA'), findsOneWidget);
+  });
+
+  testWidgets('download: local files get a hint; web videos ask once', (
+    tester,
+  ) async {
+    final h = await AppHarness.create();
+    await h.pump(tester, launch: const LaunchOptions(source: '/v/Film.mkv'));
+    h.load();
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('download')));
+    await tester.pump();
+    expect(find.byKey(const Key('download-hint')), findsOneWidget);
+    final button = tester.widget<FilledButton>(
+      find.ancestor(
+        of: find.text('Download this video'),
+        matching: find.byType(FilledButton),
+      ),
+    );
+    expect(button.onPressed, isNull);
+    await tester.tapAt(const Offset(600, 300));
+    await tester.pump();
+
+    await h.service.open('https://example.org/films/Clip.mp4');
+    h.load();
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('download')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('download-current')));
+    await tester.pumpAndSettle();
+    expect(find.text('Before you download'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('download-agree')));
+    await tester.pump();
+    expect(h.container.read(settingsProvider).downloadTermsAccepted, isTrue);
+    await tester.pump(const Duration(seconds: 2));
   });
 }

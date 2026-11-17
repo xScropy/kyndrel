@@ -1,4 +1,3 @@
-import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/features/playback/widgets/seek_bar.dart';
 import 'package:kyndrel/features/playback/widgets/transport_controls.dart';
 import 'package:kyndrel/features/playback/widgets/volume_control.dart';
@@ -9,9 +8,16 @@ import 'package:material_ui/material_ui.dart';
 /// [rightActions] come from other features (subtitles, speed...) and are
 /// wired by the app shell, which keeps features free of cross-imports.
 class BottomControls extends StatelessWidget {
-  const new({required this.rightActions, super.key});
+  const new({
+    required this.rightActions,
+    this.leftActions = const [],
+    super.key,
+  });
 
   final List<Widget> rightActions;
+
+  /// After the volume group (the download button, task 4.3).
+  final List<Widget> leftActions;
 
   @override
   Widget build(BuildContext context) {
@@ -34,18 +40,11 @@ class BottomControls extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      VolumeControl(),
-                      ControlButton(
-                        key: Key('download'),
-                        icon: Icons.download_outlined,
-                        tooltip: 'Download (coming in a later version)',
-                      ),
-                    ],
+                    children: [const VolumeControl(), ...leftActions],
                   ),
                 ),
                 const TransportControls(),

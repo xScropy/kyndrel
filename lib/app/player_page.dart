@@ -16,6 +16,7 @@ import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
+import 'package:kyndrel/features/download/download_button.dart';
 import 'package:kyndrel/features/info/media_info_dialog.dart';
 import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
@@ -271,6 +272,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     bottom: 0,
                     child: fade(
                       const BottomControls(
+                        leftActions: [DownloadButton()],
                         rightActions: [
                           PlaylistButton(),
                           FitMenuButton(),

@@ -29,6 +29,8 @@ class AppSettings {
     this.deeplApiKey = '',
     this.googleTranslateApiKey = '',
     this.anthropicApiKey = '',
+    this.downloadFolder = '',
+    this.downloadTermsAccepted = false,
   });
 
   /// Last volume, 0–400.
@@ -71,6 +73,12 @@ class AppSettings {
   final String googleTranslateApiKey;
   final String anthropicApiKey;
 
+  /// Where downloads go; empty means `~/Downloads` (4.3).
+  final String downloadFolder;
+
+  /// The user confirmed they only download what they may save.
+  final bool downloadTermsAccepted;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -92,6 +100,8 @@ class AppSettings {
     String? deeplApiKey,
     String? googleTranslateApiKey,
     String? anthropicApiKey,
+    String? downloadFolder,
+    bool? downloadTermsAccepted,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -114,6 +124,9 @@ class AppSettings {
       googleTranslateApiKey:
           googleTranslateApiKey ?? this.googleTranslateApiKey,
       anthropicApiKey: anthropicApiKey ?? this.anthropicApiKey,
+      downloadFolder: downloadFolder ?? this.downloadFolder,
+      downloadTermsAccepted:
+          downloadTermsAccepted ?? this.downloadTermsAccepted,
     );
   }
 }
@@ -124,6 +137,14 @@ String defaultScreenshotFolder([Map<String, String>? env]) {
   final e = env ?? Platform.environment;
   final home = e['USERPROFILE'] ?? e['HOME'] ?? Directory.systemTemp.path;
   return p.join(home, 'Pictures', 'Kyndrel');
+}
+
+/// `~/Downloads` (Windows: `%USERPROFILE%\Downloads`), the download folder
+/// when none is set (task 4.3).
+String defaultDownloadFolder([Map<String, String>? env]) {
+  final e = env ?? Platform.environment;
+  final home = e['USERPROFILE'] ?? e['HOME'] ?? Directory.systemTemp.path;
+  return p.join(home, 'Downloads');
 }
 
 /// Reads and writes [AppSettings].
@@ -203,6 +224,8 @@ class SettingsRepository {
     await _prefs.setString('deeplApiKey', s.deeplApiKey);
     await _prefs.setString('googleTranslateApiKey', s.googleTranslateApiKey);
     await _prefs.setString('anthropicApiKey', s.anthropicApiKey);
+    await _prefs.setString('downloadFolder', s.downloadFolder);
+    await _prefs.setBool('downloadTermsAccepted', s.downloadTermsAccepted);
   }
 }
 
