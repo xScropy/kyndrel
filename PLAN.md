@@ -79,7 +79,7 @@ Rules:
 - [x] 0.6 Theme tokens and font loaded, with a golden test of the colour set.
 
 ### Phase 1: Core player (2–3 weeks)
-- [ ] 1.1 `PlayerService`: open file/URL, play, pause, seek, position/duration/buffering/state streams.
+- [x] 1.1 `PlayerService`: open file/URL, play, pause, seek, position/duration/buffering/state streams.
 - [ ] 1.2 Frameless window: custom title bar with drag area, minimize/maximize/close, double-click to maximize.
 - [ ] 1.3 Top bar: back, title, year, quality badge (derived from video height: 480P, 720P, 1080P, 4K), info icon.
 - [ ] 1.4 Seek bar: progress, buffered segment, hover time tooltip, drag-to-seek with debounce, elapsed/total labels, toggle between total and remaining time.

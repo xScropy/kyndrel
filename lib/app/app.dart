@@ -1,12 +1,12 @@
+import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
-import 'package:kyndrel/spike/playback_spike_page.dart';
+import 'package:kyndrel/features/playback/player_screen.dart';
 import 'package:material_ui/material_ui.dart';
 
 class KyndrelApp extends StatelessWidget {
-  const new({this.initialSource, super.key});
+  const new({this.launch = const LaunchOptions(), super.key});
 
-  /// File path or URL passed on the command line, if any.
-  final String? initialSource;
+  final LaunchOptions launch;
 
   @override
   Widget build(BuildContext context) {
@@ -14,10 +14,11 @@ class KyndrelApp extends StatelessWidget {
       title: 'Kyndrel',
       debugShowCheckedModeBanner: false,
       theme: KyndrelTheme.dark(),
-      darkTheme: KyndrelTheme.dark(),
       themeMode: ThemeMode.dark,
-      // Phase 0 spike. Replaced by the real player screen in Phase 1.
-      home: PlaybackSpikePage(initialSource: initialSource),
+      home: PlayerScreen(
+        initialSource: launch.source,
+        showDiagnostics: launch.showDiagnostics,
+      ),
     );
   }
 }

@@ -1,12 +1,13 @@
 # Phase 0 spike: manual check (task 0.5)
 
-The spike screen (`lib/spike/playback_spike_page.dart`) plays a file or URL
-and shows a diagnostics panel with live mpv properties.
+Since task 1.1 the spike screen is gone; the same check runs in the real
+player with the `--diagnostics` flag, which shows a panel of live mpv
+properties.
 
 ## Run
 
 ```sh
-flutter run -d windows -- "C:\path\to\clip.mkv"
+flutter run -d windows -- --diagnostics "C:\path\to\clip.mkv"
 # or start with no argument and paste a path/URL into the field
 ```
 
