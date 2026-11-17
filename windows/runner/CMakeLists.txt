@@ -37,7 +37,10 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 
 # Media controls (task 4.8) use C++/WinRT from the Windows SDK.
+# C++/WinRT needs C++20 coroutines; under C++17 it falls back to
+# <experimental/coroutine>, which current MSVC rejects (STL1011).
 target_link_libraries(${BINARY_NAME} PRIVATE "windowsapp.lib")
+target_compile_features(${BINARY_NAME} PRIVATE cxx_std_20)
 set_source_files_properties("media_session.cpp" PROPERTIES
   COMPILE_OPTIONS "/permissive-;/bigobj;/WX-")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
