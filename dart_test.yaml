@@ -1,0 +1,7 @@
+tags:
+  # Runs PlayerService against the real libmpv. Needs libmpv installed and
+  # `scripts/make_test_media.sh` run first, so it's skipped by default.
+  # Run with: flutter test -t engine --run-skipped
+  engine:
+    skip: "Needs libmpv: scripts/make_test_media.sh && flutter test -t engine --run-skipped"
+    timeout: 3x

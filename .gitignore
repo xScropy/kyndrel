@@ -49,3 +49,4 @@ app.*.map.json
 
 # Golden test failure output
 **/failures/
+test_media/generated/

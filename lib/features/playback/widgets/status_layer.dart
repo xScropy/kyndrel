@@ -95,6 +95,7 @@ class _ErrorMessage extends StatelessWidget {
             child: Stack(
               children: [
                 SingleChildScrollView(
+                  padding: const EdgeInsets.only(right: 32),
                   child: SelectableText(
                     log,
                     style: const TextStyle(

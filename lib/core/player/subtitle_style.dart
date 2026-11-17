@@ -79,6 +79,14 @@ class SubtitleStyle {
     'sub-ass-override': overrideAssStyles ? 'force' : 'scale',
   };
 
+  /// Equivalent options for libmpv < 0.38 (no `sub-border-style`): the box
+  /// is the text shadow drawn in `sub-back-color`.
+  Map<String, String> toLegacyMpvOptions() => {
+    'sub-back-color': mpvColor(backgroundBox ? backgroundColor : 0x00000000),
+    'sub-shadow-offset': backgroundBox ? '4' : '0',
+    'sub-shadow-color': mpvColor(backgroundBox ? backgroundColor : 0x80000000),
+  };
+
   /// ARGB int to mpv's `#AARRGGBB`.
   static String mpvColor(int argb) =>
       '#${argb.toRadixString(16).padLeft(8, '0').toUpperCase()}';

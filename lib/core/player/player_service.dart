@@ -16,11 +16,9 @@ import 'package:kyndrel/core/player/subtitle_style.dart';
 class PlayerService {
   new(this.backend) {
     _subscriptions.addAll([
-      backend.playing.listen(
-        (v) => _update(
-          _state.copyWith(isPlaying: v, isLoaded: v || _state.isLoaded),
-        ),
-      ),
+      // Not a sign of loading: media_kit reports playing=true as soon as
+      // a file is opened, before mpv has read it.
+      backend.playing.listen((v) => _update(_state.copyWith(isPlaying: v))),
       backend.completed.listen(_onCompleted),
       backend.buffering.listen((v) => _update(_state.copyWith(isBuffering: v))),
       backend.position.listen((v) => _update(_state.copyWith(position: v))),
@@ -265,6 +263,14 @@ class PlayerService {
     for (final e in style.toMpvOptions().entries) {
       await backend.setProperty(e.key, e.value);
     }
+    // libmpv before 0.38 has no `sub-border-style`; there the background
+    // box comes from the shadow, drawn in `sub-back-color`.
+    final supported = await backend.getProperty('sub-border-style');
+    if (supported == null || supported.isEmpty) {
+      for (final e in style.toLegacyMpvOptions().entries) {
+        await backend.setProperty(e.key, e.value);
+      }
+    }
   }
 
   /// Load subtitle files named like the video from the same folder
@@ -432,8 +438,15 @@ class PlayerService {
     }
   }
 
+  /// mpv errors that never stop playback (no sound card, a missing audio
+  /// driver). They stay in the log but don't count as "can't play".
+  static final _nonFatal = RegExp(
+    'audio (device|driver|output)|no sound|ao[/ ]',
+    caseSensitive: false,
+  );
+
   void _onError(String message) {
-    if (message.trim().isEmpty) return;
+    if (message.trim().isEmpty || _nonFatal.hasMatch(message)) return;
     _update(_state.copyWith(errorMessage: message));
   }
 

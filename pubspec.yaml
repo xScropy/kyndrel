@@ -47,7 +47,8 @@ flutter:
 hooks:
   user_defines:
     sqlite3:
-      # Linux desktops ship libsqlite3 (and Flutter's GTK embedder already
-      # loads it); Windows and macOS use the package's prebuilt library.
+      # Linux uses the system library (libsqlite3.so, from libsqlite3-dev or
+      # shipped by the Linux package, task 5.6). Windows and macOS bundle the
+      # package's prebuilt SQLite.
       source:
         linux: system

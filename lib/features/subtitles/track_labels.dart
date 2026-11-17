@@ -12,9 +12,17 @@ String trackLabel(MediaTrack t) {
       ? p.basename(t.externalFilename!)
       : 'Track ${t.id}';
   final title = t.title;
+  // mpv titles external tracks with their file name; that's noise here.
+  final isFileName =
+      t.externalFilename != null && title == p.basename(t.externalFilename!);
   final parts = [
     base,
-    if (title != null && title.isNotEmpty && title != base && hasLang) title,
+    if (title != null &&
+        title.isNotEmpty &&
+        title != base &&
+        hasLang &&
+        !isFileName)
+      title,
   ];
   return parts.join(' · ');
 }

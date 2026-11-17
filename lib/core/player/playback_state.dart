@@ -54,8 +54,8 @@ class PlaybackState {
   final bool isBuffering;
   final bool isCompleted;
 
-  /// True once libmpv has reported anything that proves the file is open
-  /// (a duration, a video size, or playback starting).
+  /// True once libmpv has reported something that proves the file is open:
+  /// a duration or a video size.
   final bool isLoaded;
   final int? videoWidth;
   final int? videoHeight;

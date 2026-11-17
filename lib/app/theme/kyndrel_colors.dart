@@ -12,7 +12,9 @@ abstract final class KyndrelColors {
   static const Color surface = Color(0xFF16161A);
 
   /// Translucent dark panel (popovers, subtitle panel, control bars).
-  static const Color panel = Color(0xCC1A1A1F);
+  /// 90 % opaque: still shows the video, but text stays readable over
+  /// bright frames.
+  static const Color panel = Color(0xE61A1A1F);
 
   /// Hairline border on panels.
   static const Color panelBorder = Color(0x1FFFFFFF);

@@ -54,6 +54,12 @@ void main() {
   test('playing true moves to playing, false to paused', () async {
     await service.open('a.mp4');
     backend.emitPlaying(value: true);
+    expect(
+      service.state.status,
+      PlaybackStatus.loading,
+      reason: 'media_kit says playing before the file is read',
+    );
+    backend.emitDuration(const Duration(minutes: 1));
     expect(service.state.status, PlaybackStatus.playing);
     backend.emitPlaying(value: false);
     expect(service.state.status, PlaybackStatus.paused);
@@ -90,17 +96,40 @@ void main() {
     backend
       ..emitDuration(const Duration(seconds: 10))
       ..emitPlaying(value: true)
-      ..emitError('Could not open/initialize audio device -> no sound.');
+      ..emitError('Error decoding a frame.');
     expect(service.state.status, PlaybackStatus.playing);
-    expect(service.state.errorMessage, contains('audio device'));
+    expect(service.state.errorMessage, 'Error decoding a frame.');
   });
 
-  test('a warning before load is cleared from status once it loads', () async {
+  test('audio device errors never count as fatal', () async {
     await service.open('a.mp4');
     backend.emitError('Could not open/initialize audio device -> no sound.');
+    expect(service.state.status, PlaybackStatus.loading);
+    expect(service.state.errorMessage, isNull);
+  });
+
+  test('a broken file opened after a playing one shows the error', () async {
+    await service.open('good.mp4');
+    backend
+      ..emitDuration(const Duration(minutes: 1))
+      ..emitPlaying(value: true);
+    await service.open('broken.mkv');
+    backend
+      ..emitPlaying(value: true)
+      ..emitError('Failed to recognize file format.');
     expect(service.state.status, PlaybackStatus.error);
-    backend.emitDuration(const Duration(seconds: 10));
-    expect(service.state.status, PlaybackStatus.paused);
+  });
+
+  test('libmpv without sub-border-style gets the shadow fallback', () async {
+    await service.applySubtitleStyle(const SubtitleStyle(backgroundBox: true));
+    // The fake stores any property, so it "supports" it.
+    expect(backend.properties['sub-shadow-offset'], isNull);
+    backend.properties.remove('sub-border-style');
+    final legacy = _LegacyBackend();
+    final s2 = PlayerService(legacy);
+    await s2.applySubtitleStyle(const SubtitleStyle(backgroundBox: true));
+    expect(legacy.properties['sub-shadow-offset'], '4');
+    await s2.dispose();
   });
 
   test('blank error messages are ignored', () async {
@@ -182,24 +211,26 @@ void main() {
   group('streams', () {
     test('no change is lost between the replay and live updates', () async {
       await service.open('a.mp4');
+      backend.emitDuration(const Duration(minutes: 1));
       final received = <PlaybackStatus>[];
       final sub = service.status.listen(received.add);
       // Emitted synchronously, before any microtask has run.
       backend.emitPlaying(value: true);
       await pumpEventQueue();
       await sub.cancel();
-      expect(received, [PlaybackStatus.loading, PlaybackStatus.playing]);
+      expect(received, [PlaybackStatus.paused, PlaybackStatus.playing]);
     });
 
     test('states replays the current state first, then changes', () async {
       await service.open('a.mp4');
+      backend.emitDuration(const Duration(minutes: 1));
       final received = <PlaybackStatus>[];
       final sub = service.status.listen(received.add);
       await pumpEventQueue();
       backend.emitPlaying(value: true);
       await pumpEventQueue();
       await sub.cancel();
-      expect(received, [PlaybackStatus.loading, PlaybackStatus.playing]);
+      expect(received, [PlaybackStatus.paused, PlaybackStatus.playing]);
     });
 
     test('position stream skips duplicates', () async {
@@ -448,4 +479,13 @@ void main() {
   test('limiter label constant', () {
     expect(PlayerService.limiterLabel, startsWith('@'));
   });
+}
+
+/// A backend whose mpv doesn't know `sub-border-style` (libmpv < 0.38).
+class _LegacyBackend extends FakePlayerBackend {
+  @override
+  Future<void> setProperty(String name, String value) async {
+    if (name == 'sub-border-style') return;
+    await super.setProperty(name, value);
+  }
 }

@@ -31,10 +31,14 @@ Record results (OS, GPU, file, hwdec value, drops) in the table below.
 
 - 2026-11-17, Ubuntu 24.04 container under Xvfb, no GPU, 720p H.264 test
   clip: plays, `hwdec-current: no` (expected without a GPU). Screenshot:
-  `docs/phase-0-spike-linux.png`. Hardware decoding still to be confirmed on
+  `docs/screenshots/`. Hardware decoding still to be confirmed on
   Windows.
 - Local Linux builds in a sandbox that cannot download from github.com fail on
   media_kit_libs_linux's mimalloc fetch. Workaround: install
   `libmimalloc-dev` and add `set(MIMALLOC_USE_STATIC_LIBS OFF CACHE BOOL "" FORCE)`
   before `project(` in `linux/CMakeLists.txt` (not committed; normal machines
   don't need it).
+- 2026-11-17, same container: Phases 1–2 verified against libmpv 0.37 with
+  `flutter test -t engine --run-skipped` (MP4, MKV, AVI, WebM, HLS, HEVC,
+  tracks, PGS, volume 400 %, speed) and a driven Linux build (screenshots in
+  `docs/screenshots/`, including a PGS subtitle rendered by mpv).

@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -29,6 +30,23 @@ jobs:
           name: golden-failures
           path: test/**/failures/
           if-no-files-found: ignore
+
+  engine:
+    # PlayerService against the real libmpv with generated media.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libmpv-dev libsqlite3-dev ffmpeg python3-pil
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.0
+          cache: true
+      - run: flutter pub get
+      - run: scripts/make_test_media.sh
+      - run: flutter test -t engine --run-skipped test/engine
 
   build-windows:
     runs-on: windows-latest
