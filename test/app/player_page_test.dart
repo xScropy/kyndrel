@@ -17,7 +17,7 @@ void main() {
     await h.pump(tester);
     expect(find.text('OPEN MEDIA'), findsOneWidget);
     expect(find.byKey(const Key('open-file')), findsOneWidget);
-    expect(find.text('Or drop a file anywhere in the window.'), findsOneWidget);
+    expect(find.textContaining('Or drop a file anywhere'), findsOneWidget);
     expect(find.byKey(const Key('play-pause')), findsNothing);
   });
 
@@ -30,8 +30,8 @@ void main() {
       launch: const LaunchOptions(source: '/v/The.Test.Film.2019.1080p.mkv'),
     );
     expect(
-      h.backend.calls.first,
-      'open(/v/The.Test.Film.2019.1080p.mkv, play: true)',
+      h.backend.calls,
+      contains('open(/v/The.Test.Film.2019.1080p.mkv, play: true)'),
     );
     h.load();
     await tester.pump();

@@ -27,6 +27,7 @@ class PlayerShortcuts extends ConsumerWidget {
     required this.onOpenSettings,
     required this.onShowInfo,
     required this.onToggleQueue,
+    this.onOpenUrl,
     super.key,
   });
 
@@ -34,6 +35,7 @@ class PlayerShortcuts extends ConsumerWidget {
   final VoidCallback onOpenSettings;
   final VoidCallback onShowInfo;
   final VoidCallback onToggleQueue;
+  final VoidCallback? onOpenUrl;
 
   static const help = <(String, String)>[
     ('Space', 'Play / pause'),
@@ -52,6 +54,7 @@ class PlayerShortcuts extends ConsumerWidget {
     ('Q', 'Queue'),
     ('Ctrl+O', 'Open file'),
     ('Ctrl+V', 'Open a pasted path or URL'),
+    ('Ctrl+N', 'Open network stream'),
     ('Ctrl+I', 'Media info'),
     ('Ctrl+S', 'Screenshot'),
     ('Ctrl+,', 'Settings'),
@@ -82,6 +85,8 @@ class PlayerShortcuts extends ConsumerWidget {
           unawaited(OpenActions.pickFile(ref));
         case LogicalKeyboardKey.keyV:
           unawaited(OpenActions.pasteFromClipboard(ref));
+        case LogicalKeyboardKey.keyN:
+          onOpenUrl?.call();
         case LogicalKeyboardKey.keyI:
           onShowInfo();
         case LogicalKeyboardKey.keyS:

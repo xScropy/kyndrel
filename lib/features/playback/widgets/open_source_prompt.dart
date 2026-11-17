@@ -72,7 +72,8 @@ class _OpenSourcePromptState extends State<OpenSourcePrompt> {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Or drop a file anywhere in the window.',
+            'Or drop a file anywhere in the window. Ctrl+N opens streams, '
+            'shares and WebDAV folders.',
             style: TextStyle(color: KyndrelColors.textSecondary, fontSize: 12),
           ),
         ],

@@ -131,6 +131,12 @@ class PlayerService {
   bool _limiterEnabled = true;
   bool _limiterActive = false;
   RemoteTarget? _remote;
+  final _headers = <String, List<String>>{};
+
+  /// HTTP headers to send when [source] is opened (logins for WebDAV and
+  /// protected streams, task 4.5). Kept in memory only.
+  void setSourceHeaders(String source, List<String> headers) =>
+      headers.isEmpty ? _headers.remove(source) : _headers[source] = headers;
   StreamSubscription<RemoteStatus>? _remoteSub;
 
   /// The cast device playing instead of the local player, if any.
@@ -195,6 +201,10 @@ class PlayerService {
       ),
     );
     _updateTracks(TrackState.empty);
+    await backend.setProperty(
+      'http-header-fields',
+      (_headers[trimmed] ?? const []).join(','),
+    );
     await backend.open(trimmed, play: play);
   }
 

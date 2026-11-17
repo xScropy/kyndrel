@@ -47,6 +47,11 @@ python3 -I ../../scripts/make_pgs.py pgs.sup 1920 800
   -metadata:s:s:0 language=eng -metadata:s:s:1 language=fre \
   "The.Test.Film.2019.1080p.mkv"
 
+# DASH (task 4.5).
+mkdir -p dash
+"${FF[@]}" "${SRC[@]}" -t 8 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac \
+  -f dash -seg_duration 2 dash/manifest.mpd
+
 # Chapters (task 3.6).
 cat > chapters.txt <<'META'
 ;FFMETADATA1

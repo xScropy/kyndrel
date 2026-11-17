@@ -22,6 +22,7 @@ import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
 import 'package:kyndrel/features/library/library_home.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
+import 'package:kyndrel/features/network/open_url_dialog.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
@@ -121,6 +122,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         PopupMenuItem(value: 'open', child: Text('Open file…')),
         PopupMenuItem(value: 'folder', child: Text('Open folder…')),
         PopupMenuItem(value: 'paste', child: Text('Open from clipboard')),
+        PopupMenuItem(value: 'url', child: Text('Open network stream…')),
         PopupMenuItem(value: 'info', child: Text('Media info')),
         PopupMenuItem(value: 'details', child: Text('Edit details…')),
         PopupMenuItem(value: 'screenshot', child: Text('Screenshot  (Ctrl+S)')),
@@ -136,6 +138,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         unawaited(OpenActions.pickFolder(ref));
       case 'paste':
         unawaited(OpenActions.pasteFromClipboard(ref));
+      case 'url':
+        unawaited(showOpenUrlDialog(context));
       case 'info':
         _showInfo();
       case 'screenshot':
@@ -196,6 +200,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         onOpenSettings: _showSettings,
         onShowInfo: _showInfo,
         onToggleQueue: ref.read(playlistPanelProvider.notifier).toggle,
+        onOpenUrl: () => unawaited(showOpenUrlDialog(context)),
         child: DropTarget(
           onDragEntered: (_) => setState(() => _dragging = true),
           onDragExited: (_) => setState(() => _dragging = false),

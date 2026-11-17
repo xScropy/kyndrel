@@ -321,6 +321,57 @@ void main() {
     expect(cues.single.text, 'Hello from the embedded English track');
   });
 
+  group('network streams over HTTP', () {
+    late HttpServer server;
+    setUp(() async {
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0)
+        ..listen((req) async {
+          final path = req.uri.path;
+          if (path.startsWith('/private/') &&
+              req.headers.value('Authorization') != 'Basic bWU6cHc=') {
+            req.response.statusCode = 401;
+            await req.response.close();
+            return;
+          }
+          final file = File(
+            p.join(media, path.replaceFirst('/private', '').substring(1)),
+          );
+          if (!file.existsSync()) {
+            req.response.statusCode = 404;
+            await req.response.close();
+            return;
+          }
+          req.response.contentLength = file.lengthSync();
+          await req.response.addStream(file.openRead());
+          await req.response.close();
+        });
+    });
+    tearDown(() => server.close(force: true));
+
+    String url(String path) => 'http://127.0.0.1:${server.port}/$path';
+
+    for (final path in ['hls.m3u8', 'dash/manifest.mpd']) {
+      test(path, () async {
+        await service.open(url(path));
+        final s = await waitFor(
+          (s) => s.duration > Duration.zero && s.isPlaying,
+        );
+        expect(s.status, PlaybackStatus.playing);
+      });
+    }
+
+    test('a protected stream plays only with the login header', () async {
+      await service.open(url('private/clip.mp4'));
+      await waitFor((s) => s.status == PlaybackStatus.error);
+      service.setSourceHeaders(url('private/clip.mp4'), [
+        'Authorization: Basic bWU6cHc=',
+      ]);
+      await service.open(url('private/clip.mp4'));
+      final s = await waitFor((s) => s.duration > Duration.zero);
+      expect(s.errorMessage, isNull);
+    });
+  });
+
   test('track list types', () {
     expect(MediaTrackType.values, hasLength(3));
   });

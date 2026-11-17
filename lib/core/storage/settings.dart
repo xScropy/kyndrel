@@ -31,6 +31,7 @@ class AppSettings {
     this.anthropicApiKey = '',
     this.downloadFolder = '',
     this.downloadTermsAccepted = false,
+    this.recentUrls = const [],
   });
 
   /// Last volume, 0–400.
@@ -79,6 +80,9 @@ class AppSettings {
   /// The user confirmed they only download what they may save.
   final bool downloadTermsAccepted;
 
+  /// Last network URLs opened, newest first, without passwords (4.5).
+  final List<String> recentUrls;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -102,6 +106,7 @@ class AppSettings {
     String? anthropicApiKey,
     String? downloadFolder,
     bool? downloadTermsAccepted,
+    List<String>? recentUrls,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -127,6 +132,7 @@ class AppSettings {
       downloadFolder: downloadFolder ?? this.downloadFolder,
       downloadTermsAccepted:
           downloadTermsAccepted ?? this.downloadTermsAccepted,
+      recentUrls: recentUrls ?? this.recentUrls,
     );
   }
 }
@@ -226,6 +232,7 @@ class SettingsRepository {
     await _prefs.setString('anthropicApiKey', s.anthropicApiKey);
     await _prefs.setString('downloadFolder', s.downloadFolder);
     await _prefs.setBool('downloadTermsAccepted', s.downloadTermsAccepted);
+    await _prefs.setStringList('recentUrls', s.recentUrls);
   }
 }
 
