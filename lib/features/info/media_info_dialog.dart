@@ -2,16 +2,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/utils/languages.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The "i" button's dialog: container, codecs, bitrate, resolution, HDR,
 /// audio channels, file size, with a copy button.
 Future<void> showMediaInfoDialog(BuildContext context, WidgetRef ref) async {
-  final info = await ref.read(playerServiceProvider).mediaInfo();
+  final service = ref.read(playerServiceProvider);
+  final info = await service.mediaInfo();
   if (!context.mounted) return;
-  final sections = MediaInfoSections.from(info);
+  final sections = MediaInfoSections.from(info, tracks: service.tracks);
   await showDialog<void>(
     context: context,
     builder: (context) => MediaInfoDialog(sections: sections),
@@ -22,7 +25,7 @@ Future<void> showMediaInfoDialog(BuildContext context, WidgetRef ref) async {
 class MediaInfoSections {
   new(this.sections);
 
-  factory from(Map<String, String> p) {
+  factory from(Map<String, String> p, {TrackState tracks = TrackState.empty}) {
     String? v(String k) => p[k];
     final w = v('video-params/w');
     final h = v('video-params/h');
@@ -31,8 +34,16 @@ class MediaInfoSections {
       'pq' => 'HDR10 (PQ)',
       'hlg' => 'HLG',
       null => null,
-      _ => 'SDR',
+      _ => v('video-params/primaries') == 'bt.2020' ? 'SDR (BT.2020)' : 'SDR',
     };
+    String trackLine(MediaTrack t) => [
+      languageName(t.language),
+      ?t.codec,
+      if (t.channels != null) '${t.channels} ch',
+      if (t.isExternal) 'external',
+      if (t.isForced) 'forced',
+      if (t.title != null && t.title!.isNotEmpty) '"${t.title}"',
+    ].join(', ');
     final duration = double.tryParse(v('duration') ?? '');
     return MediaInfoSections({
       'File': {
@@ -62,9 +73,22 @@ class MediaInfoSections {
       },
       'Audio': {
         'Codec': v('audio-codec'),
-        'Channels': v('audio-params/channel-count'),
+        'Channels': [
+          v('audio-params/channel-count'),
+          if (v('audio-params/hr-channels') case final l?) '($l)',
+        ].nonNulls.join(' ').ifEmpty,
         'Sample rate': _hz(v('audio-params/samplerate')),
         'Bitrate': _bitrate(v('audio-bitrate')),
+      },
+      'Tracks': {
+        for (final (i, t) in tracks.audio.indexed)
+          'Audio ${i + 1}': trackLine(t),
+        for (final (i, t) in tracks.subtitles.indexed)
+          'Subtitle ${i + 1}': trackLine(t),
+        'Chapters': switch (v('chapters')) {
+          null || '0' => null,
+          final c => c,
+        },
       },
     });
   }

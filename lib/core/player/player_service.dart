@@ -343,6 +343,8 @@ class PlayerService {
     'video-bitrate',
     'audio-codec',
     'audio-params/channel-count',
+    'audio-params/hr-channels',
+    'chapters',
     'audio-params/samplerate',
     'audio-bitrate',
     'hwdec-current',

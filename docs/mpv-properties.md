@@ -45,7 +45,7 @@ uses them.
 | `video-aspect-override` | property | write | 16:9 / 4:3 / `no` | 2.12 |
 | `video-rotate` | property | write | 0/90/180/270 | 2.12 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |
-| `filename`, `path`, `file-format`, `file-size`, `duration`, `video-params/{w,h,pixelformat,colormatrix,primaries,gamma}`, `video-bitrate`, `audio-codec`, `audio-params/{channel-count,samplerate}`, `audio-bitrate` | property | read | Media info dialog | 1.3 |
+| `filename`, `path`, `file-format`, `file-size`, `duration`, `chapters`, `audio-params/hr-channels`, `video-params/{w,h,pixelformat,colormatrix,primaries,gamma}`, `video-bitrate`, `audio-codec`, `audio-params/{channel-count,samplerate}`, `audio-bitrate` | property | read | Media info dialog | 1.3 |
 
 Log lines (`warn` and above) are kept in a 200-line buffer for the error
 screen (1.13). Errors matching "audio device/driver/output" or "no sound"
