@@ -22,6 +22,9 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
   late final _apiKey = TextEditingController(
     text: ref.read(settingsProvider).openSubtitlesApiKey,
   );
+  late final _tmdbKey = TextEditingController(
+    text: ref.read(settingsProvider).tmdbApiKey,
+  );
   late final _languages = TextEditingController(
     text: ref.read(settingsProvider).subtitleLanguages,
   );
@@ -31,6 +34,7 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
   void dispose() {
     _apiKey.dispose();
     _languages.dispose();
+    _tmdbKey.dispose();
     super.dispose();
   }
 
@@ -143,6 +147,21 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                       onChanged: (v) => _update(
                         (x) => x.copyWith(openSubtitlesApiKey: v.trim()),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('LIBRARY', style: KyndrelTheme.sectionLabel),
+                    TextField(
+                      key: const Key('settings-tmdb-key'),
+                      controller: _tmdbKey,
+                      obscureText: !_showKey,
+                      decoration: const InputDecoration(
+                        labelText: 'TMDB API key or read access token',
+                        helperText:
+                            'For titles, posters and episode names '
+                            '(themoviedb.org › Settings › API)',
+                      ),
+                      onChanged: (v) =>
+                          _update((x) => x.copyWith(tmdbApiKey: v.trim())),
                     ),
                   ],
                 ),

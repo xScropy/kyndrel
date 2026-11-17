@@ -117,7 +117,7 @@ Rules:
 - [x] 3.1 Playlist: queue, next/previous, shuffle, repeat, drag to reorder, and open a whole folder.
 - [x] 3.2 Episode detection: parse filenames (`S01E02`, `1x02`) to group episodes. This powers "End of next episode" and auto-play of the next episode.
 - [x] 3.3 History and continue-watching list with thumbnails and progress.
-- [ ] 3.4 Metadata: TMDB lookup for title, year, poster and episode names, with local cache and a manual override.
+- [x] 3.4 Metadata: TMDB lookup for title, year, poster and episode names, with local cache and a manual override.
 - [ ] 3.5 Media info dialog (the "i" icon): container, codecs, bitrate, resolution, HDR, audio channels, file size, and a copy button.
 - [ ] 3.6 Chapters: markers on the seek bar and next/previous chapter.
 - [ ] 3.7 Seek-bar thumbnails: generate preview frames with a second headless mpv or FFmpeg and cache them.

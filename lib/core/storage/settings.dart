@@ -19,6 +19,7 @@ class AppSettings {
     this.subtitleLanguages = 'en',
     this.boostWarningSeen = false,
     this.autoPlayNextEpisode = true,
+    this.tmdbApiKey = '',
   });
 
   /// Last volume, 0–400.
@@ -45,6 +46,9 @@ class AppSettings {
   /// Opening an episode queues the next ones from the same folder (3.2).
   final bool autoPlayNextEpisode;
 
+  /// TMDB v3 key or v4 read token for titles and posters (3.4).
+  final String tmdbApiKey;
+
   static const skipChoices = [5, 10, 15, 30, 60];
 
   AppSettings copyWith({
@@ -58,6 +62,7 @@ class AppSettings {
     String? subtitleLanguages,
     bool? boostWarningSeen,
     bool? autoPlayNextEpisode,
+    String? tmdbApiKey,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -70,6 +75,7 @@ class AppSettings {
       subtitleLanguages: subtitleLanguages ?? this.subtitleLanguages,
       boostWarningSeen: boostWarningSeen ?? this.boostWarningSeen,
       autoPlayNextEpisode: autoPlayNextEpisode ?? this.autoPlayNextEpisode,
+      tmdbApiKey: tmdbApiKey ?? this.tmdbApiKey,
     );
   }
 }
@@ -113,6 +119,7 @@ class SettingsRepository {
           _prefs.getBool('boostWarningSeen') ?? d.boostWarningSeen,
       autoPlayNextEpisode:
           _prefs.getBool('autoPlayNextEpisode') ?? d.autoPlayNextEpisode,
+      tmdbApiKey: _prefs.getString('tmdbApiKey') ?? d.tmdbApiKey,
     );
   }
 
@@ -130,6 +137,7 @@ class SettingsRepository {
     await _prefs.setString('subtitleLanguages', s.subtitleLanguages);
     await _prefs.setBool('boostWarningSeen', s.boostWarningSeen);
     await _prefs.setBool('autoPlayNextEpisode', s.autoPlayNextEpisode);
+    await _prefs.setString('tmdbApiKey', s.tmdbApiKey);
   }
 }
 

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/metadata/metadata_service.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:material_ui/material_ui.dart';
@@ -98,11 +99,22 @@ class _ContinueCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final thumb = item.thumbnailPath;
+    final details = ref.watch(mediaDetailsProvider(item.source)).value;
+    // A real frame first, then the episode still or poster from TMDB.
+    final remote = details?.stillUrl ?? details?.posterUrl;
     final image =
         poster ??
         (thumb != null && File(thumb).existsSync()
             ? ResizeImage(FileImage(File(thumb)), width: 480)
+            : remote != null
+            ? NetworkImage(remote)
             : null);
+    final title = details == null
+        ? item.title
+        : [
+            details.title,
+            details.subtitle,
+          ].where((t) => t.isNotEmpty).join(' · ');
     final left = item.duration - item.position;
     return SizedBox(
       width: 240,
@@ -127,7 +139,11 @@ class _ContinueCard extends ConsumerWidget {
                             size: 40,
                             color: KyndrelColors.sectionLabel,
                           )
-                        : Image(image: image, fit: BoxFit.cover),
+                        : Image(
+                            image: image,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const SizedBox(),
+                          ),
                   ),
                   Positioned(
                     left: 0,
@@ -158,7 +174,7 @@ class _ContinueCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
             Text(
               item.duration > Duration.zero
                   ? '${formatRemaining(left)} left'

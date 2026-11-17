@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/core/metadata/metadata_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/utils/media_title.dart';
@@ -22,12 +23,18 @@ class TopBarContent extends ConsumerWidget {
     );
     if (source == null) return const SizedBox.shrink();
 
-    final title = parseMediaTitle(source);
+    final parsed = parseMediaTitle(source);
+    final details = ref.watch(mediaDetailsProvider(source)).value;
     final quality = qualityLabel(width, height);
-    final subtitle = [
-      ?title.episode,
-      if (title.year != null) '${title.year}',
-    ].join(' · ');
+    final titleText = details?.title.isNotEmpty ?? false
+        ? details!.title
+        : parsed.title;
+    final subtitle =
+        details?.subtitle ??
+        [
+          ?parsed.episode,
+          if (parsed.year != null) '${parsed.year}',
+        ].join(' · ');
 
     return Row(
       children: [
@@ -47,7 +54,7 @@ class TopBarContent extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title.title,
+                  titleText,
                   key: const Key('top-title'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

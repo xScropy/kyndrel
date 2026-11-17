@@ -17,6 +17,7 @@ import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/info/media_info_dialog.dart';
+import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
 import 'package:kyndrel/features/library/library_home.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
@@ -116,6 +117,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         PopupMenuItem(value: 'folder', child: Text('Open folder…')),
         PopupMenuItem(value: 'paste', child: Text('Open from clipboard')),
         PopupMenuItem(value: 'info', child: Text('Media info')),
+        PopupMenuItem(value: 'details', child: Text('Edit details…')),
         PopupMenuItem(value: 'subs', child: Text('Subtitles & audio')),
         PopupMenuItem(value: 'settings', child: Text('Settings…')),
       ],
@@ -130,6 +132,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         unawaited(OpenActions.pasteFromClipboard(ref));
       case 'info':
         _showInfo();
+      case 'details':
+        final source = ref.read(playerServiceProvider).state.source;
+        if (source != null) unawaited(showEditDetailsDialog(context, source));
       case 'subs':
         ref.read(subtitlePanelProvider.notifier).open();
       case 'settings':
