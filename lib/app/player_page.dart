@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/engine_sync.dart';
@@ -196,12 +197,14 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       );
     }
 
-    Widget fade(Widget child) => IgnorePointer(
-      ignoring: !visible,
-      child: AnimatedOpacity(
-        opacity: visible ? 1 : 0,
-        duration: const Duration(milliseconds: 200),
-        child: child,
+    Widget fade(Widget child) => KeyboardFocusKeepsControls(
+      child: IgnorePointer(
+        ignoring: !visible,
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: const Duration(milliseconds: 200),
+          child: child,
+        ),
       ),
     );
 
@@ -351,4 +354,80 @@ class _DropHint extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Keeps the overlay up while a control inside [child] has keyboard focus,
+/// so Tab never lands on an invisible button (task 5.3). Mouse movement or
+/// a click hands control back to the normal auto-hide.
+class KeyboardFocusKeepsControls extends ConsumerStatefulWidget {
+  const new({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  ConsumerState<KeyboardFocusKeepsControls> createState() =>
+      _KeyboardFocusKeepsControlsState();
+}
+
+class _KeyboardFocusKeepsControlsState
+    extends ConsumerState<KeyboardFocusKeepsControls> {
+  bool _focused = false;
+  bool _keyboard = false;
+  bool _locked = false;
+  late final ControlsVisibility _visibility;
+
+  @override
+  void initState() {
+    super.initState();
+    _visibility = ref.read(controlsVisibilityProvider.notifier);
+    HardwareKeyboard.instance.addHandler(_onKey);
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
+    if (_locked) _visibility.release(this);
+    super.dispose();
+  }
+
+  bool _onKey(KeyEvent e) {
+    if (e is KeyDownEvent && !_keyboard) {
+      _keyboard = true;
+      _sync();
+    }
+    return false;
+  }
+
+  void _onPointer(PointerEvent e) {
+    if (_keyboard && (e is PointerDownEvent || e is PointerHoverEvent)) {
+      _keyboard = false;
+      _sync();
+    }
+  }
+
+  void _sync() {
+    final want = _focused && _keyboard;
+    if (want == _locked || !mounted) return;
+    _locked = want;
+    if (want) {
+      _visibility
+        ..show()
+        ..lock(this);
+    } else {
+      _visibility.unlock(this);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(
+    canRequestFocus: false,
+    skipTraversal: true,
+    onFocusChange: (has) {
+      _focused = has;
+      _sync();
+    },
+    child: widget.child,
+  );
 }

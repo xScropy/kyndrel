@@ -45,6 +45,7 @@ class ControlButton extends StatelessWidget {
           onTap: onPressed,
           radius: 22,
           hoverColor: KyndrelColors.windowButtonHover,
+          focusColor: KyndrelColors.focus,
           child: SizedBox(
             height: 40,
             child: Padding(

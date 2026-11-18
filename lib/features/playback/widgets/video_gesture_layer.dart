@@ -8,6 +8,7 @@ import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
+import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Mouse and touch gestures on the video (tasks 1.7, 1.10):
@@ -61,53 +62,58 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
           );
         }
       },
-      child: GestureDetector(
-        key: const Key('video-gestures'),
-        behavior: HitTestBehavior.opaque,
-        onTap: _onTap,
-        onDoubleTap: () => unawaited(FullscreenActions.toggle(ref)),
-        onSecondaryTapUp: widget.onSecondaryTap == null
-            ? null
-            : (d) => widget.onSecondaryTap!(d.globalPosition),
+      child: Semantics(
+        label: context.l10n.videoSurface,
+        hint: context.l10n.videoSurfaceHint,
         child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          supportedDevices: const {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.stylus,
-          },
-          onHorizontalDragStart: (_) {
-            final state = ref.read(playerServiceProvider).state;
-            if (state.duration <= Duration.zero) return;
-            _dragStart = state.position;
-            _dragDx = 0;
-          },
-          onHorizontalDragUpdate: (d) {
-            final start = _dragStart;
-            if (start == null) return;
-            _dragDx += d.delta.dx;
-            final width = context.size?.width ?? 1;
-            final duration = ref.read(playerServiceProvider).state.duration;
-            final offset = VideoGestureLayer.fullWidthSeek * (_dragDx / width);
-            var target = start + offset;
-            if (target < Duration.zero) target = Duration.zero;
-            if (target > duration) target = duration;
-            _dragTarget = target;
-            final sign = offset.isNegative ? '-' : '+';
-            ref
-                .read(osdProvider.notifier)
-                .show(
-                  '$sign${formatDuration(offset.abs())} '
-                  '(${formatDuration(target)})',
-                );
-          },
-          onHorizontalDragEnd: (_) {
-            final target = _dragTarget;
-            _dragStart = null;
-            _dragTarget = null;
-            if (target != null) {
-              unawaited(ref.read(playerServiceProvider).seek(target));
-            }
-          },
+          key: const Key('video-gestures'),
+          behavior: HitTestBehavior.opaque,
+          onTap: _onTap,
+          onDoubleTap: () => unawaited(FullscreenActions.toggle(ref)),
+          onSecondaryTapUp: widget.onSecondaryTap == null
+              ? null
+              : (d) => widget.onSecondaryTap!(d.globalPosition),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            supportedDevices: const {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.stylus,
+            },
+            onHorizontalDragStart: (_) {
+              final state = ref.read(playerServiceProvider).state;
+              if (state.duration <= Duration.zero) return;
+              _dragStart = state.position;
+              _dragDx = 0;
+            },
+            onHorizontalDragUpdate: (d) {
+              final start = _dragStart;
+              if (start == null) return;
+              _dragDx += d.delta.dx;
+              final width = context.size?.width ?? 1;
+              final duration = ref.read(playerServiceProvider).state.duration;
+              final offset =
+                  VideoGestureLayer.fullWidthSeek * (_dragDx / width);
+              var target = start + offset;
+              if (target < Duration.zero) target = Duration.zero;
+              if (target > duration) target = duration;
+              _dragTarget = target;
+              final sign = offset.isNegative ? '-' : '+';
+              ref
+                  .read(osdProvider.notifier)
+                  .show(
+                    '$sign${formatDuration(offset.abs())} '
+                    '(${formatDuration(target)})',
+                  );
+            },
+            onHorizontalDragEnd: (_) {
+              final target = _dragTarget;
+              _dragStart = null;
+              _dragTarget = null;
+              if (target != null) {
+                unawaited(ref.read(playerServiceProvider).seek(target));
+              }
+            },
+          ),
         ),
       ),
     );

@@ -733,6 +733,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Software decoding'**
   String get softwareDecoding;
+
+  /// No description provided for @seekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek'**
+  String get seekLabel;
+
+  /// No description provided for @seekValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed} of {total}'**
+  String seekValue(String elapsed, String total);
+
+  /// No description provided for @videoSurface.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get videoSurface;
+
+  /// No description provided for @videoSurfaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to show controls, double-tap for full screen'**
+  String get videoSurfaceHint;
 }
 
 class _AppLocalizationsDelegate

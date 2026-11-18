@@ -341,4 +341,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get softwareDecoding => 'Software decoding';
+
+  @override
+  String get seekLabel => 'Seek';
+
+  @override
+  String seekValue(String elapsed, String total) {
+    return '$elapsed of $total';
+  }
+
+  @override
+  String get videoSurface => 'Video';
+
+  @override
+  String get videoSurfaceHint =>
+      'Tap to show controls, double-tap for full screen';
 }

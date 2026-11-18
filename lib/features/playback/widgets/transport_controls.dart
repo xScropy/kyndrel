@@ -134,6 +134,7 @@ class _PlayPauseButtonState extends ConsumerState<PlayPauseButton>
           shape: const CircleBorder(),
           child: InkWell(
             key: const Key('play-pause'),
+            focusColor: KyndrelColors.focusOnAccent,
             customBorder: const CircleBorder(),
             onTap: () =>
                 unawaited(ref.read(playerServiceProvider).playOrPause()),

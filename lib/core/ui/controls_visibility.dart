@@ -68,6 +68,10 @@ class ControlsVisibility extends Notifier<bool> {
     if (_locks.remove(owner)) _restart();
   }
 
+  /// Drops [owner]'s lock without restarting the hide timer or changing
+  /// state, so it is safe from `dispose` (the owner is going away).
+  void release(Object owner) => _locks.remove(owner);
+
   @visibleForTesting
   bool get isLocked => _locks.isNotEmpty;
 

@@ -6,9 +6,9 @@ abstract final class KyndrelTheme {
   static ThemeData dark() {
     const colors = ColorScheme.dark(
       primary: KyndrelColors.accent,
-      onPrimary: KyndrelColors.textPrimary,
+      onPrimary: KyndrelColors.onAccent,
       secondary: KyndrelColors.accent,
-      onSecondary: KyndrelColors.textPrimary,
+      onSecondary: KyndrelColors.onAccent,
       surface: KyndrelColors.surface,
       error: KyndrelColors.error,
     );

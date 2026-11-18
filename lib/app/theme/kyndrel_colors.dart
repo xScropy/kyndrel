@@ -46,6 +46,16 @@ abstract final class KyndrelColors {
   /// Hover background of the minimize/maximize buttons.
   static const Color windowButtonHover = Color(0x1FFFFFFF);
 
+  /// Text on accent fills. White on the accent is only 3.1:1, below WCAG
+  /// AA for body text; this near-black is 6.4:1 (task 5.3).
+  static const Color onAccent = Color(0xFF0B0B0D);
+
+  /// Keyboard focus highlight on controls (accent, 40 %).
+  static const Color focus = Color(0x66F26A1B);
+
+  /// Keyboard focus highlight on accent-filled buttons (white, 30 %).
+  static const Color focusOnAccent = Color(0x4DFFFFFF);
+
   /// Hover background of the close button (Windows convention).
   static const Color windowCloseHover = Color(0xFFE81123);
 
@@ -71,6 +81,9 @@ abstract final class KyndrelColors {
     'trackBuffered': trackBuffered,
     'rowActive': rowActive,
     'windowButtonHover': windowButtonHover,
+    'onAccent': onAccent,
+    'focus': focus,
+    'focusOnAccent': focusOnAccent,
     'windowCloseHover': windowCloseHover,
     'titleBarScrim': titleBarScrim,
     'error': error,

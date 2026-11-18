@@ -154,5 +154,19 @@
       }
     }
   },
-  "softwareDecoding": "Software decoding"
+  "softwareDecoding": "Software decoding",
+  "seekLabel": "Seek",
+  "seekValue": "{elapsed} of {total}",
+  "@seekValue": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSurface": "Video",
+  "videoSurfaceHint": "Tap to show controls, double-tap for full screen"
 }

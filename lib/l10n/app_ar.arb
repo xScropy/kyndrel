@@ -105,5 +105,9 @@
   "openSourceLicences": "تراخيص البرمجيات المفتوحة",
   "diagnosticsHeader": "التشخيص",
   "hardwareDecoding": "فك الترميز بالعتاد: {hwdec}",
-  "softwareDecoding": "فك الترميز بالبرمجيات"
+  "softwareDecoding": "فك الترميز بالبرمجيات",
+  "seekLabel": "التقديم والإرجاع",
+  "seekValue": "{elapsed} من {total}",
+  "videoSurface": "الفيديو",
+  "videoSurfaceHint": "انقر لإظهار عناصر التحكم، وانقر مرتين لملء الشاشة"
 }

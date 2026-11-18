@@ -123,6 +123,9 @@ class _SeekBarState extends ConsumerState<SeekBar> {
     });
   }
 
+  static Duration _clamp(Duration d, Duration max) =>
+      d < Duration.zero ? Duration.zero : (d > max ? max : d);
+
   Duration _at(double fraction, Duration duration) =>
       duration * fraction.clamp(0.0, 1.0);
 
@@ -133,6 +136,9 @@ class _SeekBarState extends ConsumerState<SeekBar> {
     final position = state?.position ?? Duration.zero;
     final buffered = position + (state?.buffered ?? Duration.zero);
     final enabled = duration > Duration.zero;
+    final skip = Duration(
+      seconds: ref.watch(settingsProvider.select((s) => s.skipSeconds)),
+    );
     final chapters =
         ref.watch(trackStateProvider.select((t) => t.value?.chapters)) ??
         const [];
@@ -167,113 +173,146 @@ class _SeekBarState extends ConsumerState<SeekBar> {
             _preview = null;
             _previewRequest++;
           }),
-          child: GestureDetector(
-            key: const Key('seek-bar'),
-            behavior: HitTestBehavior.opaque,
-            dragStartBehavior: DragStartBehavior.down,
-            onTapUp: enabled
-                ? (d) => unawaited(
-                    ref
-                        .read(playerServiceProvider)
-                        .seek(_at(fractionAt(d.localPosition.dx), duration)),
+          // A screen-reader slider: arrow/volume-key gestures seek by the
+          // skip interval (task 5.3).
+          child: Semantics(
+            slider: true,
+            label: context.l10n.seekLabel,
+            value: context.l10n.seekValue(
+              formatDuration(position),
+              formatDuration(duration),
+            ),
+            increasedValue: enabled
+                ? context.l10n.seekValue(
+                    formatDuration(_clamp(position + skip, duration)),
+                    formatDuration(duration),
                   )
                 : null,
-            onHorizontalDragStart: enabled
-                ? (d) => setState(
-                    () => _dragFraction = fractionAt(d.localPosition.dx),
+            decreasedValue: enabled
+                ? context.l10n.seekValue(
+                    formatDuration(_clamp(position - skip, duration)),
+                    formatDuration(duration),
                   )
                 : null,
-            onHorizontalDragUpdate: enabled
-                ? (d) {
-                    final f = fractionAt(d.localPosition.dx);
-                    setState(() {
-                      _dragFraction = f;
-                      _hoverX = d.localPosition.dx;
-                    });
-                    _seekThrottled(_at(f, duration));
-                    _requestPreview(_at(f, duration), duration);
-                  }
+            onIncrease: enabled
+                ? () => unawaited(ref.read(playerServiceProvider).seekBy(skip))
                 : null,
-            onHorizontalDragEnd: enabled
-                ? (_) {
-                    final f = _dragFraction;
-                    _throttle?.cancel();
-                    _pendingSeek = null;
-                    if (f != null) {
-                      unawaited(
-                        ref.read(playerServiceProvider).seek(_at(f, duration)),
-                      );
+            onDecrease: enabled
+                ? () => unawaited(ref.read(playerServiceProvider).seekBy(-skip))
+                : null,
+            child: GestureDetector(
+              key: const Key('seek-bar'),
+              behavior: HitTestBehavior.opaque,
+              dragStartBehavior: DragStartBehavior.down,
+              onTapUp: enabled
+                  ? (d) => unawaited(
+                      ref
+                          .read(playerServiceProvider)
+                          .seek(_at(fractionAt(d.localPosition.dx), duration)),
+                    )
+                  : null,
+              onHorizontalDragStart: enabled
+                  ? (d) => setState(
+                      () => _dragFraction = fractionAt(d.localPosition.dx),
+                    )
+                  : null,
+              onHorizontalDragUpdate: enabled
+                  ? (d) {
+                      final f = fractionAt(d.localPosition.dx);
+                      setState(() {
+                        _dragFraction = f;
+                        _hoverX = d.localPosition.dx;
+                      });
+                      _seekThrottled(_at(f, duration));
+                      _requestPreview(_at(f, duration), duration);
                     }
-                    setState(() => _dragFraction = null);
-                  }
-                : null,
-            child: SizedBox(
-              height: 32,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: SeekBarPainter(
-                        progress: progress,
-                        buffered: fractionOf(buffered),
-                        hovering: hoverX != null || _dragFraction != null,
-                        marks: [
-                          for (final c in chapters)
-                            if (c.start > Duration.zero) fractionOf(c.start),
-                        ],
-                        loopA: loopA == null ? null : fractionOf(loopA),
-                        loopB: loopB == null ? null : fractionOf(loopB),
+                  : null,
+              onHorizontalDragEnd: enabled
+                  ? (_) {
+                      final f = _dragFraction;
+                      _throttle?.cancel();
+                      _pendingSeek = null;
+                      if (f != null) {
+                        unawaited(
+                          ref
+                              .read(playerServiceProvider)
+                              .seek(_at(f, duration)),
+                        );
+                      }
+                      setState(() => _dragFraction = null);
+                    }
+                  : null,
+              child: SizedBox(
+                height: 32,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: SeekBarPainter(
+                          progress: progress,
+                          buffered: fractionOf(buffered),
+                          hovering: hoverX != null || _dragFraction != null,
+                          marks: [
+                            for (final c in chapters)
+                              if (c.start > Duration.zero) fractionOf(c.start),
+                          ],
+                          loopA: loopA == null ? null : fractionOf(loopA),
+                          loopB: loopB == null ? null : fractionOf(loopB),
+                        ),
                       ),
                     ),
-                  ),
-                  if (hoverX != null && enabled)
-                    Builder(
-                      builder: (context) {
-                        final at = _at(fractionAt(hoverX), duration);
-                        String? chapter;
-                        for (final c in chapters) {
-                          if (c.start <= at) chapter = c.title;
-                        }
-                        final preview = _preview;
-                        final bubble = preview == null ? 140.0 : 180.0;
-                        return Positioned(
-                          left: (hoverX - bubble / 2).clamp(0, width - bubble),
-                          bottom: 30,
-                          width: bubble,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (preview != null)
-                                Container(
-                                  key: const Key('seek-preview'),
-                                  margin: const EdgeInsets.only(bottom: 4),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: KyndrelColors.panelBorder,
+                    if (hoverX != null && enabled)
+                      Builder(
+                        builder: (context) {
+                          final at = _at(fractionAt(hoverX), duration);
+                          String? chapter;
+                          for (final c in chapters) {
+                            if (c.start <= at) chapter = c.title;
+                          }
+                          final preview = _preview;
+                          final bubble = preview == null ? 140.0 : 180.0;
+                          return Positioned(
+                            left: (hoverX - bubble / 2).clamp(
+                              0,
+                              width - bubble,
+                            ),
+                            bottom: 30,
+                            width: bubble,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (preview != null)
+                                  Container(
+                                    key: const Key('seek-preview'),
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: KyndrelColors.panelBorder,
+                                      ),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Image.file(
+                                      File(preview),
+                                      width: 176,
+                                      fit: BoxFit.cover,
+                                      gaplessPlayback: true,
+                                      errorBuilder: (_, _, _) =>
+                                          const SizedBox.shrink(),
                                     ),
                                   ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: Image.file(
-                                    File(preview),
-                                    width: 176,
-                                    fit: BoxFit.cover,
-                                    gaplessPlayback: true,
-                                    errorBuilder: (_, _, _) =>
-                                        const SizedBox.shrink(),
-                                  ),
+                                _TimeBubble(
+                                  text: formatDuration(at),
+                                  chapter: chapter,
                                 ),
-                              _TimeBubble(
-                                text: formatDuration(at),
-                                chapter: chapter,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

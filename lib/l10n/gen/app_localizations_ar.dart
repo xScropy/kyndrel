@@ -341,4 +341,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get softwareDecoding => 'فك الترميز بالبرمجيات';
+
+  @override
+  String get seekLabel => 'التقديم والإرجاع';
+
+  @override
+  String seekValue(String elapsed, String total) {
+    return '$elapsed من $total';
+  }
+
+  @override
+  String get videoSurface => 'الفيديو';
+
+  @override
+  String get videoSurfaceHint =>
+      'انقر لإظهار عناصر التحكم، وانقر مرتين لملء الشاشة';
 }
