@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,10 @@ const _assets = [
   'Kyndrel-1.2.0-macos-universal.dmg',
   'Kyndrel-1.2.0-x86_64.AppImage',
   'kyndrel_1.2.0_amd64.deb',
+  'Kyndrel-1.2.0-android-universal.apk',
+  'Kyndrel-1.2.0-android-arm64-v8a.apk',
+  'Kyndrel-1.2.0-android-armeabi-v7a.apk',
+  'Kyndrel-1.2.0-android-x86_64.apk',
 ];
 
 String _release(String tag) => jsonEncode({
@@ -76,6 +81,9 @@ void main() {
         (UpdatePackage.macDmg, _assets[1]),
         (UpdatePackage.linuxAppImage, _assets[2]),
         (UpdatePackage.linuxDeb, _assets[3]),
+        (UpdatePackage.androidArm64, _assets[5]),
+        (UpdatePackage.androidArm, _assets[6]),
+        (UpdatePackage.androidX64, _assets[7]),
       ]) {
         final info = await _checker('v1.2.0', package: package).check();
         expect(info!.version.toString(), '1.2.0');
@@ -83,6 +91,22 @@ void main() {
         expect(info.pageUrl.path, endsWith('/releases/tag/v1.2.0'));
         expect(info.notes, 'Notes');
       }
+    });
+
+    test("a phone's processor picks its APK", () {
+      expect(
+        UpdatePackage.forAndroid(Abi.androidArm64),
+        UpdatePackage.androidArm64,
+      );
+      expect(
+        UpdatePackage.forAndroid(Abi.androidArm),
+        UpdatePackage.androidArm,
+      );
+      expect(
+        UpdatePackage.forAndroid(Abi.androidX64),
+        UpdatePackage.androidX64,
+      );
+      expect(UpdatePackage.forAndroid(Abi.linuxX64), isNull);
     });
 
     test('same or older version: no update', () async {

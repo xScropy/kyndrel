@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -56,7 +57,11 @@ enum UpdatePackage {
   windowsInstaller('-windows-x64-setup.exe'),
   macDmg('.dmg'),
   linuxAppImage('-x86_64.AppImage'),
-  linuxDeb('_amd64.deb');
+  linuxDeb('_amd64.deb'),
+  // Android APKs, one per processor type (task 6.9).
+  androidArm64('-android-arm64-v8a.apk'),
+  androidArm('-android-armeabi-v7a.apk'),
+  androidX64('-android-x86_64.apk');
 
   new(this.suffix);
   final String suffix;
@@ -70,8 +75,17 @@ enum UpdatePackage {
           ? linuxAppImage
           : linuxDeb;
     }
+    if (Platform.isAndroid) return forAndroid(Abi.current());
     return null;
   }
+
+  /// The APK for a phone's processor; Android then offers to install it.
+  static UpdatePackage? forAndroid(Abi abi) => switch (abi) {
+    Abi.androidArm64 => androidArm64,
+    Abi.androidArm => androidArm,
+    Abi.androidX64 => androidX64,
+    _ => null,
+  };
 }
 
 @immutable

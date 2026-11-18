@@ -10,6 +10,11 @@ name: Release
 #   e.g. `*.exe *.deb`). Without a tag, or when anything under packaging/
 #   changes, the packages are only kept as workflow artifacts.
 #
+# Android (task 6.9) is signed with the release key from these secrets:
+# ANDROID_KEYSTORE (base64 .jks), ANDROID_KEYSTORE_PASSWORD,
+# ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. A tag build fails without them,
+# because phones only install an update signed with the same key.
+#
 # Optional secrets for signed macOS builds: MACOS_CERTIFICATE (base64 .p12),
 # MACOS_CERTIFICATE_PASSWORD, MACOS_SIGN_IDENTITY, APPLE_ID, APPLE_TEAM_ID,
 # APPLE_APP_PASSWORD. Without them the DMG is unsigned.
@@ -184,9 +189,70 @@ jobs:
             build/installer/*.deb
             build/installer/*.AppImage
 
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.ANDROID_KEYSTORE != '' }}
+      RELEASING: ${{ startsWith(github.ref, 'refs/tags/v') || inputs.tag != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.0
+          cache: true
+      - name: Release key
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "$HAS_KEY" != true ]; then
+            if [ "$RELEASING" = true ]; then
+              echo "::error::ANDROID_KEYSTORE is not set: release APKs must be signed with the release key"
+              exit 1
+            fi
+            echo "::warning::No release key: APKs are signed with a throwaway debug key"
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE" | base64 --decode > android/release.jks
+          {
+            echo "storeFile=release.jks"
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+          } > android/key.properties
+      - run: flutter pub get
+      - name: APKs
+        run: |
+          v=${{ needs.version.outputs.version }}
+          flutter build apk --release --split-per-abi
+          mkdir -p build/installer
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" \
+              "build/installer/Kyndrel-$v-android-$abi.apk"
+          done
+          # One APK for every phone, for people who don't know which they have.
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "build/installer/Kyndrel-$v-android-universal.apk"
+          rm -f android/release.jks android/key.properties
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: build/installer/*.apk
+
   release:
     if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
-    needs: [version, windows, macos, linux]
+    needs: [version, windows, macos, linux, android]
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}

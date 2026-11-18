@@ -3,6 +3,46 @@
 All notable changes to Kyndrel. The release workflow copies a version's
 section into its GitHub release.
 
+## [1.1.0] - 2026-11-18
+
+Kyndrel for Android: the same player on phones and tablets, with a touch
+layout and gestures. See docs/android.md.
+
+### Android
+- APKs for arm64, 32-bit ARM and x86_64 phones, plus a universal one
+  (Android 7.0+). The update check offers the right one.
+- Swipe the left side for brightness (Kyndrel only) and the right side for
+  volume: the phone's volume first, then Kyndrel's boost up to 200 %.
+- Swipe sideways to seek with a large preview of the scene, its time and
+  chapter. Dragging the seek bar shows the same preview above your finger.
+  Previews are prepared in the background after a file opens.
+- Double-tap the sides to skip (taps add up), double-tap the middle to
+  pause, pinch to zoom, hold for 2× speed, and lock the screen against
+  pocket touches. Each gesture can be turned off in Settings › Gestures.
+- Phone layout: the main controls in the bar and the rest in a "…" sheet,
+  panels sized for the screen, 48 dp buttons, cutout-safe, immersive full
+  screen while playing, turned to the video's shape with a rotate button.
+- "Open with" and Share from other apps; "On this phone" lists the
+  phone's videos by folder and queues the rest of the folder.
+- The media notification and lock screen controls; headset and Bluetooth
+  buttons; pause for calls and resume after; pause when headphones are
+  unplugged.
+- Optional playback in the background (audio only), and
+  picture-in-picture, including on Home.
+- MediaCodec hardware decoding.
+
+### Everywhere
+- Narrow windows get the phone layout, and Settings shows one section at
+  a time.
+
+### Known limitations
+- Not on Android: transcoding for casting, translating subtitles inside
+  the video, and site downloads (they need FFmpeg or yt-dlp).
+- Subtitles next to a video load automatically only for "On this phone"
+  files; load others from the subtitles panel.
+- Tested on an emulator in CI; the real-phone checklist is in
+  docs/android.md.
+
 ## [1.0.0] - 2026-11-18
 
 The first release: a desktop video player for Windows, macOS and Linux,

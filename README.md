@@ -1,6 +1,6 @@
 # Kyndrel
 
-A desktop video player for Windows, macOS and Linux, built on **libmpv**
+A video player for Windows, macOS, Linux and Android, built on **libmpv**
 (via [media_kit](https://github.com/media-kit/media-kit)) with a dark,
 orange-accented Flutter interface.
 
@@ -80,8 +80,11 @@ Touch: tap to show the controls, drag sideways to seek.
 
 Download the installer for your system from
 [Releases](https://github.com/xScropy/kyndrel/releases): the Windows setup,
-the macOS DMG, the `.deb` (Debian 12+ / Ubuntu 23.04+) or the AppImage.
-See [docs/packaging.md](docs/packaging.md).
+the macOS DMG, the `.deb` (Debian 12+ / Ubuntu 23.04+), the AppImage, or
+an Android APK (Android 7.0+). See [docs/packaging.md](docs/packaging.md)
+and, for phones, [docs/android.md](docs/android.md): gestures for
+brightness, volume and seeking with a scene preview, the media
+notification, background audio and picture-in-picture.
 
 ## Build
 
@@ -89,7 +92,7 @@ Requires Flutter 3.50 (stable).
 
 ```sh
 flutter pub get
-flutter run -d windows            # or -d linux / -d macos
+flutter run -d windows            # or -d linux / -d macos / an Android device
 flutter run -d linux -- <file>    # open a file on start
 flutter run -d linux -- --diagnostics <file>   # decoder stats overlay
 ```
@@ -99,6 +102,9 @@ Linux needs libmpv, SQLite and the desktop toolchain:
 ```sh
 sudo apt install libmpv-dev libsqlite3-dev clang cmake ninja-build pkg-config libgtk-3-dev
 ```
+
+Android needs the Android SDK and JDK 21; `flutter build apk --release
+--split-per-abi` makes one APK per processor type.
 
 Optional API keys (Settings): OpenSubtitles for subtitle search, TMDB for
 titles and posters, and Claude or DeepL for subtitle translation.
