@@ -20,6 +20,19 @@ Icons for every platform come from `scripts/make_icons.py`.
 
 The Linux job starts the AppImage under Xvfb to check it launches.
 
+## Release checklist
+1. Version in `pubspec.yaml` and `lib/core/app_info.dart` (a test keeps
+   them equal), and a `## [X.Y.Z]` section in `CHANGELOG.md`.
+2. `python3 scripts/licence_audit.py` if dependencies changed.
+3. CI green on the commit: tests, engine tests, Windows/macOS builds,
+   packaging.
+4. Push the tag: `git tag -a vX.Y.Z -m "Kyndrel X.Y.Z" && git push origin vX.Y.Z`.
+5. The Release workflow attaches the four packages to a **draft**
+   release. Before publishing, install each one: Windows (Open with, Default
+   apps, uninstall), macOS (first launch, Open with), the `.deb` on Ubuntu,
+   and the AppImage on another distribution. Then publish: running copies
+   offer the update from then on.
+
 ## Updates
 With Settings › Advanced › *Check for updates* on (the default), Kyndrel
 asks the GitHub API for the latest published release 5 s after start

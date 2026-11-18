@@ -22,8 +22,9 @@ orange-accented Flutter interface.
   fade-out.
 - Chapters, A-B loop and frame stepping. Fit, fill, stretch, aspect
   overrides, zoom and rotate.
-- Video and audio effects: brightness, contrast, sharpen shader, tone
-  mapping, normalisation and a 10-band equaliser.
+- Picture quality presets with an optional sharpen shader, a
+  hardware-decoder choice and HDR tone mapping. Audio normalisation and a
+  10-band equaliser.
 
 **Subtitles**
 - Embedded, image (PGS/VobSub) and external tracks. Files like
