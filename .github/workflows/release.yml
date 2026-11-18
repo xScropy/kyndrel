@@ -145,9 +145,16 @@ jobs:
         run: |
           sudo apt-get install -y xvfb
           app=$(ls build/installer/*.AppImage)
-          timeout 20 xvfb-run -a "$app" --perf-log 2> perf.log || true
-          grep -q "kyndrel-perf first-frame" perf.log \
-            || { cat perf.log; echo "::error::AppImage did not start"; exit 1; }
+          # Still running at the timeout (124), not aborted, and drew a
+          # frame. libmpv-dev is installed here, which is the case that
+          # once loaded two libmpv copies.
+          status=0
+          timeout 20 xvfb-run -a "$app" --perf-log > perf.log 2>&1 || status=$?
+          if [ "$status" != 124 ] || ! grep -q "kyndrel-perf first-frame" perf.log; then
+            cat perf.log
+            echo "::error::AppImage did not keep running (exit $status)"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: linux

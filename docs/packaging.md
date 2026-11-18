@@ -5,7 +5,7 @@
 | Windows 10 1809+ | `Kyndrel-<v>-windows-x64-setup.exe` (Inno Setup) | `packaging/windows/kyndrel.iss` | Per-user install by default (no admin prompt), all-users on request. Registers "Open with" and Settings › Default apps for 28 video/audio/playlist types without taking over existing defaults. Start menu entry, optional desktop icon, uninstaller. |
 | macOS 11+ | `Kyndrel-<v>-macos-universal.dmg` | `packaging/macos/make_dmg.sh` | Drag-to-Applications DMG. Signed with the hardened runtime and notarised when the signing secrets exist; otherwise unsigned (right-click › Open the first time). |
 | Debian 12+, Ubuntu 23.04+ | `kyndrel_<v>_amd64.deb` | `packaging/linux/make_deb.sh` | Installs to `/opt/kyndrel`, `/usr/bin/kyndrel`, desktop entry and icons. Uses the system `libmpv2` and `libsqlite3-0`. |
-| Other Linux | `Kyndrel-<v>-x86_64.AppImage` | `packaging/linux/make_appimage.sh` | Bundles libmpv, FFmpeg and SQLite (built on Ubuntu 24.04, so needs glibc ≥ 2.39). |
+| Other Linux | `Kyndrel-<v>-x86_64.AppImage` | `packaging/linux/make_appimage.sh` | Bundles libmpv, FFmpeg and SQLite (built on Ubuntu 24.04, so needs glibc ≥ 2.39). Ships a `libmpv.so` link to the bundled `libmpv.so.2`: media_kit dlopens `libmpv.so` first, and without it a system libmpv-dev would be loaded alongside the bundled copy (mpv aborts). |
 
 Icons for every platform come from `scripts/make_icons.py`.
 

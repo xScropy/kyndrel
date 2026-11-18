@@ -46,13 +46,22 @@ DEPLOY_ARGS=()
 for so in "$APPDIR"/usr/lib/kyndrel/lib/*.so; do
   DEPLOY_ARGS+=(--deploy-deps-only "$so")
 done
-export OUTPUT="$OUT/Kyndrel-$VERSION-x86_64.AppImage"
-export VERSION
 "$LINUXDEPLOY" --appdir "$APPDIR" \
   --executable "$APPDIR/usr/lib/kyndrel/kyndrel" \
   "${DEPLOY_ARGS[@]}" \
   --desktop-file linux/kyndrel.desktop \
   --icon-file packaging/linux/icons/256x256/kyndrel.png \
-  --custom-apprun "$APPRUN" \
-  --output appimage
+  --custom-apprun "$APPRUN"
+
+# media_kit's Dart side dlopens "libmpv.so" before "libmpv.so.2". Without
+# this link it finds the system's copy (when libmpv-dev is installed) while
+# the video plugin uses the bundled one: two libmpv instances share one
+# player and mpv aborts (m_config_cache_from_shadow assertion).
+[ -e "$APPDIR/usr/lib/libmpv.so.2" ] \
+  || { echo "libmpv.so.2 was not bundled" >&2; exit 1; }
+ln -sf libmpv.so.2 "$APPDIR/usr/lib/libmpv.so"
+
+export OUTPUT="$OUT/Kyndrel-$VERSION-x86_64.AppImage"
+export VERSION
+"$LINUXDEPLOY" --appdir "$APPDIR" --output appimage
 echo "$OUTPUT"
