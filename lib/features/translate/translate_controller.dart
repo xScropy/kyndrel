@@ -66,9 +66,13 @@ class DefaultSubtitleExtractor implements SubtitleExtractor {
         '-map', '0:s:$index', '-f', 'srt', '-',
       ], stdoutEncoding: utf8);
     } on ProcessException {
-      throw const TranslationException(
-        'Install FFmpeg to translate subtitles inside the video, or load a '
-        'subtitle file.',
+      // Phones can't run FFmpeg (task 6.6).
+      throw TranslationException(
+        Platform.isAndroid
+            ? 'Only subtitle files can be translated on this device: load '
+                  'one from the subtitles panel.'
+            : 'Install FFmpeg to translate subtitles inside the video, or '
+                  'load a subtitle file.',
       );
     }
     if (r.exitCode != 0) {

@@ -242,5 +242,6 @@
   "moreSpeed": "Speed & sleep",
   "moreCast": "Cast",
   "moreDownload": "Download",
-  "rotate": "Rotate"
+  "rotate": "Rotate",
+  "morePip": "Small window"
 }

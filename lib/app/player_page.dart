@@ -14,6 +14,7 @@ import 'package:kyndrel/app/player_shortcuts.dart';
 import 'package:kyndrel/app/settings_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/window/window_title_bar.dart';
+import 'package:kyndrel/core/platform/native_pip.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
@@ -21,6 +22,7 @@ import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_video_view.dart';
 import 'package:kyndrel/core/player/preview_prewarm.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/cast/cast_button.dart';
@@ -100,6 +102,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       // Android may end the process in the background: save on the way.
       ..onHidden(resume.saveNow)
       ..onHidden(history.saveNow)
+      ..onHidden(_pauseInBackground)
       // Last: release libmpv and the video texture before the window is
       // destroyed. On Linux, destroying the GTK window with a live texture
       // aborts the process (g_mutex_clear on a locked mutex).
@@ -136,6 +139,15 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     }
   }
 
+  /// Phones (task 6.6): leaving the app pauses, unless the sound should go
+  /// on in the background or the video went into picture-in-picture.
+  Future<void> _pauseInBackground() async {
+    if (ref.read(pipProvider) || ref.read(settingsProvider).backgroundAudio) {
+      return;
+    }
+    await ref.read(playerServiceProvider).pause();
+  }
+
   @override
   void dispose() {
     PlayerPage.openFileChannel.setMethodCallHandler(null);
@@ -168,6 +180,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       (button: const TranslateButton(), label: l.moreTranslate),
       (button: const CastButton(), label: l.moreCast),
       (button: const DownloadButton(), label: l.moreDownload),
+      if (ref.read(nativePipProvider) != null)
+        (button: const PipButton(), label: l.morePip),
     ];
   }
 
@@ -246,6 +260,13 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final compact = mobile || screen.width < 600;
     // Screen lock (task 6.3): no controls, no gestures until unlocked.
     final locked = hasMedia && ref.watch(gestureLockProvider);
+    if (ref.watch(pipProvider) && ref.watch(nativePipProvider) != null) {
+      // Android's PiP window: just the picture; Android draws the buttons.
+      return const Scaffold(
+        backgroundColor: KyndrelColors.background,
+        body: PlayerVideoView(),
+      );
+    }
     if (ref.watch(pipProvider)) {
       return Scaffold(
         backgroundColor: KyndrelColors.background,

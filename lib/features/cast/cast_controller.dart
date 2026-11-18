@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/platform/multicast_lock.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/remote_target.dart';
 import 'package:kyndrel/core/subtitles/subtitle_file.dart';
@@ -65,7 +66,9 @@ class DefaultCastPlatform implements CastPlatform {
 
   @override
   Future<List<CastDevice>> discover() async {
-    final r = await Future.wait([discoverChromecasts(), discoverDlna()]);
+    final r = await MulticastLock.hold(
+      () => Future.wait([discoverChromecasts(), discoverDlna()]),
+    );
     return [...r[0], ...r[1]];
   }
 

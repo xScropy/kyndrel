@@ -486,4 +486,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rotate => 'Rotate';
+
+  @override
+  String get morePip => 'Small window';
 }

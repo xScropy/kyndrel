@@ -65,6 +65,8 @@ void main() {
       gestureDoubleTap: false,
       gesturePinch: false,
       gestureLongPress: false,
+      backgroundAudio: true,
+      autoPip: false,
 
       limiterEnabled: false,
       showRemainingTime: true,
@@ -115,6 +117,8 @@ void main() {
       'gestureDoubleTap': s.gestureDoubleTap,
       'gesturePinch': s.gesturePinch,
       'gestureLongPress': s.gestureLongPress,
+      'backgroundAudio': s.backgroundAudio,
+      'autoPip': s.autoPip,
       'limiterEnabled': s.limiterEnabled,
       'showRemainingTime': s.showRemainingTime,
       'autoLoadSubtitles': s.autoLoadSubtitles,

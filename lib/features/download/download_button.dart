@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
@@ -117,7 +118,9 @@ class DownloadsPanel extends ConsumerWidget {
               child: Text(
                 source == null || !source.contains('://')
                     ? 'Downloads are for videos streamed from the web.'
-                    : 'This stream can only be saved with yt-dlp installed.',
+                    : ref.watch(platformCapabilitiesProvider).canRunExecutables
+                    ? 'This stream can only be saved with yt-dlp installed.'
+                    : "This stream can't be saved on this device.",
                 key: const Key('download-hint'),
                 style: const TextStyle(
                   fontSize: 12,

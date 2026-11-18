@@ -33,6 +33,9 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   int _index = 0;
 
+  /// Phones (task 6.5): the list first, then one section full width.
+  bool _sectionOpen = false;
+
   /// (stable id, label, icon, content). Ids key the tiles for tests.
   static final sections =
       <(String, String Function(AppLocalizations), IconData, List<Widget>)>[
@@ -64,7 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
           'Gestures',
           (l) => l.settingsGestures,
           Icons.touch_app_outlined,
-          const [GestureSettings()],
+          const [GestureSettings(), PhoneSettings()],
         ),
         (
           'Shortcuts',
@@ -107,50 +110,96 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final current = sections[_index];
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.escape): () =>
-            Navigator.of(context).maybePop(),
-      },
-      child: Scaffold(
-        backgroundColor: KyndrelColors.background,
-        appBar: WindowAppBar(title: Text(context.l10n.settings)),
-        body: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              width: 220,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                children: [
-                  for (final (i, s) in sections.indexed)
-                    ListTile(
-                      key: Key('settings-section-${s.$1}'),
-                      leading: Icon(s.$3, size: 20),
-                      title: Text(s.$2(context.l10n)),
-                      selected: i == _index,
-                      selectedColor: KyndrelColors.accent,
-                      selectedTileColor: KyndrelColors.rowActive,
-                      onTap: () => setState(() => _index = i),
-                    ),
-                ],
+    final narrow = MediaQuery.sizeOf(context).width < 600;
+    final list = ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      children: [
+        for (final (i, s) in sections.indexed)
+          ListTile(
+            key: Key('settings-section-${s.$1}'),
+            leading: Icon(s.$3, size: 20),
+            title: Text(s.$2(context.l10n)),
+            trailing: narrow ? const Icon(Icons.chevron_right, size: 20) : null,
+            selected: !narrow && i == _index,
+            selectedColor: KyndrelColors.accent,
+            selectedTileColor: KyndrelColors.rowActive,
+            onTap: () => setState(() {
+              _index = i;
+              _sectionOpen = true;
+            }),
+          ),
+      ],
+    );
+    final content = ListView(
+      key: ValueKey(current.$1),
+      padding: EdgeInsets.all(narrow ? 16 : 28),
+      children: current.$4,
+    );
+    final Widget body;
+    if (!narrow) {
+      body = Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(width: 220, child: list),
+          const VerticalDivider(width: 1, color: KyndrelColors.panelBorder),
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.topStart,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: content,
               ),
             ),
-            const VerticalDivider(width: 1, color: KyndrelColors.panelBorder),
-            Expanded(
-              child: Align(
-                alignment: AlignmentDirectional.topStart,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 720),
-                  child: ListView(
-                    key: ValueKey(current.$1),
-                    padding: const EdgeInsets.all(28),
-                    children: current.$4,
+          ),
+        ],
+      );
+    } else if (!_sectionOpen) {
+      body = list;
+    } else {
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4),
+            child: Row(
+              children: [
+                IconButton(
+                  key: const Key('settings-back-to-sections'),
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  icon: const BackButtonIcon(),
+                  onPressed: () => setState(() => _sectionOpen = false),
+                ),
+                Expanded(
+                  child: Text(
+                    current.$2(context.l10n),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
+          Expanded(child: content),
+        ],
+      );
+    }
+    return PopScope(
+      // The system back gesture closes a section before the page.
+      canPop: !narrow || !_sectionOpen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _sectionOpen = false);
+      },
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): () =>
+              Navigator.of(context).maybePop(),
+        },
+        child: Scaffold(
+          backgroundColor: KyndrelColors.background,
+          appBar: WindowAppBar(title: Text(context.l10n.settings)),
+          body: SafeArea(top: false, child: body),
         ),
       ),
     );

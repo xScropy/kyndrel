@@ -991,6 +991,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rotate'**
   String get rotate;
+
+  /// No description provided for @morePip.
+  ///
+  /// In en, this message translates to:
+  /// **'Small window'**
+  String get morePip;
 }
 
 class _AppLocalizationsDelegate

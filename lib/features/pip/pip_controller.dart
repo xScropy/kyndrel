@@ -1,11 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/platform/native_pip.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 
 /// Picture-in-picture: the same window and player, shrunk to a small,
 /// always-on-top, aspect-locked window in the screen's corner (task 4.1).
 /// No second player, so playback never restarts.
+///
+/// On Android it is the system's PiP instead (task 6.6): the state follows
+/// what Android reports, and going Home while a video plays enters it
+/// when the "Picture-in-picture on Home" setting is on.
 class PipController extends Notifier<bool> {
   /// Width of the PiP window when it opens.
   static const width = 400.0;
@@ -20,7 +28,48 @@ class PipController extends Notifier<bool> {
   bool _wasFullScreen = false;
 
   @override
-  bool build() => false;
+  bool build() {
+    final native = ref.watch(nativePipProvider);
+    if (native != null) _watchNative(native);
+    return false;
+  }
+
+  void _watchNative(NativePip native) {
+    final changes = native.changes.listen((inPip) => state = inPip);
+    final service = ref.read(playerServiceProvider);
+    ({bool auto, double aspect, bool playing})? last;
+    void push() {
+      final p = service.state;
+      final next = (
+        auto: ref.read(settingsProvider).autoPip && p.isPlaying,
+        aspect: _aspectOf(p.videoWidth, p.videoHeight),
+        playing: p.isPlaying,
+      );
+      if (next == last) return;
+      last = next;
+      unawaited(
+        native.configure(
+          auto: next.auto,
+          aspect: next.aspect,
+          playing: next.playing,
+        ),
+      );
+    }
+
+    final states = service.states.listen((_) => push());
+    final settings = ref.listen(
+      settingsProvider.select((s) => s.autoPip),
+      (_, _) => push(),
+    );
+    ref.onDispose(() {
+      unawaited(changes.cancel());
+      unawaited(states.cancel());
+      settings.close();
+    });
+  }
+
+  static double _aspectOf(int? w, int? h) =>
+      w != null && h != null && w > 0 && h > 0 ? w / h : 16 / 9;
 
   WindowService get _window => ref.read(windowServiceProvider);
 
@@ -28,15 +77,19 @@ class PipController extends Notifier<bool> {
 
   Future<void> enter() async {
     if (state) return;
+    final native = ref.read(nativePipProvider);
+    if (native != null) {
+      final p = ref.read(playerServiceProvider).state;
+      await native.enter(aspect: _aspectOf(p.videoWidth, p.videoHeight));
+      return;
+    }
     final window = _window;
     _wasFullScreen = window.isFullScreen;
     if (_wasFullScreen) await window.setFullScreen(fullScreen: false);
     _savedBounds = await window.getBounds();
 
     final p = ref.read(playerServiceProvider).state;
-    final w = p.videoWidth;
-    final h = p.videoHeight;
-    final aspect = w != null && h != null && w > 0 && h > 0 ? w / h : 16 / 9;
+    final aspect = _aspectOf(p.videoWidth, p.videoHeight);
     final size = Size(width, (width / aspect).roundToDouble());
     final area = await window.workArea();
 
@@ -55,7 +108,8 @@ class PipController extends Notifier<bool> {
   }
 
   Future<void> exit() async {
-    if (!state) return;
+    // System PiP is left with its own expand button.
+    if (!state || ref.read(nativePipProvider) != null) return;
     final window = _window;
     await window.setAlwaysOnTop(onTop: false);
     await window.setAspectRatio(0);

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_channel">التشغيل</string>
+    <string name="play">تشغيل</string>
+    <string name="pause">إيقاف مؤقت</string>
+    <string name="previous">السابق</string>
+    <string name="next">التالي</string>
+    <string name="rewind">رجوع 10 ثوانٍ</string>
+    <string name="forward">تقديم 10 ثوانٍ</string>
+</resources>

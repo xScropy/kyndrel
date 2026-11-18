@@ -4,6 +4,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/mpv_options.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
@@ -550,6 +551,46 @@ class GestureSettings extends ConsumerWidget {
           'Press and hold the video to play twice as fast until you let go.',
           s.gestureLongPress,
           (x, v) => x.copyWith(gestureLongPress: v),
+        ),
+      ],
+    );
+  }
+}
+
+/// Phone behaviour outside the player screen (task 6.6). Phones only.
+class PhoneSettings extends ConsumerWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(platformCapabilitiesProvider).isMobile) {
+      return const SizedBox.shrink();
+    }
+    final s = ref.watch(settingsProvider);
+    return SettingsSection(
+      title: 'Leaving the app',
+      children: [
+        SwitchListTile(
+          key: const Key('settings-background-audio'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Keep playing in the background'),
+          subtitle: const Text(
+            'The sound goes on with the screen off or another app open; '
+            'controls are in the notification.',
+          ),
+          value: s.backgroundAudio,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(backgroundAudio: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-auto-pip'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Picture-in-picture on Home'),
+          subtitle: const Text(
+            'Going Home while a video plays keeps it in a small window.',
+          ),
+          value: s.autoPip,
+          onChanged: (v) => updateSettings(ref, (x) => x.copyWith(autoPip: v)),
         ),
       ],
     );

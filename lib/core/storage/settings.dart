@@ -22,6 +22,8 @@ class AppSettings {
     this.gestureDoubleTap = true,
     this.gesturePinch = true,
     this.gestureLongPress = true,
+    this.backgroundAudio = false,
+    this.autoPip = true,
     this.limiterEnabled = true,
     this.showRemainingTime = false,
     this.autoLoadSubtitles = true,
@@ -85,6 +87,12 @@ class AppSettings {
 
   /// Long-press: 2× speed while held.
   final bool gestureLongPress;
+
+  /// Phones (task 6.6): keep playing the sound after leaving the app.
+  final bool backgroundAudio;
+
+  /// Phones: going Home while a video plays opens picture-in-picture.
+  final bool autoPip;
 
   /// Limiter above 100 % volume (task 1.6).
   final bool limiterEnabled;
@@ -179,6 +187,8 @@ class AppSettings {
     bool? gestureDoubleTap,
     bool? gesturePinch,
     bool? gestureLongPress,
+    bool? backgroundAudio,
+    bool? autoPip,
     bool? limiterEnabled,
     bool? showRemainingTime,
     bool? autoLoadSubtitles,
@@ -224,6 +234,8 @@ class AppSettings {
       gestureDoubleTap: gestureDoubleTap ?? this.gestureDoubleTap,
       gesturePinch: gesturePinch ?? this.gesturePinch,
       gestureLongPress: gestureLongPress ?? this.gestureLongPress,
+      backgroundAudio: backgroundAudio ?? this.backgroundAudio,
+      autoPip: autoPip ?? this.autoPip,
       limiterEnabled: limiterEnabled ?? this.limiterEnabled,
       showRemainingTime: showRemainingTime ?? this.showRemainingTime,
       autoLoadSubtitles: autoLoadSubtitles ?? this.autoLoadSubtitles,
@@ -316,6 +328,8 @@ class SettingsRepository {
       gesturePinch: _prefs.getBool('gesturePinch') ?? d.gesturePinch,
       gestureLongPress:
           _prefs.getBool('gestureLongPress') ?? d.gestureLongPress,
+      backgroundAudio: _prefs.getBool('backgroundAudio') ?? d.backgroundAudio,
+      autoPip: _prefs.getBool('autoPip') ?? d.autoPip,
       limiterEnabled: _prefs.getBool('limiterEnabled') ?? d.limiterEnabled,
       showRemainingTime:
           _prefs.getBool('showRemainingTime') ?? d.showRemainingTime,
@@ -405,6 +419,8 @@ class SettingsRepository {
     await _prefs.setBool('gestureDoubleTap', s.gestureDoubleTap);
     await _prefs.setBool('gesturePinch', s.gesturePinch);
     await _prefs.setBool('gestureLongPress', s.gestureLongPress);
+    await _prefs.setBool('backgroundAudio', s.backgroundAudio);
+    await _prefs.setBool('autoPip', s.autoPip);
     await _prefs.setBool('limiterEnabled', s.limiterEnabled);
     await _prefs.setBool('showRemainingTime', s.showRemainingTime);
     await _prefs.setBool('autoLoadSubtitles', s.autoLoadSubtitles);

@@ -1,6 +1,13 @@
 package dev.kyndrel.kyndrel
 
 import android.Manifest
+import android.app.PictureInPictureParams
+import android.app.RemoteAction
+import android.content.Context
+import android.content.res.Configuration
+import android.graphics.drawable.Icon
+import android.net.wifi.WifiManager
+import android.util.Rational
 import android.content.ActivityNotFoundException
 import android.content.ContentUris
 import android.content.Intent
@@ -26,6 +33,10 @@ import java.util.concurrent.Executors
  *   macOS (`pending` at start, then `open` calls), with {uri, name} maps.
  * - `kyndrel/android_media`: document picker, video permission, MediaStore.
  * - `kyndrel/frames`: seek-preview frames (task 6.4).
+ * - `kyndrel/media_session`: notification and media buttons (task 6.6,
+ *   see KyndrelMedia).
+ * - `kyndrel/pip`: system picture-in-picture (task 6.6).
+ * - `kyndrel/multicast`: lets DLNA/Chromecast discovery hear replies.
  */
 class MainActivity : FlutterActivity() {
     private var openChannel: MethodChannel? = null
@@ -38,6 +49,11 @@ class MainActivity : FlutterActivity() {
     private val frameExecutor = Executors.newSingleThreadExecutor()
     private var retriever: MediaMetadataRetriever? = null
     private var retrieverSource: String? = null
+
+    private var pipChannel: MethodChannel? = null
+    private var pipAuto = false
+    private var pipAspect = Rational(16, 9)
+    private var multicastLock: WifiManager.MulticastLock? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,6 +117,55 @@ class MainActivity : FlutterActivity() {
                     false
                 }
                 runOnUiThread { result.success(ok) }
+            }
+        }
+
+        KyndrelMedia.channel = MethodChannel(messenger, "kyndrel/media_session").apply {
+            setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "update" -> {
+                        (call.arguments as? Map<*, *>)?.let { KyndrelMedia.update(this@MainActivity, it) }
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        }
+
+        pipChannel = MethodChannel(messenger, "kyndrel/pip").apply {
+            setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "supported" -> result.success(pipSupported())
+                    "enter" -> {
+                        pipAspect = aspectOf(call.argument<Number>("aspect"))
+                        result.success(enterPip())
+                    }
+                    "configure" -> {
+                        pipAuto = call.argument<Boolean>("auto") ?: false
+                        pipAspect = aspectOf(call.argument<Number>("aspect"))
+                        updatePipParams(call.argument<Boolean>("playing") ?: false)
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        }
+
+        MethodChannel(messenger, "kyndrel/multicast").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "acquire" -> {
+                    val lock = multicastLock ?: (
+                        applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                        ).createMulticastLock("kyndrel-cast").apply { setReferenceCounted(false) }
+                    multicastLock = lock
+                    lock.acquire()
+                    result.success(null)
+                }
+                "release" -> {
+                    multicastLock?.takeIf { it.isHeld }?.release()
+                    result.success(null)
+                }
+                else -> result.notImplemented()
             }
         }
 
@@ -309,7 +374,84 @@ class MainActivity : FlutterActivity() {
         return true
     }
 
+    // ----------------------------------------------- picture-in-picture
+
+    private fun pipSupported() = Build.VERSION.SDK_INT >= 26 &&
+        packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+    /** Android allows 1:2.39 to 2.39:1. */
+    private fun aspectOf(value: Number?): Rational {
+        val a = (value?.toDouble() ?: (16.0 / 9)).coerceIn(1 / 2.39, 2.39)
+        return Rational((a * 1000).toInt(), 1000)
+    }
+
+    private fun pipParams(playing: Boolean): PictureInPictureParams? {
+        if (Build.VERSION.SDK_INT < 26) return null
+        fun action(icon: Int, label: Int, action: String) = RemoteAction(
+            Icon.createWithResource(this, icon),
+            getString(label),
+            getString(label),
+            KyndrelMedia.actionIntent(this, action),
+        )
+        val b = PictureInPictureParams.Builder()
+            .setAspectRatio(pipAspect)
+            .setActions(
+                listOf(
+                    action(R.drawable.ic_replay_10, R.string.rewind, KyndrelMedia.ACTION_REWIND),
+                    if (playing) {
+                        action(R.drawable.ic_pause, R.string.pause, KyndrelMedia.ACTION_PLAY_PAUSE)
+                    } else {
+                        action(R.drawable.ic_play, R.string.play, KyndrelMedia.ACTION_PLAY_PAUSE)
+                    },
+                    action(R.drawable.ic_forward_10, R.string.forward, KyndrelMedia.ACTION_FORWARD),
+                ),
+            )
+        if (Build.VERSION.SDK_INT >= 31) {
+            // Going Home while a video plays shrinks it into PiP.
+            b.setAutoEnterEnabled(pipAuto)
+            b.setSeamlessResizeEnabled(false)
+        }
+        return b.build()
+    }
+
+    private fun updatePipParams(playing: Boolean) {
+        if (Build.VERSION.SDK_INT < 26 || !pipSupported()) return
+        val params = pipParams(playing) ?: return
+        try {
+            setPictureInPictureParams(params)
+        } catch (e: IllegalStateException) {
+            // Activity not ready.
+        }
+    }
+
+    private fun enterPip(): Boolean {
+        if (Build.VERSION.SDK_INT < 26 || !pipSupported()) return false
+        val params = pipParams(KyndrelMedia.isPlaying) ?: return false
+        return try {
+            enterPictureInPictureMode(params)
+        } catch (e: IllegalStateException) {
+            false
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Before Android 12 there is no auto-enter: do it on Home.
+        if (pipAuto && Build.VERSION.SDK_INT in 26..30) enterPip()
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration,
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        pipChannel?.invokeMethod("changed", isInPictureInPictureMode)
+    }
+
     override fun onDestroy() {
+        if (isFinishing) KyndrelMedia.release(this)
+        KyndrelMedia.channel = null
+        multicastLock?.takeIf { it.isHeld }?.release()
         frameExecutor.shutdown()
         retriever?.release()
         retriever = null

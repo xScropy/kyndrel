@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/core/platform/native_pip.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
@@ -113,7 +114,8 @@ class PipButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // In-window PiP needs a movable window; phones get Android's own PiP
     // (task 6.6).
-    if (!ref.watch(platformCapabilitiesProvider).hasWindowControls) {
+    if (!ref.watch(platformCapabilitiesProvider).hasWindowControls &&
+        ref.watch(nativePipProvider) == null) {
       return const SizedBox.shrink();
     }
     return ControlButton(

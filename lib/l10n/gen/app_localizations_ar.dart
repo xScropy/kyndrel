@@ -485,4 +485,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rotate => 'تدوير الشاشة';
+
+  @override
+  String get morePip => 'نافذة صغيرة';
 }

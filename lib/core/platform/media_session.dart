@@ -100,7 +100,8 @@ class RaiseCommand extends MediaCommand {
   const new();
 }
 
-/// The OS media session: Windows SMTC, Linux MPRIS, macOS Now Playing.
+/// The OS media session: Windows SMTC, Linux MPRIS, macOS Now Playing,
+/// Android's MediaSession.
 abstract interface class MediaSession {
   Stream<MediaCommand> get commands;
   Future<void> update(MediaSessionState state);
@@ -166,8 +167,11 @@ class ChannelMediaSession implements MediaSession {
   }
 }
 
-/// The right session for this OS. Linux uses MPRIS (see mpris.dart).
+/// The right session for this OS. Linux uses MPRIS (see mpris.dart);
+/// Android has a MediaSession and notification in MainActivity (6.6).
 MediaSession platformMediaSession() {
-  if (Platform.isWindows || Platform.isMacOS) return ChannelMediaSession();
+  if (Platform.isWindows || Platform.isMacOS || Platform.isAndroid) {
+    return ChannelMediaSession();
+  }
   return const NoopMediaSession();
 }
