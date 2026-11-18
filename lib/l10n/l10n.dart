@@ -7,9 +7,10 @@ export 'package:kyndrel/l10n/gen/app_localizations.dart';
 /// Localisation (task 5.2). Strings live in `lib/l10n/app_*.arb`;
 /// `flutter gen-l10n` (run by `flutter pub get`) writes `lib/l10n/gen/`.
 abstract final class L10n {
-  /// Locales the UI is translated into.
-  static const List<Locale> supportedLocales =
-      AppLocalizations.supportedLocales;
+  /// Locales the UI is translated into. English first: Flutter falls back
+  /// to the first entry when the system language isn't one of these (the
+  /// generated list is alphabetical, which put Arabic first).
+  static const List<Locale> supportedLocales = [Locale('en'), Locale('ar')];
 
   /// App strings plus `material_ui`'s own Material/Cupertino/Widgets
   /// delegates (the generated list points at the deprecated

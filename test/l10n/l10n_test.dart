@@ -85,6 +85,25 @@ void main() {
     );
   });
 
+  test('every generated locale is offered', () {
+    expect(
+      L10n.supportedLocales.toSet(),
+      AppLocalizations.supportedLocales.toSet(),
+    );
+  });
+
+  testWidgets('an untranslated system language falls back to English', (
+    tester,
+  ) async {
+    tester.platformDispatcher.localesTestValue = const [Locale('fr', 'FR')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    final h = await AppHarness.create();
+    await h.pump(tester);
+    final page = tester.element(find.byKey(const Key('open-file')));
+    expect(Localizations.localeOf(page).languageCode, 'en');
+    expect(Directionality.of(page), TextDirection.ltr);
+  });
+
   testWidgets('switching the language setting relocalises live', (
     tester,
   ) async {
