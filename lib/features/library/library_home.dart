@@ -7,6 +7,7 @@ import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/metadata/metadata_service.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
+import 'package:kyndrel/features/library/device_videos.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -43,6 +44,8 @@ class LibraryHome extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(child: openPrompt),
+              // Android only (task 6.2); nothing elsewhere.
+              const DeviceVideosSection(),
               if (continuing.isNotEmpty) ...[
                 const SizedBox(height: 32),
                 Text(

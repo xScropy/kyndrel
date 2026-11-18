@@ -443,4 +443,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get upNextCancel => 'إلغاء';
+
+  @override
+  String get onThisPhone => 'على هذا الهاتف';
+
+  @override
+  String get showPhoneVideos => 'عرض الفيديوهات على هذا الهاتف';
+
+  @override
+  String get phoneVideosDenied => 'يحتاج Kyndrel إلى إذن لعرض فيديوهاتك.';
+
+  @override
+  String get phoneVideosNone => 'لا توجد فيديوهات على هذا الهاتف بعد.';
+
+  @override
+  String get allFolders => 'الكل';
 }

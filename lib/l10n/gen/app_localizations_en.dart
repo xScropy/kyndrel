@@ -443,4 +443,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get upNextCancel => 'Cancel';
+
+  @override
+  String get onThisPhone => 'ON THIS PHONE';
+
+  @override
+  String get showPhoneVideos => 'Show videos on this phone';
+
+  @override
+  String get phoneVideosDenied =>
+      'Kyndrel needs permission to list your videos.';
+
+  @override
+  String get phoneVideosNone => 'No videos on this phone yet.';
+
+  @override
+  String get allFolders => 'All';
 }

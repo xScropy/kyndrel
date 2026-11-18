@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/platform/device_media.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 
@@ -41,10 +42,7 @@ abstract final class OpenActions {
 
   /// Picks files to add to the end of the queue.
   static Future<void> pickToQueue(WidgetRef ref) async {
-    final files = await openFiles(acceptedTypeGroups: _types);
-    await ref
-        .read(playlistProvider.notifier)
-        .enqueue(files.map((f) => f.path).toList());
+    await ref.read(playlistProvider.notifier).enqueue(await _pick(ref));
   }
 
   static const _types = [
@@ -59,8 +57,42 @@ abstract final class OpenActions {
 
   /// Shows the system file picker; several files become the queue.
   static Future<void> pickFile(WidgetRef ref) async {
+    await openPaths(ref, await _pick(ref));
+  }
+
+  /// Picked sources: Android's document picker (content:// URIs, no copy of
+  /// big files) or the desktop file dialog.
+  static Future<List<String>> _pick(WidgetRef ref) async {
+    final device = ref.read(deviceMediaProvider);
+    if (device != null) {
+      final picked = await device.pick(multiple: true);
+      for (final f in picked) {
+        f.remember();
+      }
+      return [for (final f in picked) f.uri];
+    }
     final files = await openFiles(acceptedTypeGroups: _types);
-    await openPaths(ref, files.map((f) => f.path).toList());
+    return files.map((f) => f.path).toList();
+  }
+
+  /// Opens files handed over by the OS ("Open with", share): plain paths
+  /// (macOS) or `{uri, name}` maps (Android).
+  static Future<void> openFromSystem(WidgetRef ref, Object? arguments) async {
+    final items = arguments is List ? arguments : [arguments];
+    final sources = <String>[];
+    for (final item in items) {
+      if (item is String) {
+        sources.add(item);
+      } else if (item is Map) {
+        final f = DeviceFile.fromMap(item)..remember();
+        sources.add(f.uri);
+      }
+    }
+    if (sources.length == 1) {
+      await openSource(ref, sources.single);
+    } else {
+      await openPaths(ref, sources);
+    }
   }
 
   /// Opens a URL or path from the clipboard. Returns false if the clipboard

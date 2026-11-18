@@ -134,5 +134,10 @@
   "upNext": "التالي",
   "upNextIn": "يبدأ خلال {seconds} ث",
   "upNextPlayNow": "تشغيل الآن",
-  "upNextCancel": "إلغاء"
+  "upNextCancel": "إلغاء",
+  "onThisPhone": "على هذا الهاتف",
+  "showPhoneVideos": "عرض الفيديوهات على هذا الهاتف",
+  "phoneVideosDenied": "يحتاج Kyndrel إلى إذن لعرض فيديوهاتك.",
+  "phoneVideosNone": "لا توجد فيديوهات على هذا الهاتف بعد.",
+  "allFolders": "الكل"
 }

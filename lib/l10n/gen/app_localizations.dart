@@ -907,6 +907,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get upNextCancel;
+
+  /// No description provided for @onThisPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'ON THIS PHONE'**
+  String get onThisPhone;
+
+  /// No description provided for @showPhoneVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Show videos on this phone'**
+  String get showPhoneVideos;
+
+  /// No description provided for @phoneVideosDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Kyndrel needs permission to list your videos.'**
+  String get phoneVideosDenied;
+
+  /// No description provided for @phoneVideosNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No videos on this phone yet.'**
+  String get phoneVideosNone;
+
+  /// No description provided for @allFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allFolders;
 }
 
 class _AppLocalizationsDelegate

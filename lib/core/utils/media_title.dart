@@ -17,12 +17,23 @@ final _tags = RegExp(
   caseSensitive: false,
 );
 
+final _displayNames = <String, String>{};
+
+/// The file name for a source whose own text says nothing, such as an
+/// Android `content://media/external/video/media/1234` URI (task 6.2).
+/// [parseMediaTitle] uses it instead of the URI.
+void rememberDisplayName(String source, String name) =>
+    _displayNames[source] = name;
+
 /// `The.Matrix.1999.1080p.BluRay.mkv` → `The Matrix`, 1999.
 /// `Show.Name.S01E02.Title.mkv` → `Show Name`, episode `S01E02`.
 MediaTitle parseMediaTitle(String source) {
   var name = source;
   final uri = Uri.tryParse(source);
-  if (uri != null && uri.hasScheme && uri.scheme.length > 1) {
+  final known = _displayNames[source];
+  if (known != null) {
+    name = known;
+  } else if (uri != null && uri.hasScheme && uri.scheme.length > 1) {
     final segments = uri.pathSegments.where((s) => s.isNotEmpty);
     name = segments.isEmpty ? uri.host : Uri.decodeComponent(segments.last);
   } else {

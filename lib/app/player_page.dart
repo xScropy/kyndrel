@@ -100,26 +100,26 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       );
     }
     PlayerPage.openFileChannel.setMethodCallHandler((call) async {
-      if (call.method == 'open' && call.arguments is String) {
-        await OpenActions.openSource(ref, call.arguments as String);
+      if (call.method == 'open') {
+        await OpenActions.openFromSystem(ref, call.arguments);
       }
     });
-    unawaited(_openPendingMacFiles());
+    unawaited(_openPendingSystemFiles());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(maybeOfferCrashReport(context, ref));
     });
   }
 
-  Future<void> _openPendingMacFiles() async {
+  Future<void> _openPendingSystemFiles() async {
     try {
-      final files = await PlayerPage.openFileChannel.invokeListMethod<String>(
+      final files = await PlayerPage.openFileChannel.invokeListMethod<Object?>(
         'pending',
       );
       if (files != null && files.isNotEmpty && mounted) {
-        await OpenActions.openPaths(ref, files);
+        await OpenActions.openFromSystem(ref, files);
       }
     } on MissingPluginException {
-      // Only macOS implements the channel.
+      // Only macOS and Android implement the channel.
     }
   }
 
