@@ -39,9 +39,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libmpv-dev libsqlite3-dev ffmpeg python3-pil
+      # A stuck package mirror fails fast instead of eating the job.
+      - timeout-minutes: 5
+        run: |
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo apt-get -o Acquire::Retries=3 install -y libmpv-dev libsqlite3-dev ffmpeg python3-pil
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -111,9 +113,10 @@ jobs:
           cache: true
       - run: flutter pub get
       - name: Test media
+        timeout-minutes: 8
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg python3-pil
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo apt-get -o Acquire::Retries=3 install -y ffmpeg python3-pil
           scripts/make_test_media.sh
       - name: Serve test media
         run: |
