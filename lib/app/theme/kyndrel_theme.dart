@@ -3,7 +3,8 @@ import 'package:material_ui/material_ui.dart';
 
 /// Builds the single dark theme Kyndrel ships with.
 abstract final class KyndrelTheme {
-  static ThemeData dark() {
+  /// [touch] makes control buttons 48 dp touch targets (phones, 6.5).
+  static ThemeData dark({bool touch = false}) {
     const colors = ColorScheme.dark(
       primary: KyndrelColors.accent,
       onPrimary: KyndrelColors.onAccent,
@@ -24,6 +25,7 @@ abstract final class KyndrelTheme {
     );
 
     return base.copyWith(
+      extensions: [KyndrelTouch(touch: touch)],
       textTheme: base.textTheme.apply(
         bodyColor: KyndrelColors.textPrimary,
         displayColor: KyndrelColors.textPrimary,
@@ -80,4 +82,26 @@ abstract final class KyndrelTheme {
     borderRadius: BorderRadius.circular(KyndrelTokens.panelRadius),
     border: Border.all(color: KyndrelColors.panelBorder),
   );
+}
+
+/// Whether controls are sized for fingers (48 dp) rather than a mouse.
+class KyndrelTouch extends ThemeExtension<KyndrelTouch> {
+  const new({required this.touch});
+
+  factory of(BuildContext context) =>
+      Theme.of(context).extension<KyndrelTouch>() ??
+      const KyndrelTouch(touch: false);
+
+  final bool touch;
+
+  /// Height of a control button.
+  double get target => touch ? 48 : 40;
+
+  @override
+  KyndrelTouch copyWith({bool? touch}) =>
+      KyndrelTouch(touch: touch ?? this.touch);
+
+  @override
+  KyndrelTouch lerp(KyndrelTouch? other, double t) =>
+      t < 0.5 ? this : (other ?? this);
 }

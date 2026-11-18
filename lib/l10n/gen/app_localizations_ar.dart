@@ -461,4 +461,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsGestures => 'الإيماءات';
+
+  @override
+  String get more => 'المزيد';
+
+  @override
+  String get moreQueue => 'قائمة التشغيل';
+
+  @override
+  String get morePicture => 'الصورة';
+
+  @override
+  String get moreTranslate => 'الترجمة الآلية';
+
+  @override
+  String get moreSpeed => 'السرعة والمؤقت';
+
+  @override
+  String get moreCast => 'البث';
+
+  @override
+  String get moreDownload => 'تنزيل';
+
+  @override
+  String get rotate => 'تدوير الشاشة';
 }

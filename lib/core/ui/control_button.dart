@@ -1,4 +1,5 @@
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Icon button used across the control bars: tooltip, hover highlight,
@@ -28,6 +29,8 @@ class ControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final touch = KyndrelTouch.of(context);
+    final target = touch.target;
     final enabled = onPressed != null;
     final color = !enabled
         ? KyndrelColors.textPrimary.withValues(alpha: 0.35)
@@ -46,8 +49,9 @@ class ControlButton extends StatelessWidget {
           radius: 22,
           hoverColor: KyndrelColors.windowButtonHover,
           focusColor: KyndrelColors.focus,
-          child: SizedBox(
-            height: 40,
+          child: ConstrainedBox(
+            constraints: BoxConstraints.tightFor(height: target)
+                .copyWith(minWidth: touch.touch ? target : 0),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Center(

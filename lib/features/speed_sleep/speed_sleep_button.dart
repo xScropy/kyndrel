@@ -85,86 +85,95 @@ class SpeedSleepPanel extends ConsumerWidget {
     final sleep = ref.watch(sleepTimerProvider);
     final isCustom = !SpeedOptions.values.contains(rate);
 
+    // Phones stack the two lists (6.5); wider screens put them side by side.
+    final narrow = MediaQuery.sizeOf(context).width < 520;
+    final divider = narrow
+        ? const Divider(height: 32, color: KyndrelColors.panelBorder)
+        : const VerticalDivider(width: 32, color: KyndrelColors.panelBorder);
+    final children = [
+      SizedBox(
+        width: narrow ? null : 200,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.l10n.playbackSpeedHeader,
+              style: KyndrelTheme.sectionLabel,
+            ),
+            const SizedBox(height: 8),
+            for (final v in SpeedOptions.values)
+              PopoverOption(
+                key: Key('speed-$v'),
+                label: SpeedOptions.label(v),
+                selected: rate == v,
+                onTap: () => unawaited(SpeedActions.set(ref, v)),
+                trailing: v == SpeedOptions.normal ? const _DefaultTag() : null,
+              ),
+            const SizedBox(height: 8),
+            _CustomSpeedField(rate: isCustom ? rate : null),
+          ],
+        ),
+      ),
+      divider,
+      SizedBox(
+        width: narrow ? null : 210,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.l10n.sleepTimerHeader,
+              style: KyndrelTheme.sectionLabel,
+            ),
+            const SizedBox(height: 8),
+            for (final option in SleepOption.all)
+              PopoverOption(
+                key: Key('sleep-${option.label}'),
+                label: option.label,
+                selected: sleep?.option == option,
+                onTap: () => unawaited(
+                  ref.read(sleepTimerProvider.notifier).select(option),
+                ),
+                trailing: sleep?.option == option
+                    ? Text(
+                        sleep!.remaining != null
+                            ? formatDuration(sleep.remaining!)
+                            : sleep.episodesLeft > 0
+                            ? 'after ${sleep.episodesLeft} more'
+                            : 'on',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: KyndrelColors.accent,
+                        ),
+                      )
+                    : null,
+              ),
+            if (sleep != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  context.l10n.sleepCancelHint,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: KyndrelColors.textSecondary.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ];
+    if (narrow) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
     return IntrinsicHeight(
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 200,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  context.l10n.playbackSpeedHeader,
-                  style: KyndrelTheme.sectionLabel,
-                ),
-                const SizedBox(height: 8),
-                for (final v in SpeedOptions.values)
-                  PopoverOption(
-                    key: Key('speed-$v'),
-                    label: SpeedOptions.label(v),
-                    selected: rate == v,
-                    onTap: () => unawaited(SpeedActions.set(ref, v)),
-                    trailing: v == SpeedOptions.normal
-                        ? const _DefaultTag()
-                        : null,
-                  ),
-                const SizedBox(height: 8),
-                _CustomSpeedField(rate: isCustom ? rate : null),
-              ],
-            ),
-          ),
-          const VerticalDivider(width: 32, color: KyndrelColors.panelBorder),
-          SizedBox(
-            width: 210,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  context.l10n.sleepTimerHeader,
-                  style: KyndrelTheme.sectionLabel,
-                ),
-                const SizedBox(height: 8),
-                for (final option in SleepOption.all)
-                  PopoverOption(
-                    key: Key('sleep-${option.label}'),
-                    label: option.label,
-                    selected: sleep?.option == option,
-                    onTap: () => unawaited(
-                      ref.read(sleepTimerProvider.notifier).select(option),
-                    ),
-                    trailing: sleep?.option == option
-                        ? Text(
-                            sleep!.remaining != null
-                                ? formatDuration(sleep.remaining!)
-                                : sleep.episodesLeft > 0
-                                ? 'after ${sleep.episodesLeft} more'
-                                : 'on',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: KyndrelColors.accent,
-                            ),
-                          )
-                        : null,
-                  ),
-                if (sleep != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      context.l10n.sleepCancelHint,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: KyndrelColors.textSecondary.withValues(
-                          alpha: 0.8,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+        children: children,
       ),
     );
   }

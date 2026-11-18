@@ -234,5 +234,13 @@
   "phoneVideosDenied": "Kyndrel needs permission to list your videos.",
   "phoneVideosNone": "No videos on this phone yet.",
   "allFolders": "All",
-  "settingsGestures": "Gestures"
+  "settingsGestures": "Gestures",
+  "more": "More",
+  "moreQueue": "Queue",
+  "morePicture": "Picture",
+  "moreTranslate": "Translate",
+  "moreSpeed": "Speed & sleep",
+  "moreCast": "Cast",
+  "moreDownload": "Download",
+  "rotate": "Rotate"
 }

@@ -943,6 +943,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gestures'**
   String get settingsGestures;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
+
+  /// No description provided for @moreQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get moreQueue;
+
+  /// No description provided for @morePicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture'**
+  String get morePicture;
+
+  /// No description provided for @moreTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get moreTranslate;
+
+  /// No description provided for @moreSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed & sleep'**
+  String get moreSpeed;
+
+  /// No description provided for @moreCast.
+  ///
+  /// In en, this message translates to:
+  /// **'Cast'**
+  String get moreCast;
+
+  /// No description provided for @moreDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get moreDownload;
+
+  /// No description provided for @rotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get rotate;
 }
 
 class _AppLocalizationsDelegate

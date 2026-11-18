@@ -462,4 +462,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsGestures => 'Gestures';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get moreQueue => 'Queue';
+
+  @override
+  String get morePicture => 'Picture';
+
+  @override
+  String get moreTranslate => 'Translate';
+
+  @override
+  String get moreSpeed => 'Speed & sleep';
+
+  @override
+  String get moreCast => 'Cast';
+
+  @override
+  String get moreDownload => 'Download';
+
+  @override
+  String get rotate => 'Rotate';
 }

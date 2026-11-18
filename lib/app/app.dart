@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/player_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -17,7 +18,9 @@ class KyndrelApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Kyndrel',
       debugShowCheckedModeBanner: false,
-      theme: KyndrelTheme.dark(),
+      theme: KyndrelTheme.dark(
+        touch: ref.watch(platformCapabilitiesProvider).isMobile,
+      ),
       themeMode: ThemeMode.dark,
       locale: L10n.localeFor(language),
       supportedLocales: L10n.supportedLocales,

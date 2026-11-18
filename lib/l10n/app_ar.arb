@@ -140,5 +140,13 @@
   "phoneVideosDenied": "يحتاج Kyndrel إلى إذن لعرض فيديوهاتك.",
   "phoneVideosNone": "لا توجد فيديوهات على هذا الهاتف بعد.",
   "allFolders": "الكل",
-  "settingsGestures": "الإيماءات"
+  "settingsGestures": "الإيماءات",
+  "more": "المزيد",
+  "moreQueue": "قائمة التشغيل",
+  "morePicture": "الصورة",
+  "moreTranslate": "الترجمة الآلية",
+  "moreSpeed": "السرعة والمؤقت",
+  "moreCast": "البث",
+  "moreDownload": "تنزيل",
+  "rotate": "تدوير الشاشة"
 }

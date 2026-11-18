@@ -82,104 +82,107 @@ class _PlaylistPanelState extends ConsumerState<PlaylistPanel> {
       bindings: {const SingleActivator(LogicalKeyboardKey.escape): close},
       child: Focus(
         autofocus: true,
-        child: Container(
-          key: const Key('playlist-panel'),
-          width: 380,
-          height: 440,
-          decoration: KyndrelTheme.panelDecoration(),
-          padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
-          child: Material(
-            type: MaterialType.transparency,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      context.l10n.queueTitle(queue.items.length),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+        // Phones (task 6.5): no wider or taller than the space given.
+        child: LayoutBuilder(
+          builder: (context, c) => Container(
+            key: const Key('playlist-panel'),
+            width: c.maxWidth < 380 ? c.maxWidth : 380,
+            height: c.maxHeight < 440 ? c.maxHeight : 440,
+            decoration: KyndrelTheme.panelDecoration(),
+            padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        context.l10n.queueTitle(queue.items.length),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    ControlButton(
-                      key: const Key('shuffle'),
-                      icon: Icons.shuffle,
-                      tooltip: queue.shuffle
-                          ? context.l10n.shuffleOn
-                          : context.l10n.shuffleOff,
-                      active: queue.shuffle,
-                      onPressed: playlist.toggleShuffle,
-                    ),
-                    ControlButton(
-                      key: const Key('repeat'),
-                      icon: queue.repeat == QueueRepeat.one
-                          ? Icons.repeat_one
-                          : Icons.repeat,
-                      tooltip: switch (queue.repeat) {
-                        QueueRepeat.off => context.l10n.repeatOff,
-                        QueueRepeat.all => context.l10n.repeatAll,
-                        QueueRepeat.one => context.l10n.repeatOne,
-                      },
-                      active: queue.repeat != QueueRepeat.off,
-                      onPressed: playlist.cycleRepeat,
-                    ),
-                    ControlButton(
-                      key: const Key('queue-close'),
-                      icon: Icons.close,
-                      tooltip: context.l10n.closeEsc,
-                      onPressed: close,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: queue.items.isEmpty
-                      ? Center(
-                          child: Text(
-                            context.l10n.queueEmpty,
-                            style: const TextStyle(
-                              color: KyndrelColors.textSecondary,
+                      const Spacer(),
+                      ControlButton(
+                        key: const Key('shuffle'),
+                        icon: Icons.shuffle,
+                        tooltip: queue.shuffle
+                            ? context.l10n.shuffleOn
+                            : context.l10n.shuffleOff,
+                        active: queue.shuffle,
+                        onPressed: playlist.toggleShuffle,
+                      ),
+                      ControlButton(
+                        key: const Key('repeat'),
+                        icon: queue.repeat == QueueRepeat.one
+                            ? Icons.repeat_one
+                            : Icons.repeat,
+                        tooltip: switch (queue.repeat) {
+                          QueueRepeat.off => context.l10n.repeatOff,
+                          QueueRepeat.all => context.l10n.repeatAll,
+                          QueueRepeat.one => context.l10n.repeatOne,
+                        },
+                        active: queue.repeat != QueueRepeat.off,
+                        onPressed: playlist.cycleRepeat,
+                      ),
+                      ControlButton(
+                        key: const Key('queue-close'),
+                        icon: Icons.close,
+                        tooltip: context.l10n.closeEsc,
+                        onPressed: close,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: queue.items.isEmpty
+                        ? Center(
+                            child: Text(
+                              context.l10n.queueEmpty,
+                              style: const TextStyle(
+                                color: KyndrelColors.textSecondary,
+                              ),
+                            ),
+                          )
+                        : ReorderableListView.builder(
+                            buildDefaultDragHandles: false,
+                            itemCount: queue.items.length,
+                            onReorderItem: playlist.reorder,
+                            itemBuilder: (context, i) => _QueueTile(
+                              key: ValueKey('queue-$i-${queue.items[i]}'),
+                              index: i,
+                              source: queue.items[i],
+                              current: queue.current == i,
                             ),
                           ),
-                        )
-                      : ReorderableListView.builder(
-                          buildDefaultDragHandles: false,
-                          itemCount: queue.items.length,
-                          onReorderItem: playlist.reorder,
-                          itemBuilder: (context, i) => _QueueTile(
-                            key: ValueKey('queue-$i-${queue.items[i]}'),
-                            index: i,
-                            source: queue.items[i],
-                            current: queue.current == i,
-                          ),
-                        ),
-                ),
-                const Divider(color: KyndrelColors.panelBorder, height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: queue.items.isEmpty ? null : playlist.clear,
-                      child: Text(context.l10n.clear),
-                    ),
-                    TextButton.icon(
-                      key: const Key('queue-open-folder'),
-                      onPressed: widget.onOpenFolder,
-                      icon: const Icon(Icons.folder_open, size: 18),
-                      label: Text(context.l10n.folder),
-                    ),
-                    const SizedBox(width: 4),
-                    FilledButton.icon(
-                      key: const Key('queue-add'),
-                      onPressed: widget.onAddFiles,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: Text(context.l10n.add),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  const Divider(color: KyndrelColors.panelBorder, height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: queue.items.isEmpty ? null : playlist.clear,
+                        child: Text(context.l10n.clear),
+                      ),
+                      TextButton.icon(
+                        key: const Key('queue-open-folder'),
+                        onPressed: widget.onOpenFolder,
+                        icon: const Icon(Icons.folder_open, size: 18),
+                        label: Text(context.l10n.folder),
+                      ),
+                      const SizedBox(width: 4),
+                      FilledButton.icon(
+                        key: const Key('queue-add'),
+                        onPressed: widget.onAddFiles,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: Text(context.l10n.add),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

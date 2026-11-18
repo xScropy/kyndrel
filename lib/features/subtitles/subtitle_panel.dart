@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,75 +76,96 @@ class _SubtitlePanelState extends ConsumerState<SubtitlePanel> {
       bindings: {const SingleActivator(LogicalKeyboardKey.escape): panel.close},
       child: Focus(
         autofocus: true,
-        child: Container(
-          key: const Key('subtitle-panel'),
-          width: 680,
-          height: 440,
-          decoration: KyndrelTheme.panelDecoration(),
-          padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
-          // Material inside the decoration so list tiles paint on top of it.
-          child: Material(
-            type: MaterialType.transparency,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
+        // Phones (task 6.5): fit the space given; narrow screens stack the
+        // track list above the detail view.
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final narrow = c.maxWidth < 560;
+            final detail = switch (view) {
+              SubtitlePanelView.online => const OnlineResultsView(),
+              SubtitlePanelView.sync => const SyncView(),
+              SubtitlePanelView.style => const StyleView(),
+            };
+            return Container(
+              key: const Key('subtitle-panel'),
+              width: math.min(c.maxWidth, 680),
+              height: math.min(c.maxHeight, narrow ? 560 : 440),
+              decoration: KyndrelTheme.panelDecoration(),
+              padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+              // Material inside the decoration so list tiles paint on it.
+              child: Material(
+                type: MaterialType.transparency,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      context.l10n.subtitles,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          context.l10n.subtitles,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        ControlButton(
+                          key: const Key('panel-sync'),
+                          icon: Icons.timer_outlined,
+                          tooltip: context.l10n.syncOffset,
+                          active: view == SubtitlePanelView.sync,
+                          onPressed: () => panel.show(SubtitlePanelView.sync),
+                        ),
+                        ControlButton(
+                          key: const Key('panel-style'),
+                          icon: Icons.tune,
+                          tooltip: context.l10n.style,
+                          active: view == SubtitlePanelView.style,
+                          onPressed: () => panel.show(SubtitlePanelView.style),
+                        ),
+                        ControlButton(
+                          key: const Key('panel-close'),
+                          icon: Icons.close,
+                          tooltip: context.l10n.closeEsc,
+                          onPressed: panel.close,
+                        ),
+                      ],
                     ),
-                    const Spacer(),
-                    ControlButton(
-                      key: const Key('panel-sync'),
-                      icon: Icons.timer_outlined,
-                      tooltip: context.l10n.syncOffset,
-                      active: view == SubtitlePanelView.sync,
-                      onPressed: () => panel.show(SubtitlePanelView.sync),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: narrow
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Expanded(child: _TrackColumn()),
+                                const Divider(
+                                  height: 20,
+                                  color: KyndrelColors.panelBorder,
+                                ),
+                                Expanded(child: detail),
+                              ],
+                            )
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(
+                                  width: 220,
+                                  child: _TrackColumn(),
+                                ),
+                                const VerticalDivider(
+                                  width: 28,
+                                  color: KyndrelColors.panelBorder,
+                                ),
+                                Expanded(child: detail),
+                              ],
+                            ),
                     ),
-                    ControlButton(
-                      key: const Key('panel-style'),
-                      icon: Icons.tune,
-                      tooltip: context.l10n.style,
-                      active: view == SubtitlePanelView.style,
-                      onPressed: () => panel.show(SubtitlePanelView.style),
-                    ),
-                    ControlButton(
-                      key: const Key('panel-close'),
-                      icon: Icons.close,
-                      tooltip: context.l10n.closeEsc,
-                      onPressed: panel.close,
-                    ),
+                    const Divider(color: KyndrelColors.panelBorder, height: 16),
+                    const _Footer(),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(width: 220, child: _TrackColumn()),
-                      const VerticalDivider(
-                        width: 28,
-                        color: KyndrelColors.panelBorder,
-                      ),
-                      Expanded(
-                        child: switch (view) {
-                          SubtitlePanelView.online => const OnlineResultsView(),
-                          SubtitlePanelView.sync => const SyncView(),
-                          SubtitlePanelView.style => const StyleView(),
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(color: KyndrelColors.panelBorder, height: 16),
-                const _Footer(),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

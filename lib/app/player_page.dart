@@ -38,6 +38,7 @@ import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
 import 'package:kyndrel/features/playback/gesture_lock.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
+import 'package:kyndrel/features/playback/phone_playback.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
@@ -45,6 +46,7 @@ import 'package:kyndrel/features/playback/widgets/bottom_controls.dart';
 import 'package:kyndrel/features/playback/widgets/diagnostics_overlay.dart';
 import 'package:kyndrel/features/playback/widgets/fit_menu.dart';
 import 'package:kyndrel/features/playback/widgets/fullscreen_button.dart';
+import 'package:kyndrel/features/playback/widgets/more_sheet.dart';
 import 'package:kyndrel/features/playback/widgets/status_layer.dart';
 import 'package:kyndrel/features/playback/widgets/swipe_seek_preview.dart';
 import 'package:kyndrel/features/playback/widgets/top_bar.dart';
@@ -85,6 +87,10 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(logSyncProvider);
     // Phones: cache seek-preview frames in the background (task 6.4).
     if (Platform.isAndroid) ref.read(previewPrewarmProvider);
+    // Phones: immersive full screen and rotation while a video plays.
+    if (ref.read(platformCapabilitiesProvider).isMobile) {
+      ref.read(phonePlaybackProvider);
+    }
     PerfLog.start(ref);
     final resume = ref.read(resumeControllerProvider.notifier);
     final history = ref.read(historyControllerProvider.notifier);
@@ -139,6 +145,31 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   void _pickFile() => unawaited(OpenActions.pickFile(ref));
   void _showInfo() => unawaited(showMediaInfoDialog(context, ref));
   void _showSettings() => unawaited(showSettingsPage(context));
+
+  /// Phones: at most 75 % of the screen's height for a panel.
+  static Widget _panelBox({
+    required bool compact,
+    required Size screen,
+    required Widget child,
+  }) => compact
+      ? ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: screen.height * 0.75),
+          child: child,
+        )
+      : child;
+
+  /// The phone's "More" sheet (task 6.5).
+  List<MoreAction> _moreActions(BuildContext context) {
+    final l = context.l10n;
+    return [
+      (button: const PlaylistButton(), label: l.moreQueue),
+      (button: const FitMenuButton(), label: l.morePicture),
+      (button: const SpeedSleepButton(), label: l.moreSpeed),
+      (button: const TranslateButton(), label: l.moreTranslate),
+      (button: const CastButton(), label: l.moreCast),
+      (button: const DownloadButton(), label: l.moreDownload),
+    ];
+  }
 
   Future<void> _contextMenu(Offset position) async {
     final l = context.l10n;
@@ -210,6 +241,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final queueOpen = ref.watch(playlistPanelProvider);
     final hasMedia = !idle && status != PlaybackStatus.error;
     final mobile = ref.watch(platformCapabilitiesProvider).isMobile;
+    // Phone layout (task 6.5): phones, and narrow desktop windows.
+    final screen = MediaQuery.sizeOf(context);
+    final compact = mobile || screen.width < 600;
     // Screen lock (task 6.3): no controls, no gestures until unlocked.
     final locked = hasMedia && ref.watch(gestureLockProvider);
     if (ref.watch(pipProvider)) {
@@ -324,13 +358,17 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     left: 0,
                     right: 0,
                     child: fade(
-                      WindowTitleBar(
-                        showButtons: !fullScreen,
-                        child: TopBarContent(
-                          onBack: () => unawaited(
-                            ref.read(playerServiceProvider).close(),
+                      // Phones: keep clear of the notch and status bar.
+                      SafeArea(
+                        bottom: false,
+                        child: WindowTitleBar(
+                          showButtons: !fullScreen,
+                          child: TopBarContent(
+                            onBack: () => unawaited(
+                              ref.read(playerServiceProvider).close(),
+                            ),
+                            onInfo: _showInfo,
                           ),
-                          onInfo: _showInfo,
                         ),
                       ),
                     ),
@@ -341,38 +379,65 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     right: 0,
                     bottom: 0,
                     child: fade(
-                      BottomControls(
-                        leftActions: [
-                          if (mobile) const LockButton(),
-                          const DownloadButton(),
-                        ],
-                        rightActions: const [
-                          PlaylistButton(),
-                          FitMenuButton(),
-                          TranslateButton(),
-                          SubtitlesButton(),
-                          SpeedSleepButton(),
-                          PipButton(),
-                          CastButton(),
-                          FullscreenButton(),
-                        ],
+                      SafeArea(
+                        top: false,
+                        child: compact
+                            ? BottomControls(
+                                compact: true,
+                                leftActions: [
+                                  if (mobile) const LockButton(),
+                                  const SubtitlesButton(),
+                                ],
+                                rightActions: [
+                                  if (mobile)
+                                    const RotateButton()
+                                  else
+                                    const FullscreenButton(),
+                                  MoreButton(actions: _moreActions),
+                                ],
+                              )
+                            : const BottomControls(
+                                leftActions: [DownloadButton()],
+                                rightActions: [
+                                  PlaylistButton(),
+                                  FitMenuButton(),
+                                  TranslateButton(),
+                                  SubtitlesButton(),
+                                  SpeedSleepButton(),
+                                  PipButton(),
+                                  CastButton(),
+                                  FullscreenButton(),
+                                ],
+                              ),
                       ),
                     ),
                   ),
+                // Phones: panels span the width above the controls.
                 if (panelOpen && hasMedia)
-                  const PositionedDirectional(
-                    end: 20,
-                    bottom: 130,
-                    child: SubtitlePanel(),
+                  PositionedDirectional(
+                    start: compact ? 8 : null,
+                    end: compact ? 8 : 20,
+                    bottom: compact ? 8 : 130,
+                    child: _panelBox(
+                      compact: compact,
+                      screen: screen,
+                      child: const SubtitlePanel(),
+                    ),
                   ),
                 if (queueOpen && hasMedia && !panelOpen)
                   PositionedDirectional(
-                    end: 20,
-                    bottom: 130,
-                    child: PlaylistPanel(
-                      onAddFiles: () => unawaited(OpenActions.pickToQueue(ref)),
-                      onOpenFolder: () =>
-                          unawaited(OpenActions.pickFolder(ref)),
+                    start: compact ? 8 : null,
+                    end: compact ? 8 : 20,
+                    bottom: compact ? 8 : 130,
+                    child: _panelBox(
+                      compact: compact,
+                      screen: screen,
+                      child: PlaylistPanel(
+                        onAddFiles: () =>
+                            unawaited(OpenActions.pickToQueue(ref)),
+                        onOpenFolder: () =>
+                            unawaited(OpenActions.pickFolder(ref)),
+                      ),
                     ),
                   ),
                 if (locked) const Positioned.fill(child: LockedOverlay()),

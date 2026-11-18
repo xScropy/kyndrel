@@ -11,8 +11,14 @@ class BottomControls extends StatelessWidget {
   const new({
     required this.rightActions,
     this.leftActions = const [],
+    this.compact = false,
     super.key,
   });
+
+  /// Phone layout (task 6.5): no volume slider (phones have swipes and
+  /// volume keys), tighter padding, and the side groups share the row
+  /// with the transport instead of overlapping it.
+  final bool compact;
 
   final List<Widget> rightActions;
 
@@ -22,7 +28,9 @@ class BottomControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 14),
+      padding: compact
+          ? const EdgeInsets.fromLTRB(12, 16, 12, 8)
+          : const EdgeInsets.fromLTRB(20, 24, 20, 14),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
@@ -50,38 +58,69 @@ class BottomControls extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          SizedBox(
-            height: 60,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: VolumeControl(),
+          if (compact)
+            SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: leftActions,
                       ),
-                      ...leftActions,
-                    ],
+                    ),
                   ),
-                ),
-                const Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: TransportControls(),
-                ),
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: rightActions,
+                  const Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: TransportControls(),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: rightActions,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            SizedBox(
+              height: 60,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: VolumeControl(),
+                        ),
+                        ...leftActions,
+                      ],
+                    ),
+                  ),
+                  const Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: TransportControls(),
+                  ),
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: rightActions,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

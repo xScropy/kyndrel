@@ -77,6 +77,9 @@ class _PopoverState extends ConsumerState<Popover> {
       PopoverAlign.center => (Alignment.topCenter, Alignment.bottomCenter),
       PopoverAlign.right => (Alignment.topRight, Alignment.bottomRight),
     };
+    final screen = MediaQuery.sizeOf(context);
+    final compact = screen.width < 600;
+    Widget panel({required bool scroll}) => _panel(context, scroll: scroll);
     return OverlayPortal(
       controller: _portal,
       overlayChildBuilder: (context) => Stack(
@@ -88,33 +91,55 @@ class _PopoverState extends ConsumerState<Popover> {
               onTap: _close,
             ),
           ),
-          CompositedTransformFollower(
-            link: _link,
-            targetAnchor: target,
-            followerAnchor: follower,
-            offset: const Offset(0, -12),
-            child: CallbackShortcuts(
-              bindings: {
-                const SingleActivator(LogicalKeyboardKey.escape): _close,
-              },
-              child: Focus(
-                autofocus: true,
-                child: Container(
-                  decoration: KyndrelTheme.panelDecoration(),
-                  padding: const EdgeInsets.all(16),
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: widget.contentBuilder(context, _close),
-                  ),
+          if (compact)
+            // Phones: a sheet along the bottom edge instead of a bubble
+            // above a button that may sit near the screen edge (6.5).
+            PositionedDirectional(
+              start: 8,
+              end: 8,
+              bottom: 8,
+              child: SafeArea(
+                top: false,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: screen.height * 0.75),
+                  child: panel(scroll: true),
                 ),
               ),
+            )
+          else
+            CompositedTransformFollower(
+              link: _link,
+              targetAnchor: target,
+              followerAnchor: follower,
+              offset: const Offset(0, -12),
+              child: panel(scroll: false),
             ),
-          ),
         ],
       ),
       child: CompositedTransformTarget(
         link: _link,
         child: widget.anchorBuilder(context, _toggle),
+      ),
+    );
+  }
+
+  Widget _panel(BuildContext context, {required bool scroll}) {
+    final content = widget.contentBuilder(context, _close);
+    return CallbackShortcuts(
+      bindings: {const SingleActivator(LogicalKeyboardKey.escape): _close},
+      child: Focus(
+        autofocus: true,
+        child: Container(
+          key: const Key('popover-panel'),
+          decoration: KyndrelTheme.panelDecoration(),
+          padding: const EdgeInsets.all(16),
+          child: Material(
+            type: MaterialType.transparency,
+            child: scroll
+                ? SingleChildScrollView(child: Center(child: content))
+                : content,
+          ),
+        ),
       ),
     );
   }
