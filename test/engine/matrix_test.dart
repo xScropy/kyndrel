@@ -36,7 +36,7 @@ void main() {
     await service.backend.setProperty('vid', 'auto');
   });
 
-  tearDown(() => service.dispose());
+  tearDown(() => service.dispose().timeout(const Duration(seconds: 20)));
 
   Future<PlaybackState> waitFor(
     bool Function(PlaybackState) test, {

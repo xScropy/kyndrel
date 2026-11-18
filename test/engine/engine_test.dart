@@ -40,12 +40,17 @@ void main() {
     await service.backend.setProperty('vid', 'auto');
   });
 
-  tearDown(() => service.dispose());
+  // A stuck dispose fails this test instead of stalling the whole job.
+  tearDown(() => service.dispose().timeout(const Duration(seconds: 20)));
 
+  // Checks the current state too: the event may already have happened.
   Future<PlaybackState> waitFor(
     bool Function(PlaybackState) test, {
     Duration timeout = const Duration(seconds: 15),
-  }) => service.states.firstWhere(test).timeout(timeout);
+  }) async {
+    if (test(service.state)) return service.state;
+    return await service.states.firstWhere(test).timeout(timeout);
+  }
 
   Future<void> eventually(
     Future<bool> Function() check, {
@@ -243,18 +248,22 @@ void main() {
     expect(info['audio-params/channel-count'], isNotNull);
   });
 
-  test('completion fires once at the end', () async {
-    final ends = <String>[];
-    final sub = service.completions.listen(ends.add);
-    await service.open(p.join(media, 'clip.mp4'));
-    await waitFor((s) => s.isPlaying);
-    await service.seek(const Duration(seconds: 7));
-    await waitFor((s) => s.isCompleted, timeout: const Duration(seconds: 20));
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    await sub.cancel();
-    expect(ends, hasLength(1));
-    expect(service.state.status, PlaybackStatus.completed);
-  });
+  test(
+    'completion fires once at the end',
+    timeout: const Timeout(Duration(seconds: 60)),
+    () async {
+      final ends = <String>[];
+      final sub = service.completions.listen(ends.add);
+      await service.open(p.join(media, 'clip.mp4'));
+      await waitFor((s) => s.isPlaying);
+      await service.seek(const Duration(seconds: 7));
+      await waitFor((s) => s.isCompleted, timeout: const Duration(seconds: 20));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await sub.cancel();
+      expect(ends, hasLength(1));
+      expect(service.state.status, PlaybackStatus.completed);
+    },
+  );
 
   test('chapters are listed and next chapter jumps', () async {
     await service.open(p.join(media, 'chapters.mkv'));

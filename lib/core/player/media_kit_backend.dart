@@ -80,7 +80,8 @@ class MediaKitBackend implements PlayerBackend {
       unawaited(
         _native?.observeProperty(property, (value) async {
           _lastObserved[property] = value;
-          c.add(value);
+          // mpv can still report a change while the player is closing.
+          if (!c.isClosed) c.add(value);
         }),
       );
       return c;
@@ -136,9 +137,10 @@ class MediaKitBackend implements PlayerBackend {
 
   @override
   Future<void> dispose() async {
+    // The player first: no property callbacks arrive after it is gone.
+    await player.dispose();
     for (final c in _observed.values) {
       await c.close();
     }
-    await player.dispose();
   }
 }
