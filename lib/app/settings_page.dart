@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/app/window/window_app_bar.dart';
 import 'package:kyndrel/core/app_info.dart';
 import 'package:kyndrel/core/ui/settings_widgets.dart';
 import 'package:kyndrel/features/effects/effects_dialog.dart';
+import 'package:kyndrel/features/logs/log_viewer_page.dart';
 import 'package:kyndrel/features/scripts/scripts_settings.dart';
 import 'package:kyndrel/features/settings/settings_sections.dart';
 import 'package:kyndrel/features/translate/translate_settings.dart';
@@ -106,10 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
       },
       child: Scaffold(
         backgroundColor: KyndrelColors.background,
-        appBar: AppBar(
-          title: Text(context.l10n.settings),
-          backgroundColor: KyndrelColors.background,
-        ),
+        appBar: WindowAppBar(title: Text(context.l10n.settings)),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -167,6 +166,15 @@ class AboutSection extends StatelessWidget {
           subtitle: Text('GPL-3.0 · $appRepository'),
         ),
         const _UpdateCheckButton(),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            key: const Key('settings-view-log'),
+            onPressed: () => unawaited(showLogViewer(context)),
+            icon: const Icon(Icons.receipt_long, size: 18),
+            label: Text(context.l10n.viewLog),
+          ),
+        ),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: TextButton(

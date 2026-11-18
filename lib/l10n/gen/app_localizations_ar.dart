@@ -389,4 +389,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get updateCheckNow => 'التحقق من التحديثات';
+
+  @override
+  String get crashTitle => 'توقف Kyndrel بشكل غير متوقع';
+
+  @override
+  String get crashBodyExit =>
+      'انتهت الجلسة السابقة دون إغلاق طبيعي. هل تريد الإبلاغ عن ذلك؟ سيفتح هذا بلاغًا على GitHub في المتصفح مع الإصدار ونظام التشغيل ونهاية السجل. يمكنك تعديله أو تجاهله قبل الإرسال.';
+
+  @override
+  String get crashBodyError =>
+      'حدث خطأ في الجلسة السابقة. هل تريد الإبلاغ عنه؟ سيفتح هذا بلاغًا معبأً مسبقًا على GitHub في المتصفح، ولا يُرسل شيء ما لم ترسله أنت.';
+
+  @override
+  String get crashReport => 'الإبلاغ على GitHub';
+
+  @override
+  String get notNow => 'ليس الآن';
+
+  @override
+  String get viewLog => 'عرض السجل';
+
+  @override
+  String get logTitle => 'السجل';
+
+  @override
+  String get logCopy => 'نسخ';
+
+  @override
+  String get logCopied => 'تم نسخ السجل';
+
+  @override
+  String get logOpenFolder => 'فتح مجلد السجلات';
+
+  @override
+  String get logEmpty => 'لا يوجد شيء في السجل بعد.';
+
+  @override
+  String logLevelAndUp(String level) {
+    return '$level فأعلى';
+  }
 }

@@ -19,6 +19,21 @@ void main() {
     expect(o.perfLog, isFalse);
   });
 
+  test('relative paths resolve against the start-up directory', () {
+    expect(
+      LaunchOptions.parse(const [
+        '../films/a.mkv',
+      ], workingDirectory: '/home/me/videos').source,
+      '/home/me/films/a.mkv',
+    );
+    for (final kept in ['/abs/a.mkv', 'https://x.example/a.m3u8']) {
+      expect(
+        LaunchOptions.parse([kept], workingDirectory: '/home/me').source,
+        kept,
+      );
+    }
+  });
+
   test('--perf-log', () {
     final o = LaunchOptions.parse(const ['--perf-log', 'x.mp4']);
     expect(o.perfLog, isTrue);

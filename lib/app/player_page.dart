@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/engine_sync.dart';
 import 'package:kyndrel/app/launch_options.dart';
+import 'package:kyndrel/app/log_sync.dart';
 import 'package:kyndrel/app/media_session_sync.dart';
 import 'package:kyndrel/app/perf_log.dart';
 import 'package:kyndrel/app/player_shortcuts.dart';
@@ -27,6 +28,7 @@ import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
 import 'package:kyndrel/features/library/library_home.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
+import 'package:kyndrel/features/logs/crash_prompt.dart';
 import 'package:kyndrel/features/network/open_url_dialog.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
@@ -73,13 +75,18 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     ref
       ..read(engineSyncProvider)
       ..read(mediaSessionSyncProvider)
-      ..read(scriptManagerProvider);
+      ..read(scriptManagerProvider)
+      ..read(logSyncProvider);
     PerfLog.start(ref);
     final resume = ref.read(resumeControllerProvider.notifier);
     final history = ref.read(historyControllerProvider.notifier);
     ref.read(windowServiceProvider)
       ..onClose(resume.saveNow)
-      ..onClose(history.saveNow);
+      ..onClose(history.saveNow)
+      // Last: release libmpv and the video texture before the window is
+      // destroyed. On Linux, destroying the GTK window with a live texture
+      // aborts the process (g_mutex_clear on a locked mutex).
+      ..onClose(ref.read(playerServiceProvider).dispose);
 
     final source = widget.launch.source;
     if (source != null) {
@@ -94,6 +101,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       }
     });
     unawaited(_openPendingMacFiles());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(maybeOfferCrashReport(context, ref));
+    });
   }
 
   Future<void> _openPendingMacFiles() async {

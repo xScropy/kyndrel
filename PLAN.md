@@ -142,7 +142,7 @@ Rules:
 - [x] 5.4 Performance: cold start time, memory over a 3-hour film, CPU in 4K, no frame drops while the overlay animates.
 - [x] 5.5 Test matrix: HDR, 4K HEVC/AV1, 10-bit, VFR, broken MKVs, multi-audio files, image subtitles, huge subtitle files, network drops mid-stream.
 - [ ] 5.6 Packaging: Windows installer (MSIX or Inno Setup), macOS signed DMG, Linux AppImage/deb, with auto-update.
-- [ ] 5.7 Crash and log reporting (opt-in), a user-facing log viewer, and docs/README with screenshots.
+- [x] 5.7 Crash and log reporting (opt-in), a user-facing log viewer, and docs/README with screenshots.
 - [ ] 5.8 Licence audit for bundled libmpv/FFmpeg builds and an `ATTRIBUTION.md`.
 - [ ] 5.9 v1.0 release notes and tagged GitHub release.
 

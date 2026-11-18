@@ -375,6 +375,9 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.comma);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pumpAndSettle();
+    // The window is frameless: the page brings its own buttons and drag area.
+    expect(find.byKey(const Key('window-close')), findsOneWidget);
+    expect(find.byKey(const Key('title-bar-drag-area')), findsOneWidget);
     for (final name in [
       'Playback', 'Subtitles', 'Audio', 'Video', 'Shortcuts', 'Library', //
       'Appearance', 'Language', 'Advanced', 'About',

@@ -811,6 +811,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check for updates'**
   String get updateCheckNow;
+
+  /// No description provided for @crashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kyndrel stopped unexpectedly'**
+  String get crashTitle;
+
+  /// No description provided for @crashBodyExit.
+  ///
+  /// In en, this message translates to:
+  /// **'The last session ended without closing normally. Would you like to report it? This opens a GitHub issue in your browser with the version, your OS and the end of the log filled in. You can edit or discard it before sending.'**
+  String get crashBodyExit;
+
+  /// No description provided for @crashBodyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong in the last session. Would you like to report it? This opens a pre-filled GitHub issue in your browser; nothing is sent unless you submit it.'**
+  String get crashBodyError;
+
+  /// No description provided for @crashReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report on GitHub'**
+  String get crashReport;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @viewLog.
+  ///
+  /// In en, this message translates to:
+  /// **'View log'**
+  String get viewLog;
+
+  /// No description provided for @logTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get logTitle;
+
+  /// No description provided for @logCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get logCopy;
+
+  /// No description provided for @logCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Log copied'**
+  String get logCopied;
+
+  /// No description provided for @logOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open log folder'**
+  String get logOpenFolder;
+
+  /// No description provided for @logEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged yet.'**
+  String get logEmpty;
+
+  /// No description provided for @logLevelAndUp.
+  ///
+  /// In en, this message translates to:
+  /// **'{level} and up'**
+  String logLevelAndUp(String level);
 }
 
 class _AppLocalizationsDelegate

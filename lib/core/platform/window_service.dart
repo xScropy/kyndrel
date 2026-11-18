@@ -117,8 +117,13 @@ class WindowManagerService with WindowListener implements WindowService {
   void onClose(Future<void> Function() callback) =>
       _closeCallbacks.add(callback);
 
+  bool _closing = false;
+
   @override
   Future<void> onWindowClose() async {
+    // Some platforms deliver the close event twice; save only once.
+    if (_closing) return;
+    _closing = true;
     for (final callback in _closeCallbacks) {
       try {
         await callback().timeout(const Duration(seconds: 2));

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 
 /// What the app was asked to do on the command line.
 ///
@@ -7,7 +8,9 @@ import 'package:flutter/foundation.dart';
 class LaunchOptions {
   const new({this.source, this.showDiagnostics = false, this.perfLog = false});
 
-  factory parse(List<String> args) {
+  /// A relative file path is resolved against [workingDirectory]; URLs
+  /// and absolute paths are kept as they are.
+  factory parse(List<String> args, {String? workingDirectory}) {
     String? source;
     var diagnostics = false;
     var perfLog = false;
@@ -19,6 +22,12 @@ class LaunchOptions {
       } else if (!arg.startsWith('--') && source == null && arg.isNotEmpty) {
         source = arg;
       }
+    }
+    if (source != null &&
+        workingDirectory != null &&
+        !RegExp('^[a-zA-Z][a-zA-Z0-9+.-]*://').hasMatch(source) &&
+        !p.isAbsolute(source)) {
+      source = p.normalize(p.join(workingDirectory, source));
     }
     return LaunchOptions(
       source: source,

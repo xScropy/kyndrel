@@ -389,4 +389,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateCheckNow => 'Check for updates';
+
+  @override
+  String get crashTitle => 'Kyndrel stopped unexpectedly';
+
+  @override
+  String get crashBodyExit =>
+      'The last session ended without closing normally. Would you like to report it? This opens a GitHub issue in your browser with the version, your OS and the end of the log filled in. You can edit or discard it before sending.';
+
+  @override
+  String get crashBodyError =>
+      'Something went wrong in the last session. Would you like to report it? This opens a pre-filled GitHub issue in your browser; nothing is sent unless you submit it.';
+
+  @override
+  String get crashReport => 'Report on GitHub';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get viewLog => 'View log';
+
+  @override
+  String get logTitle => 'Log';
+
+  @override
+  String get logCopy => 'Copy';
+
+  @override
+  String get logCopied => 'Log copied';
+
+  @override
+  String get logOpenFolder => 'Open log folder';
+
+  @override
+  String get logEmpty => 'Nothing logged yet.';
+
+  @override
+  String logLevelAndUp(String level) {
+    return '$level and up';
+  }
 }

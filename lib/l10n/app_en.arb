@@ -198,5 +198,24 @@
       }
     }
   },
-  "updateCheckNow": "Check for updates"
+  "updateCheckNow": "Check for updates",
+  "crashTitle": "Kyndrel stopped unexpectedly",
+  "crashBodyExit": "The last session ended without closing normally. Would you like to report it? This opens a GitHub issue in your browser with the version, your OS and the end of the log filled in. You can edit or discard it before sending.",
+  "crashBodyError": "Something went wrong in the last session. Would you like to report it? This opens a pre-filled GitHub issue in your browser; nothing is sent unless you submit it.",
+  "crashReport": "Report on GitHub",
+  "notNow": "Not now",
+  "viewLog": "View log",
+  "logTitle": "Log",
+  "logCopy": "Copy",
+  "logCopied": "Log copied",
+  "logOpenFolder": "Open log folder",
+  "logEmpty": "Nothing logged yet.",
+  "logLevelAndUp": "{level} and up",
+  "@logLevelAndUp": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  }
 }

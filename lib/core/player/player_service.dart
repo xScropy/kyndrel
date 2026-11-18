@@ -128,6 +128,7 @@ class PlayerService {
   final _trackController = StreamController<TrackState>.broadcast();
   final _completions = StreamController<String>.broadcast();
   final _log = ListQueue<PlayerLogLine>();
+  final _logLines = StreamController<PlayerLogLine>.broadcast();
   PlaybackState _state = PlaybackState.initial;
   TrackState _tracks = TrackState.empty;
   bool _disposed = false;
@@ -170,6 +171,10 @@ class PlayerService {
 
   /// Most recent mpv log lines, oldest first.
   List<PlayerLogLine> get recentLog => List.unmodifiable(_log);
+
+  /// Every mpv log line (warnings and errors) as it arrives, for the app
+  /// log file (task 5.7).
+  Stream<PlayerLogLine> get logLines => _logLines.stream;
 
   /// The last few warnings/errors, for the "can't play" message.
   String logExcerpt({int lines = 8}) {
@@ -669,6 +674,7 @@ class PlayerService {
     await _controller.close();
     await _trackController.close();
     await _completions.close();
+    await _logLines.close();
     await backend.dispose();
   }
 
@@ -772,6 +778,7 @@ class PlayerService {
   }
 
   void _onLog(PlayerLogLine line) {
+    if (!_logLines.isClosed) _logLines.add(line);
     _log.addLast(line);
     while (_log.length > logCapacity) {
       _log.removeFirst();

@@ -118,5 +118,17 @@
   "updateDownloading": "جارٍ تنزيل التحديث… {percent}٪",
   "updateUpToDate": "Kyndrel محدّث.",
   "updateFailed": "تعذر التحقق من التحديثات: {reason}",
-  "updateCheckNow": "التحقق من التحديثات"
+  "updateCheckNow": "التحقق من التحديثات",
+  "crashTitle": "توقف Kyndrel بشكل غير متوقع",
+  "crashBodyExit": "انتهت الجلسة السابقة دون إغلاق طبيعي. هل تريد الإبلاغ عن ذلك؟ سيفتح هذا بلاغًا على GitHub في المتصفح مع الإصدار ونظام التشغيل ونهاية السجل. يمكنك تعديله أو تجاهله قبل الإرسال.",
+  "crashBodyError": "حدث خطأ في الجلسة السابقة. هل تريد الإبلاغ عنه؟ سيفتح هذا بلاغًا معبأً مسبقًا على GitHub في المتصفح، ولا يُرسل شيء ما لم ترسله أنت.",
+  "crashReport": "الإبلاغ على GitHub",
+  "notNow": "ليس الآن",
+  "viewLog": "عرض السجل",
+  "logTitle": "السجل",
+  "logCopy": "نسخ",
+  "logCopied": "تم نسخ السجل",
+  "logOpenFolder": "فتح مجلد السجلات",
+  "logEmpty": "لا يوجد شيء في السجل بعد.",
+  "logLevelAndUp": "{level} فأعلى"
 }
