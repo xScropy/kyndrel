@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:media_kit/media_kit.dart';
@@ -23,9 +24,10 @@ class MediaKitBackend implements PlayerBackend {
     if (withVideo) {
       videoController = VideoController(
         player,
-        configuration: const VideoControllerConfiguration(
-          // Let mpv pick a hardware decoder, falling back to software.
-          hwdec: 'auto-safe',
+        configuration: VideoControllerConfiguration(
+          // Let mpv pick a hardware decoder, falling back to software. On
+          // Android that is MediaCodec (task 6.7).
+          hwdec: Platform.isAndroid ? 'mediacodec-copy' : 'auto-safe',
         ),
       );
     }

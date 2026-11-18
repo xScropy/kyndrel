@@ -59,8 +59,16 @@ void main() {
     tester,
   ) async {
     final h = await phone(tester, prefs: {'backgroundAudio': true});
+    h.backend.properties['vid'] = '1';
     await leaveApp(h, tester);
     expect(h.backend.calls, isNot(contains('pause')));
+    // Only the sound is decoded while nobody can see the picture (6.7).
+    expect(h.backend.properties['vid'], 'no');
+
+    for (final c in h.window.shownCallbacks) {
+      await c();
+    }
+    expect(h.backend.properties['vid'], '1');
   });
 
   testWidgets("Android's PiP: auto-enter while playing, video only", (

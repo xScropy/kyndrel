@@ -53,6 +53,7 @@ const hwdecChoices = {
   'nvdec': 'NVIDIA NVDEC',
   'vaapi': 'VA-API (Linux)',
   'videotoolbox': 'VideoToolbox (macOS)',
+  'mediacodec-copy': 'MediaCodec (Android)',
 };
 
 /// mpv `tone-mapping` choices for HDR on SDR screens (task 4.6).

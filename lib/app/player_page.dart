@@ -103,6 +103,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..onHidden(resume.saveNow)
       ..onHidden(history.saveNow)
       ..onHidden(_pauseInBackground)
+      ..onShown(_backInForeground)
       // Last: release libmpv and the video texture before the window is
       // destroyed. On Linux, destroying the GTK window with a live texture
       // aborts the process (g_mutex_clear on a locked mutex).
@@ -141,12 +142,19 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
 
   /// Phones (task 6.6): leaving the app pauses, unless the sound should go
   /// on in the background or the video went into picture-in-picture.
+  /// Playing on in the background decodes only the sound (task 6.7).
   Future<void> _pauseInBackground() async {
-    if (ref.read(pipProvider) || ref.read(settingsProvider).backgroundAudio) {
-      return;
+    if (ref.read(pipProvider)) return;
+    final service = ref.read(playerServiceProvider);
+    if (ref.read(settingsProvider).backgroundAudio) {
+      await service.setVideoDecoding(enabled: false);
+    } else {
+      await service.pause();
     }
-    await ref.read(playerServiceProvider).pause();
   }
+
+  Future<void> _backInForeground() =>
+      ref.read(playerServiceProvider).setVideoDecoding(enabled: true);
 
   @override
   void dispose() {

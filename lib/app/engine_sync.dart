@@ -40,7 +40,7 @@ final engineSyncProvider = Provider<void>((ref) {
     await service.setVolume(initial.volume);
     await service.setAutoLoadSubtitles(enabled: initial.autoLoadSubtitles);
     await service.applySubtitleStyle(initial.subtitleStyle);
-    await service.setHardwareDecoding(initial.hwdec);
+    await service.setHardwareDecoding(_decoder(initial.hwdec));
     await service.setDeband(enabled: initial.deband);
     await service.setToneMapping(initial.toneMapping);
     await applyVideo(initial);
@@ -64,7 +64,7 @@ final engineSyncProvider = Provider<void>((ref) {
       unawaited(applyVideo(ref.read(settingsProvider)));
     })
     ..listen(settingsProvider.select((s) => s.hwdec), (_, v) {
-      unawaited(service.setHardwareDecoding(v));
+      unawaited(service.setHardwareDecoding(_decoder(v)));
     })
     ..listen(settingsProvider.select((s) => s.deband), (_, v) {
       unawaited(service.setDeband(enabled: v));
@@ -82,3 +82,9 @@ final engineSyncProvider = Provider<void>((ref) {
       unawaited(service.applyOptions(parseMpvOptions(v).options));
     });
 });
+
+/// "Automatic" on Android is MediaCodec with a copy back (task 6.7): it is
+/// what works with media_kit's texture output, and mpv still falls back to
+/// software for formats the phone can't decode.
+String _decoder(String setting) =>
+    setting == 'auto-safe' && Platform.isAndroid ? 'mediacodec-copy' : setting;

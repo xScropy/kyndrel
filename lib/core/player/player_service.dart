@@ -462,6 +462,25 @@ class PlayerService {
   Future<void> setHardwareDecoding(String mode) =>
       backend.setProperty('hwdec', mode);
 
+  String? _videoTrackWhileHidden;
+
+  /// Stops decoding the picture while nobody can see it, such as a phone
+  /// playing in the background (task 6.7), and brings it back. mpv `vid`.
+  Future<void> setVideoDecoding({required bool enabled}) async {
+    if (!enabled) {
+      if (_videoTrackWhileHidden != null) return;
+      final vid = await backend.getProperty('vid');
+      if (vid == null || vid == 'no' || vid.isEmpty) return;
+      _videoTrackWhileHidden = vid;
+      await backend.setProperty('vid', 'no');
+    } else {
+      final vid = _videoTrackWhileHidden;
+      if (vid == null) return;
+      _videoTrackWhileHidden = null;
+      await backend.setProperty('vid', vid);
+    }
+  }
+
   // --------------------------------------------------------- audio effects
 
   static const eqLabel = '@kyndrel-eq';

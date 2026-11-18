@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
+import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/android_frame_source.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
@@ -18,6 +19,7 @@ import 'package:path/path.dart' as p;
 import '../../support/app_harness.dart';
 import '../../support/fake_player_backend.dart';
 import '../../support/fake_preview_source.dart';
+import '../../support/fake_window_service.dart';
 
 /// Task 6.4: the scene preview while seeking on a phone.
 void main() {
@@ -142,18 +144,29 @@ void main() {
       final backend = FakePlayerBackend();
       final service = PlayerService(backend);
       final previews = FakePreviewSource('/x.jpg');
+      final window = FakeWindowService();
       final c = ProviderContainer(
         overrides: [
           playerServiceProvider.overrideWithValue(service),
           previewSourceProvider.overrideWithValue(previews),
+          windowServiceProvider.overrideWithValue(window),
         ],
       )..read(previewPrewarmProvider);
       unawaited(service.open('/v/film.mkv'));
       async.flushMicrotasks();
       backend.emitDuration(const Duration(minutes: 20));
+      // In the background: nothing is rendered until the app is back (6.7).
+      for (final cb in window.hiddenCallbacks) {
+        unawaited(cb());
+      }
       async
         ..flushMicrotasks()
-        ..elapse(const Duration(seconds: 4));
+        ..elapse(const Duration(seconds: 10));
+      expect(previews.requests, isEmpty);
+      for (final cb in window.shownCallbacks) {
+        unawaited(cb());
+      }
+      async.elapse(const Duration(seconds: 2));
       expect(previews.requests, hasLength(19));
       expect(previews.requests.first, const Duration(minutes: 1));
       c.dispose();
