@@ -36,14 +36,14 @@ jobs:
   engine:
     # PlayerService against the real libmpv with generated media.
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       # A stuck package mirror fails fast instead of eating the job.
-      - timeout-minutes: 5
+      - timeout-minutes: 12
         run: |
           sudo apt-get -o Acquire::Retries=3 update
-          sudo apt-get -o Acquire::Retries=3 install -y libmpv-dev libsqlite3-dev ffmpeg python3-pil
+          sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends libmpv-dev libsqlite3-dev ffmpeg python3-pil
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -113,10 +113,10 @@ jobs:
           cache: true
       - run: flutter pub get
       - name: Test media
-        timeout-minutes: 8
+        timeout-minutes: 12
         run: |
           sudo apt-get -o Acquire::Retries=3 update
-          sudo apt-get -o Acquire::Retries=3 install -y ffmpeg python3-pil
+          sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends ffmpeg python3-pil
           scripts/make_test_media.sh
       - name: Serve test media
         run: |
