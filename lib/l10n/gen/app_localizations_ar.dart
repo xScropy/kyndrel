@@ -429,4 +429,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String logLevelAndUp(String level) {
     return '$level فأعلى';
   }
+
+  @override
+  String get upNext => 'التالي';
+
+  @override
+  String upNextIn(int seconds) {
+    return 'يبدأ خلال $seconds ث';
+  }
+
+  @override
+  String get upNextPlayNow => 'تشغيل الآن';
+
+  @override
+  String get upNextCancel => 'إلغاء';
 }

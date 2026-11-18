@@ -429,4 +429,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String logLevelAndUp(String level) {
     return '$level and up';
   }
+
+  @override
+  String get upNext => 'UP NEXT';
+
+  @override
+  String upNextIn(int seconds) {
+    return 'Playing in $seconds s';
+  }
+
+  @override
+  String get upNextPlayNow => 'Play now';
+
+  @override
+  String get upNextCancel => 'Cancel';
 }

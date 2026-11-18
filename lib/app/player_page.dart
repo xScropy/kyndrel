@@ -28,6 +28,7 @@ import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
 import 'package:kyndrel/features/library/library_home.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
+import 'package:kyndrel/features/library/up_next_card.dart';
 import 'package:kyndrel/features/logs/crash_prompt.dart';
 import 'package:kyndrel/features/network/open_url_dialog.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
@@ -282,6 +283,11 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   left: 0,
                   right: 0,
                   child: Center(child: UpdateBanner()),
+                ),
+                const PositionedDirectional(
+                  end: 20,
+                  bottom: 130,
+                  child: UpNextCard(),
                 ),
                 if (widget.launch.showDiagnostics)
                   const PositionedDirectional(

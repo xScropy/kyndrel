@@ -217,5 +217,16 @@
         "type": "String"
       }
     }
-  }
+  },
+  "upNext": "UP NEXT",
+  "upNextIn": "Playing in {seconds} s",
+  "@upNextIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "upNextPlayNow": "Play now",
+  "upNextCancel": "Cancel"
 }

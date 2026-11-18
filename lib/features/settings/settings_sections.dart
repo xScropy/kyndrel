@@ -37,6 +37,27 @@ class PlaybackSettings extends ConsumerWidget {
                 updateSettings(ref, (x) => x.copyWith(skipSeconds: v)),
           ),
         ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Up next countdown'),
+          subtitle: const Text(
+            'Seconds before the queue moves on, with Play now and Cancel',
+          ),
+          trailing: DropdownButton<int>(
+            key: const Key('settings-up-next'),
+            value: s.upNextSeconds,
+            dropdownColor: KyndrelColors.surface,
+            items: [
+              for (final v in AppSettings.upNextChoices)
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(v == 0 ? 'Off' : '$v s'),
+                ),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(upNextSeconds: v)),
+          ),
+        ),
         SwitchListTile(
           key: const Key('settings-next-episode'),
           contentPadding: EdgeInsets.zero,

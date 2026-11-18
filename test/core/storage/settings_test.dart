@@ -58,6 +58,7 @@ void main() {
     const changed = AppSettings(
       volume: 150,
       skipSeconds: 30,
+      upNextSeconds: 0,
       limiterEnabled: false,
       showRemainingTime: true,
       autoLoadSubtitles: false,
@@ -100,6 +101,7 @@ void main() {
     Map<String, Object?> dump(AppSettings s) => {
       'volume': s.volume,
       'skipSeconds': s.skipSeconds,
+      'upNextSeconds': s.upNextSeconds,
       'limiterEnabled': s.limiterEnabled,
       'showRemainingTime': s.showRemainingTime,
       'autoLoadSubtitles': s.autoLoadSubtitles,

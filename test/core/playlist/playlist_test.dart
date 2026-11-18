@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
+import 'package:kyndrel/core/playlist/up_next.dart';
 import 'package:kyndrel/core/utils/natural_sort.dart';
 import 'package:path/path.dart' as p;
 
@@ -39,6 +40,11 @@ void main() {
       ..emitPosition(const Duration(minutes: 20))
       ..emitCompleted(value: true);
     await pumpEventQueue();
+    // Skip the "Up next" countdown (tested below): press Play now.
+    if (container.read(upNextProvider) != null) {
+      await container.read(upNextProvider.notifier).playNow();
+      await pumpEventQueue();
+    }
   }
 
   test('natural sort', () {

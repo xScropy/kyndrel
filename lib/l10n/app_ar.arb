@@ -130,5 +130,9 @@
   "logCopied": "تم نسخ السجل",
   "logOpenFolder": "فتح مجلد السجلات",
   "logEmpty": "لا يوجد شيء في السجل بعد.",
-  "logLevelAndUp": "{level} فأعلى"
+  "logLevelAndUp": "{level} فأعلى",
+  "upNext": "التالي",
+  "upNextIn": "يبدأ خلال {seconds} ث",
+  "upNextPlayNow": "تشغيل الآن",
+  "upNextCancel": "إلغاء"
 }

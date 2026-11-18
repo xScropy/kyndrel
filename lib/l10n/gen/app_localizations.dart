@@ -883,6 +883,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{level} and up'**
   String logLevelAndUp(String level);
+
+  /// No description provided for @upNext.
+  ///
+  /// In en, this message translates to:
+  /// **'UP NEXT'**
+  String get upNext;
+
+  /// No description provided for @upNextIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing in {seconds} s'**
+  String upNextIn(int seconds);
+
+  /// No description provided for @upNextPlayNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Play now'**
+  String get upNextPlayNow;
+
+  /// No description provided for @upNextCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get upNextCancel;
 }
 
 class _AppLocalizationsDelegate

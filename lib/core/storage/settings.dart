@@ -15,6 +15,7 @@ class AppSettings {
   const new({
     this.volume = 100,
     this.skipSeconds = 10,
+    this.upNextSeconds = 10,
     this.limiterEnabled = true,
     this.showRemainingTime = false,
     this.autoLoadSubtitles = true,
@@ -56,6 +57,9 @@ class AppSettings {
 
   /// Length of the back/forward skip and the ←/→ seek (task 1.5).
   final int skipSeconds;
+
+  /// "Up next" countdown before the queue moves on; 0 = straight away.
+  final int upNextSeconds;
 
   /// Limiter above 100 % volume (task 1.6).
   final bool limiterEnabled;
@@ -138,10 +142,12 @@ class AppSettings {
   static const hideChoices = [2, 3, 5, 10];
 
   static const skipChoices = [5, 10, 15, 30, 60];
+  static const upNextChoices = [0, 5, 10, 15, 30];
 
   AppSettings copyWith({
     double? volume,
     int? skipSeconds,
+    int? upNextSeconds,
     bool? limiterEnabled,
     bool? showRemainingTime,
     bool? autoLoadSubtitles,
@@ -180,6 +186,7 @@ class AppSettings {
     return AppSettings(
       volume: volume ?? this.volume,
       skipSeconds: skipSeconds ?? this.skipSeconds,
+      upNextSeconds: upNextSeconds ?? this.upNextSeconds,
       limiterEnabled: limiterEnabled ?? this.limiterEnabled,
       showRemainingTime: showRemainingTime ?? this.showRemainingTime,
       autoLoadSubtitles: autoLoadSubtitles ?? this.autoLoadSubtitles,
@@ -262,6 +269,7 @@ class SettingsRepository {
     return AppSettings(
       volume: (_prefs.getDouble('volume') ?? d.volume).clamp(0, 400),
       skipSeconds: _prefs.getInt('skipSeconds') ?? d.skipSeconds,
+      upNextSeconds: _prefs.getInt('upNextSeconds') ?? d.upNextSeconds,
       limiterEnabled: _prefs.getBool('limiterEnabled') ?? d.limiterEnabled,
       showRemainingTime:
           _prefs.getBool('showRemainingTime') ?? d.showRemainingTime,
@@ -344,6 +352,7 @@ class SettingsRepository {
   Future<void> save(AppSettings s) async {
     await _prefs.setDouble('volume', s.volume);
     await _prefs.setInt('skipSeconds', s.skipSeconds);
+    await _prefs.setInt('upNextSeconds', s.upNextSeconds);
     await _prefs.setBool('limiterEnabled', s.limiterEnabled);
     await _prefs.setBool('showRemainingTime', s.showRemainingTime);
     await _prefs.setBool('autoLoadSubtitles', s.autoLoadSubtitles);

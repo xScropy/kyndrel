@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/playlist/up_next.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/utils/episode_parser.dart';
 import 'package:path/path.dart' as p;
@@ -102,6 +103,7 @@ class PlaylistController extends Notifier<PlaylistState> {
   /// Replaces the queue with [sources] and plays [start].
   Future<void> openAll(List<String> sources, {int start = 0}) async {
     if (sources.isEmpty) return;
+    ref.read(upNextProvider.notifier).cancel();
     final s = start.clamp(0, sources.length - 1);
     state = PlaylistState(
       items: List.unmodifiable(sources),
@@ -124,6 +126,15 @@ class PlaylistController extends Notifier<PlaylistState> {
       }
     }
     await openAll([source]);
+  }
+
+  int get _upNextSeconds {
+    try {
+      return ref.read(settingsProvider).upNextSeconds;
+    } on Object {
+      // No settings in some tests: move on straight away.
+      return 0;
+    }
   }
 
   bool get _autoNext {
@@ -178,6 +189,7 @@ class PlaylistController extends Notifier<PlaylistState> {
 
   Future<void> playAt(int index) async {
     if (index < 0 || index >= state.items.length) return;
+    ref.read(upNextProvider.notifier).cancel();
     state = state.copyWith(current: () => index, stopAfterCurrent: false);
     await _play(index);
   }
@@ -290,6 +302,14 @@ class PlaylistController extends Notifier<PlaylistState> {
     if (state.repeat == QueueRepeat.one) {
       // play() restarts a completed file from the beginning.
       await ref.read(playerServiceProvider).play();
+      return;
+    }
+    final n = state._step(1);
+    final seconds = _upNextSeconds;
+    if (n != null && seconds > 0) {
+      ref
+          .read(upNextProvider.notifier)
+          .start(index: n, source: state.items[n], seconds: seconds);
       return;
     }
     await next();
