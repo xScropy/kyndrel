@@ -155,8 +155,8 @@ preview frame while dragging; releases are signed APKs on GitHub.
 - [x] 6.3 Touch gestures: left swipe brightness, right swipe volume then boost, horizontal seek, double-tap ±10 s (adds up), pinch zoom, long-press 2×, lock; level OSD; Settings › Gestures.
 - [x] 6.4 Scene preview while seeking: big frame above the thumb on touch drags and during swipe-seek, with time and chapter; Android frame source if mpv's image output is missing.
 - [x] 6.5 Phone layout: fewer buttons plus a "more" sheet, panels as bottom sheets, 48 dp targets, cutouts, rotate/lock orientation, keep screen on.
-- [ ] 6.6 Android integration: media notification and session, background audio, audio focus, pause on unplug, native PiP, multicast lock for DLNA, hide features needing ffmpeg/yt-dlp.
-- [ ] 6.7 Performance and battery: mediacodec decoding, less work when hidden.
+- [x] 6.6 Android integration: media notification and session, background audio, audio focus, pause on unplug, native PiP, multicast lock for DLNA, hide features needing ffmpeg/yt-dlp.
+- [x] 6.7 Performance and battery: mediacodec decoding, less work when hidden.
 - [ ] 6.8 Tests and CI: gesture tests with fake platform services, phone goldens, emulator smoke test.
 - [ ] 6.9 Release: signed per-ABI APKs on GitHub releases, update check for APKs, licence audit, 1.1.0 notes.
 
