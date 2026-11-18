@@ -2,10 +2,13 @@ name: Release
 
 # Builds and packages Kyndrel for every platform (task 5.6).
 # - Push a tag `vX.Y.Z` (matching pubspec.yaml's version): packages are
-#   attached to a *draft* GitHub release, which a maintainer publishes.
-# - Run it by hand (Actions > Release > Run workflow), or change anything
-#   under packaging/, to get the packages as workflow artifacts without
-#   making a release.
+#   attached to the tag's release. If there is none yet, a *draft* is
+#   created for a maintainer to publish; an existing release (draft or
+#   published) only gets the files added, and keeps its state and text.
+# - Run it by hand (Actions > Release > Run workflow) with a tag to build
+#   that tag and attach packages to its release (`assets` picks which,
+#   e.g. `*.exe *.deb`). Without a tag, or when anything under packaging/
+#   changes, the packages are only kept as workflow artifacts.
 #
 # Optional secrets for signed macOS builds: MACOS_CERTIFICATE (base64 .p12),
 # MACOS_CERTIFICATE_PASSWORD, MACOS_SIGN_IDENTITY, APPLE_ID, APPLE_TEAM_ID,
@@ -22,6 +25,15 @@ on:
       - 'packaging/**'
       - '.github/workflows/release.yml'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Build this tag and attach the packages to its release (e.g. v1.0.0)
+        required: false
+        default: ''
+      assets:
+        description: Which packages to attach (shell patterns)
+        required: false
+        default: '*'
 
 permissions:
   contents: write
@@ -33,11 +45,15 @@ jobs:
       version: ${{ steps.v.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - id: v
         run: |
           version=$(awk '/^version:/ {sub(/\+.*/, "", $2); print $2}' pubspec.yaml)
-          if [[ "$GITHUB_REF" == refs/tags/v* && "${GITHUB_REF_NAME#v}" != "$version" ]]; then
-            echo "::error::tag $GITHUB_REF_NAME does not match pubspec version $version"
+          tag="${{ inputs.tag }}"
+          if [[ -z "$tag" && "$GITHUB_REF" == refs/tags/v* ]]; then tag=$GITHUB_REF_NAME; fi
+          if [[ -n "$tag" && "${tag#v}" != "$version" ]]; then
+            echo "::error::tag $tag does not match pubspec version $version"
             exit 1
           fi
           grep -q "appVersion = '$version'" lib/core/app_info.dart \
@@ -49,6 +65,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -78,6 +96,8 @@ jobs:
       HAS_CERT: ${{ secrets.MACOS_CERTIFICATE != '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -118,6 +138,8 @@ jobs:
       APPIMAGE_EXTRACT_AND_RUN: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config \
@@ -163,11 +185,17 @@ jobs:
             build/installer/*.AppImage
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
     needs: [version, windows, macos, linux]
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag || github.ref_name }}
+      ASSETS: ${{ inputs.assets || '*' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -178,9 +206,24 @@ jobs:
           awk -v v="$v" '$0 ~ "^## \\[?" v "\\]?" {on=1; next} /^## / && on {exit} on' \
             CHANGELOG.md > notes.md || true
           [ -s notes.md ] || echo "Kyndrel $v" > notes.md
-      - uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          name: Kyndrel ${{ needs.version.outputs.version }}
-          body_path: notes.md
-          files: dist/*
+      - name: Attach to the release
+        run: |
+          cd dist
+          # shellcheck disable=SC2086 # ASSETS holds patterns on purpose
+          files=$(ls -1 $ASSETS 2>/dev/null || true)
+          [ -n "$files" ] || { echo "::error::no packages match '$ASSETS'"; ls -l; exit 1; }
+          echo "Attaching:"; echo "$files"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            # Existing release: add (or replace) the files only; its draft
+            # or published state, title and text stay as they are, except
+            # that an empty description gets the changelog section.
+            gh release upload "$TAG" $files --clobber --repo "$GITHUB_REPOSITORY"
+            body=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body -q .body)
+            if [ -z "$body" ]; then
+              gh release edit "$TAG" --notes-file ../notes.md --repo "$GITHUB_REPOSITORY"
+            fi
+          else
+            gh release create "$TAG" $files --draft \
+              --title "Kyndrel ${{ needs.version.outputs.version }}" \
+              --notes-file ../notes.md --repo "$GITHUB_REPOSITORY"
+          fi
