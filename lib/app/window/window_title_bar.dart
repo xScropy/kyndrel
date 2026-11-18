@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -51,7 +52,9 @@ class WindowTitleBar extends ConsumerWidget {
               ],
             ),
           ),
-          if (showButtons) const WindowButtons(),
+          if (showButtons &&
+              ref.watch(platformCapabilitiesProvider).hasWindowControls)
+            const WindowButtons(),
         ],
       ),
     );

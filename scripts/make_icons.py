@@ -29,6 +29,49 @@ def icon(size: int) -> Image.Image:
     return img.resize((size, size), Image.LANCZOS)
 
 
+def adaptive_foreground(size: int) -> Image.Image:
+    """Android adaptive-icon foreground: the play triangle alone, sized for
+    the 66 % safe zone of the 108 dp canvas (task 6.1)."""
+    s = size * 4
+    img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    cx, cy, r = s * 0.52, s * 0.5, s * 0.15
+    d.polygon(
+        [(cx - r * 0.8, cy - r), (cx - r * 0.8, cy + r), (cx + r, cy)],
+        fill=(255, 255, 255, 255),
+    )
+    return img.resize((size, size), Image.LANCZOS)
+
+
+ANDROID_DENSITIES = {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}
+
+
+def android() -> None:
+    res = ROOT / "android/app/src/main/res"
+    for name, k in ANDROID_DENSITIES.items():
+        out = res / f"mipmap-{name}"
+        out.mkdir(parents=True, exist_ok=True)
+        icon(round(48 * k)).save(out / "ic_launcher.png")
+        adaptive_foreground(round(108 * k)).save(out / "ic_launcher_foreground.png")
+    anydpi = res / "mipmap-anydpi-v26"
+    anydpi.mkdir(parents=True, exist_ok=True)
+    (anydpi / "ic_launcher.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+        '    <background android:drawable="@color/ic_launcher_background" />\n'
+        '    <foreground android:drawable="@mipmap/ic_launcher_foreground" />\n'
+        '    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />\n'
+        '</adaptive-icon>\n'
+    )
+    values = res / "values"
+    values.mkdir(parents=True, exist_ok=True)
+    (values / "ic_launcher_background.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
+        '    <color name="ic_launcher_background">#F26A1B</color>\n'
+        '</resources>\n'
+    )
+
+
 def main() -> None:
     mac = ROOT / "macos/Runner/Assets.xcassets/AppIcon.appiconset"
     for n in (16, 32, 64, 128, 256, 512, 1024):
@@ -42,6 +85,8 @@ def main() -> None:
         out = linux / f"{n}x{n}"
         out.mkdir(parents=True, exist_ok=True)
         icon(n).save(out / "kyndrel.png")
+    if (ROOT / "android").exists():
+        android()
 
 
 if __name__ == "__main__":

@@ -83,6 +83,22 @@ class CrashMonitor {
     }
   }
 
+  /// The app went to the background (Android): the system may end the
+  /// process there, which is not a crash, so mark the session as stopped
+  /// cleanly until [resume].
+  void pause() => cleanExit();
+
+  /// Back in the foreground: running again.
+  void resume() {
+    try {
+      _file('session.lock')
+        ?..createSync(recursive: true)
+        ..writeAsStringSync('$pid ${DateTime.now().toIso8601String()}');
+    } on FileSystemException {
+      // Best effort.
+    }
+  }
+
   /// Forget the previous crash (after offering a report once).
   void dismissPrevious() => _previous = null;
 

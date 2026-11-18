@@ -33,6 +33,14 @@ abstract interface class WindowService {
   /// The window closes once [callback] completes.
   void onClose(Future<void> Function() callback);
 
+  /// Called when the app goes to the background (Android, task 6.1). The
+  /// system may end the process there without a close, so save state now.
+  /// Desktop windows never call it.
+  void onHidden(Future<void> Function() callback);
+
+  /// Called when the app comes back from the background.
+  void onShown(Future<void> Function() callback);
+
   // Picture-in-picture (task 4.1).
   Future<Rect> getBounds();
   Future<void> setBounds(Rect bounds);
@@ -116,6 +124,13 @@ class WindowManagerService with WindowListener implements WindowService {
   @override
   void onClose(Future<void> Function() callback) =>
       _closeCallbacks.add(callback);
+
+  // A desktop window is minimised, not backgrounded: nothing to do.
+  @override
+  void onHidden(Future<void> Function() callback) {}
+
+  @override
+  void onShown(Future<void> Function() callback) {}
 
   bool _closing = false;
 

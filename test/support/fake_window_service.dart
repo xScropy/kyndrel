@@ -39,6 +39,16 @@ class FakeWindowService implements WindowService {
   bool _isFullScreen = false;
   final _fullScreenChanges = StreamController<bool>.broadcast(sync: true);
   final closeCallbacks = <Future<void> Function()>[];
+  final hiddenCallbacks = <Future<void> Function()>[];
+  final shownCallbacks = <Future<void> Function()>[];
+
+  @override
+  void onHidden(Future<void> Function() callback) =>
+      hiddenCallbacks.add(callback);
+
+  @override
+  void onShown(Future<void> Function() callback) =>
+      shownCallbacks.add(callback);
 
   @override
   bool get isFullScreen => _isFullScreen;

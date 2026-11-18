@@ -84,6 +84,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     ref.read(windowServiceProvider)
       ..onClose(resume.saveNow)
       ..onClose(history.saveNow)
+      // Android may end the process in the background: save on the way.
+      ..onHidden(resume.saveNow)
+      ..onHidden(history.saveNow)
       // Last: release libmpv and the video texture before the window is
       // destroyed. On Linux, destroying the GTK window with a live texture
       // aborts the process (g_mutex_clear on a locked mutex).
