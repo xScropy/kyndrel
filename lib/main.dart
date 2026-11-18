@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/app.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/media_session_sync.dart';
+import 'package:kyndrel/app/perf_log.dart';
 import 'package:kyndrel/core/platform/media_session.dart';
 import 'package:kyndrel/core/platform/mpris.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
@@ -16,6 +17,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 Future<void> main(List<String> args) async {
+  final launch = LaunchOptions.parse(args);
+  PerfLog.enabled = launch.perfLog;
+  PerfLog.mark('main');
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -54,7 +58,7 @@ Future<void> main(List<String> args) async {
           '${supportDir.path}${Platform.pathSeparator}scripts',
         ),
       ],
-      child: KyndrelApp(launch: LaunchOptions.parse(args)),
+      child: KyndrelApp(launch: launch),
     ),
   );
 }

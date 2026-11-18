@@ -16,6 +16,9 @@ import 'package:material_ui/material_ui.dart';
 class SeekBarRow extends ConsumerWidget {
   const new({super.key});
 
+  /// Fixed height (the bar's hit area), so the row is a relayout boundary.
+  static const double height = 32;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final position = ref.watch(positionProvider).value ?? Duration.zero;

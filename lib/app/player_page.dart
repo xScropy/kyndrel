@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/engine_sync.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/media_session_sync.dart';
+import 'package:kyndrel/app/perf_log.dart';
 import 'package:kyndrel/app/player_shortcuts.dart';
 import 'package:kyndrel/app/settings_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
@@ -72,6 +73,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(engineSyncProvider)
       ..read(mediaSessionSyncProvider)
       ..read(scriptManagerProvider);
+    PerfLog.start(ref);
     final resume = ref.read(resumeControllerProvider.notifier);
     final history = ref.read(historyControllerProvider.notifier);
     ref.read(windowServiceProvider)
@@ -203,7 +205,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
         child: AnimatedOpacity(
           opacity: visible ? 1 : 0,
           duration: const Duration(milliseconds: 200),
-          child: child,
+          child: RepaintBoundary(child: child),
         ),
       ),
     );
@@ -237,7 +239,12 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                const PlayerVideoView(),
+                // Own layer: overlay fades, OSD and seek-bar ticks must not
+                // repaint the video (task 5.4).
+                const RepaintBoundary(
+                  key: Key('video-layer'),
+                  child: PlayerVideoView(),
+                ),
                 if (hasMedia) VideoGestureLayer(onSecondaryTap: _contextMenu),
                 StatusLayer(
                   onPickFile: _pickFile,

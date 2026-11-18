@@ -35,9 +35,19 @@ class BottomControls extends StatelessWidget {
         children: [
           // Timelines and transport keep tape direction in RTL locales
           // (Material bidirectionality guidance); the side groups mirror.
-          const Directionality(
-            textDirection: TextDirection.ltr,
-            child: SeekBarRow(),
+          // The seek bar relays out and repaints on every position tick.
+          // Tight constraints make it a relayout boundary and the
+          // RepaintBoundary its own layer, so the rest of the bar is left
+          // alone (task 5.4).
+          const SizedBox(
+            width: double.infinity,
+            height: SeekBarRow.height,
+            child: RepaintBoundary(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: SeekBarRow(),
+              ),
+            ),
           ),
           const SizedBox(height: 6),
           SizedBox(
