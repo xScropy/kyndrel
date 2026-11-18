@@ -80,6 +80,7 @@ void main() {
     await service.open('a.mp4');
     backend
       ..emitDuration(const Duration(seconds: 10))
+      ..emitPosition(const Duration(seconds: 10))
       ..emitCompleted(value: true);
     expect(service.state.status, PlaybackStatus.completed);
   });
@@ -440,6 +441,53 @@ void main() {
       await service.open('b.mkv');
       expect(service.tracks.subtitles, isEmpty);
     });
+  });
+
+  group('an end of file well before the duration (task 5.5)', () {
+    test('a cut-off network stream is an error, not a completion', () async {
+      final ends = <String>[];
+      service.completions.listen(ends.add);
+      await service.open('https://example.com/film.mkv');
+      backend
+        ..emitDuration(const Duration(minutes: 90))
+        ..emitPosition(const Duration(minutes: 12))
+        ..emitCompleted(value: true);
+      await pumpEventQueue();
+      expect(service.state.status, PlaybackStatus.error);
+      expect(service.state.errorMessage, contains('connection was lost'));
+      expect(service.state.errorMessage, contains('12:00'));
+      expect(ends, isEmpty);
+    });
+
+    test('a truncated local file says it ends early', () async {
+      await service.open('/v/film.mkv');
+      backend
+        ..emitDuration(const Duration(minutes: 90))
+        ..emitPosition(const Duration(minutes: 40))
+        ..emitCompleted(value: true);
+      await pumpEventQueue();
+      expect(service.state.errorMessage, contains('ends early'));
+    });
+
+    test('ending within the margin is a normal completion', () async {
+      await service.open('/v/film.mkv');
+      backend
+        ..emitDuration(const Duration(minutes: 90))
+        // 3 % of 90 min is 2 min 42 s: credits cut short still count.
+        ..emitPosition(const Duration(minutes: 88))
+        ..emitCompleted(value: true);
+      await pumpEventQueue();
+      expect(service.state.status, PlaybackStatus.completed);
+      expect(
+        PlayerService.earlyEndMargin(const Duration(seconds: 30)),
+        const Duration(seconds: 5),
+      );
+    });
+  });
+
+  test('stream reconnects give up after the 15 s retry', () async {
+    await pumpEventQueue();
+    expect(backend.properties['stream-lavf-o'], 'reconnect_delay_max=15');
   });
 
   test('completions fire once per file end', () async {

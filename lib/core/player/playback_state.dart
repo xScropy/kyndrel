@@ -33,6 +33,7 @@ class PlaybackState {
     this.isBuffering = false,
     this.isCompleted = false,
     this.isLoaded = false,
+    this.endedEarly = false,
     this.videoWidth,
     this.videoHeight,
     this.errorMessage,
@@ -57,6 +58,11 @@ class PlaybackState {
   /// True once libmpv has reported something that proves the file is open:
   /// a duration or a video size.
   final bool isLoaded;
+
+  /// Playback stopped well before the end (a dropped stream or a truncated
+  /// file). With [errorMessage] this makes [status] an error, so the film
+  /// isn't counted as watched.
+  final bool endedEarly;
   final int? videoWidth;
   final int? videoHeight;
 
@@ -75,9 +81,12 @@ class PlaybackState {
   static const PlaybackState initial = PlaybackState();
 
   PlaybackStatus get status {
-    // An error is fatal only if the source never loaded. Errors after that
-    // are warnings (playback carries on).
-    if (errorMessage != null && !isLoaded) return PlaybackStatus.error;
+    // An error is fatal only if the source never loaded or playback was
+    // cut short. Other errors after loading are warnings (playback carries
+    // on).
+    if (errorMessage != null && (!isLoaded || endedEarly)) {
+      return PlaybackStatus.error;
+    }
     if (source == null) return PlaybackStatus.idle;
     if (isCompleted) return PlaybackStatus.completed;
     if (!isLoaded) return PlaybackStatus.loading;
@@ -92,6 +101,7 @@ class PlaybackState {
     bool? isBuffering,
     bool? isCompleted,
     bool? isLoaded,
+    bool? endedEarly,
     int? videoWidth,
     int? videoHeight,
     String? errorMessage,
@@ -108,6 +118,7 @@ class PlaybackState {
       isBuffering: isBuffering ?? this.isBuffering,
       isCompleted: isCompleted ?? this.isCompleted,
       isLoaded: isLoaded ?? this.isLoaded,
+      endedEarly: endedEarly ?? this.endedEarly,
       videoWidth: videoWidth ?? this.videoWidth,
       videoHeight: videoHeight ?? this.videoHeight,
       errorMessage: errorMessage ?? this.errorMessage,
@@ -128,6 +139,7 @@ class PlaybackState {
       other.isBuffering == isBuffering &&
       other.isCompleted == isCompleted &&
       other.isLoaded == isLoaded &&
+      other.endedEarly == endedEarly &&
       other.videoWidth == videoWidth &&
       other.videoHeight == videoHeight &&
       other.errorMessage == errorMessage &&
@@ -145,6 +157,7 @@ class PlaybackState {
     isBuffering,
     isCompleted,
     isLoaded,
+    endedEarly,
     videoWidth,
     videoHeight,
     errorMessage,

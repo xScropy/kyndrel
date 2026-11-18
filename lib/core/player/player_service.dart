@@ -9,6 +9,7 @@ import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:kyndrel/core/player/remote_target.dart';
 import 'package:kyndrel/core/player/subtitle_style.dart';
+import 'package:kyndrel/core/utils/time_format.dart';
 
 /// The single entry point to the playback engine (PLAN.md §2).
 ///
@@ -676,7 +677,19 @@ class PlayerService {
   Future<void> _configureEngine() async {
     await backend.setProperty('volume-max', maxVolume.toStringAsFixed(0));
     await backend.setProperty('audio-pitch-correction', 'yes');
+    // FFmpeg retries a dropped HTTP connection with growing delays (0, 1,
+    // 3, 7, 15 s ...). Its default cap means ~2 minutes of spinner before
+    // an error; stop after the 15 s retry instead (task 5.5).
+    // (The option's default value is empty, so setting it replaces nothing;
+    // Settings › Advanced › mpv options can still override it.)
+    await backend.setProperty(
+      'stream-lavf-o',
+      'reconnect_delay_max=$reconnectDelayMaxSeconds',
+    );
   }
+
+  /// Longest wait between reconnect attempts on a dropped stream.
+  static const reconnectDelayMaxSeconds = 15;
 
   Future<void> _syncLimiter() async {
     final want = _limiterEnabled && _state.volume > 100;
@@ -705,7 +718,39 @@ class PlayerService {
     return position;
   }
 
+  /// How far before the known duration an end of file counts as "cut
+  /// short" rather than "finished": the larger of 5 s and 3 %.
+  static Duration earlyEndMargin(Duration duration) {
+    final pct = duration * 0.03;
+    return pct > const Duration(seconds: 5) ? pct : const Duration(seconds: 5);
+  }
+
   void _onCompleted(bool completed) {
+    // mpv reports a dropped stream or a truncated file as a normal end of
+    // file once it gives up. Don't treat a cut-off film as watched (resume
+    // point, history, next in queue): report it as an error (task 5.5).
+    final d = _state.duration;
+    final at = _state.position;
+    if (completed &&
+        _remote == null &&
+        d > Duration.zero &&
+        at < d - earlyEndMargin(d)) {
+      final source = _state.source ?? '';
+      final network =
+          RegExp('^[a-z][a-z0-9+.-]*://').hasMatch(source) &&
+          !source.startsWith('file://');
+      _update(
+        _state.copyWith(
+          endedEarly: true,
+          isPlaying: false,
+          errorMessage: network
+              ? 'The connection was lost at ${formatDuration(at)}.'
+              : 'The file ends early, at ${formatDuration(at)} of '
+                    '${formatDuration(d)}. It may be incomplete or damaged.',
+        ),
+      );
+      return;
+    }
     final wasCompleted = _state.isCompleted;
     _update(_state.copyWith(isCompleted: completed));
     final source = _state.source;

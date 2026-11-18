@@ -91,6 +91,7 @@ void main() {
     await service.open('/v/a.mkv');
     backend
       ..emitDuration(const Duration(hours: 1))
+      ..emitPosition(const Duration(hours: 1))
       ..emitCompleted(value: true);
     await settle();
     expect(await repo().get('/v/a.mkv'), isNull);

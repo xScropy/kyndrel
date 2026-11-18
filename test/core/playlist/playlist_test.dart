@@ -36,6 +36,7 @@ void main() {
   Future<void> finish() async {
     backend
       ..emitDuration(const Duration(minutes: 20))
+      ..emitPosition(const Duration(minutes: 20))
       ..emitCompleted(value: true);
     await pumpEventQueue();
   }

@@ -114,7 +114,9 @@ void main() {
       async.elapse(const Duration(seconds: 1));
       expect(state()?.remaining, const Duration(minutes: 1));
 
-      backend.emitCompleted(value: true);
+      backend
+        ..emitPosition(const Duration(minutes: 20))
+        ..emitCompleted(value: true);
       async.flushMicrotasks();
       expect(state(), isNull);
       expect(backend.calls, contains('pause'));
@@ -132,7 +134,9 @@ void main() {
       expect(state()?.episodesLeft, 1);
       expect(state()?.remaining, isNull, reason: 'not the final episode yet');
 
-      backend.emitCompleted(value: true);
+      backend
+        ..emitPosition(const Duration(minutes: 20))
+        ..emitCompleted(value: true);
       async.flushMicrotasks();
       expect(state()?.episodesLeft, 0);
       expect(backend.calls, isNot(contains('pause')));
@@ -144,7 +148,9 @@ void main() {
       async.elapse(const Duration(seconds: 1));
       expect(state()?.remaining, const Duration(minutes: 18));
 
-      backend.emitCompleted(value: true);
+      backend
+        ..emitPosition(const Duration(minutes: 20))
+        ..emitCompleted(value: true);
       async.flushMicrotasks();
       expect(state(), isNull);
       expect(backend.calls, contains('pause'));

@@ -68,6 +68,43 @@ title=The Heist
 META
 "${FF[@]}" -i clip.mp4 -i chapters.txt -map_metadata 1 -map_chapters 1 -c copy chapters.mkv
 
+# Test matrix (task 5.5) into matrix/.
+mkdir -p matrix
+# 4K HEVC Main 10 with HDR10 signalling (PQ, BT.2020, mastering display).
+"${FF[@]}" -f lavfi -i testsrc2=size=3840x2160:rate=24 -t 2 \
+  -c:v libx265 -preset ultrafast -pix_fmt yuv420p10le -tag:v hvc1 \
+  -color_primaries bt2020 -color_trc smpte2084 -colorspace bt2020nc \
+  -x265-params "hdr10=1:repeat-headers=1:colorprim=bt2020:transfer=smpte2084:colormatrix=bt2020nc:master-display=G(13250,34500)B(7500,3000)R(34000,16000)WP(15635,16450)L(10000000,1):max-cll=1000,400" \
+  matrix/hdr10_4k_hevc10.mp4 2>/dev/null || echo "libx265 missing: skipping HDR10 clip"
+# AV1 (SVT-AV1, or libaom).
+"${FF[@]}" "${SRC[@]}" -t 3 -c:v libsvtav1 -preset 12 -pix_fmt yuv420p -c:a libopus \
+  matrix/av1.mkv 2>/dev/null \
+  || "${FF[@]}" "${SRC[@]}" -t 3 -c:v libaom-av1 -cpu-used 8 -row-mt 1 -c:a libopus \
+    matrix/av1.mkv 2>/dev/null || echo "no AV1 encoder: skipping AV1 clip"
+# 10-bit H.264 (High 10).
+"${FF[@]}" "${SRC[@]}" -t 4 -c:v libx264 -preset ultrafast -pix_fmt yuv420p10le -c:a aac \
+  matrix/h264_10bit.mp4
+# Variable frame rate: drop two of every three frames in the first half.
+"${FF[@]}" "${SRC[@]}" -t 8 \
+  -vf "select='gte(t,4)+not(mod(n,3))'" -fps_mode vfr \
+  -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac matrix/vfr.mkv
+# A broken MKV: the multi-track film cut off at 40 %.
+size=$(stat -c %s "The.Test.Film.2019.1080p.mkv")
+head -c $((size * 4 / 10)) "The.Test.Film.2019.1080p.mkv" > matrix/truncated.mkv
+# Index (moov) first, so a stream cut mid-way has already started playing.
+# 30 s, so a cut at 40 % is clearly before the end.
+"${FF[@]}" "${SRC[@]}" -t 30 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac \
+  -movflags +faststart matrix/faststart.mp4
+# A huge subtitle file: 100 000 cues (~5 MB).
+python3 -I - matrix/huge.srt <<'PY'
+import sys
+with open(sys.argv[1], "w", encoding="utf-8") as f:
+    for i in range(100_000):
+        a, b = i * 1000, i * 1000 + 900
+        ts = lambda ms: "%02d:%02d:%02d,%03d" % (ms // 3600000, ms // 60000 % 60, ms // 1000 % 60, ms % 1000)
+        f.write(f"{i + 1}\n{ts(a)} --> {ts(b)}\nLine {i + 1} of a very long subtitle file\n\n")
+PY
+
 # Not a video at all.
 echo "this is not a video" > broken.mkv
 echo "Generated in $OUT:"; ls -1

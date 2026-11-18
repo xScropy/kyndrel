@@ -143,7 +143,9 @@ void main() {
         expect(shot.last, 'video');
         expect(item.thumbnailPath, shot[1]);
 
-        backend.emitCompleted(value: true);
+        backend
+          ..emitPosition(hour)
+          ..emitCompleted(value: true);
         expect((await recent()).single.finished, isTrue);
       },
     );
