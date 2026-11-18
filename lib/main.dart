@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/app.dart';
 import 'package:kyndrel/app/launch_options.dart';
+import 'package:kyndrel/app/licences.dart';
 import 'package:kyndrel/app/media_session_sync.dart';
 import 'package:kyndrel/app/perf_log.dart';
 import 'package:kyndrel/core/app_info.dart';
@@ -30,6 +31,7 @@ Future<void> main(List<String> args) async {
   PerfLog.enabled = launch.perfLog;
   PerfLog.mark('main');
   WidgetsFlutterBinding.ensureInitialized();
+  registerBundledLicences();
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
 

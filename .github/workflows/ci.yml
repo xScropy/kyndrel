@@ -20,6 +20,8 @@ jobs:
           flutter-version: 3.50.0
           cache: true
       - run: flutter pub get
+      - name: Licence audit (ATTRIBUTION.md up to date, no incompatible licences)
+        run: python3 scripts/licence_audit.py --check
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test

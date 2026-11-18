@@ -49,6 +49,8 @@ flutter:
 
   assets:
     - assets/shaders/
+    - assets/fonts/OFL.txt
+    - assets/fonts/NotoSansArabic-OFL.txt
 
   fonts:
     - family: Inter
