@@ -157,8 +157,8 @@ preview frame while dragging; releases are signed APKs on GitHub.
 - [x] 6.5 Phone layout: fewer buttons plus a "more" sheet, panels as bottom sheets, 48 dp targets, cutouts, rotate/lock orientation, keep screen on.
 - [x] 6.6 Android integration: media notification and session, background audio, audio focus, pause on unplug, native PiP, multicast lock for DLNA, hide features needing ffmpeg/yt-dlp.
 - [x] 6.7 Performance and battery: mediacodec decoding, less work when hidden.
-- [ ] 6.8 Tests and CI: gesture tests with fake platform services, phone goldens, emulator smoke test.
-- [ ] 6.9 Release: signed per-ABI APKs on GitHub releases, update check for APKs, licence audit, 1.1.0 notes.
+- [x] 6.8 Tests and CI: gesture tests with fake platform services, phone goldens, emulator smoke test.
+- [x] 6.9 Release: signed per-ABI APKs on GitHub releases, update check for APKs, licence audit, 1.1.0 notes.
 
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.
