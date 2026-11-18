@@ -356,4 +356,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get videoSurfaceHint =>
       'Tap to show controls, double-tap for full screen';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Kyndrel $version is available';
+  }
+
+  @override
+  String get updateInstall => 'Install and restart';
+
+  @override
+  String get updateDownload => 'Download';
+
+  @override
+  String get updateWhatsNew => 'What\'s new';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String updateDownloading(int percent) {
+    return 'Downloading update… $percent %';
+  }
+
+  @override
+  String get updateUpToDate => 'Kyndrel is up to date.';
+
+  @override
+  String updateFailed(String reason) {
+    return 'Could not check for updates: $reason';
+  }
+
+  @override
+  String get updateCheckNow => 'Check for updates';
 }

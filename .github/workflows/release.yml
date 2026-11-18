@@ -1,0 +1,179 @@
+name: Release
+
+# Builds and packages Kyndrel for every platform (task 5.6).
+# - Push a tag `vX.Y.Z` (matching pubspec.yaml's version): packages are
+#   attached to a *draft* GitHub release, which a maintainer publishes.
+# - Run it by hand (Actions > Release > Run workflow), or change anything
+#   under packaging/, to get the packages as workflow artifacts without
+#   making a release.
+#
+# Optional secrets for signed macOS builds: MACOS_CERTIFICATE (base64 .p12),
+# MACOS_CERTIFICATE_PASSWORD, MACOS_SIGN_IDENTITY, APPLE_ID, APPLE_TEAM_ID,
+# APPLE_APP_PASSWORD. Without them the DMG is unsigned.
+
+on:
+  push:
+    tags: ['v*']
+    # Path filters don't apply to tag pushes, so a tag always runs.
+    branches: ['**']
+    # Also build the packages (without a release) whenever packaging
+    # changes, so a broken installer shows up before release day.
+    paths:
+      - 'packaging/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          version=$(awk '/^version:/ {sub(/\+.*/, "", $2); print $2}' pubspec.yaml)
+          if [[ "$GITHUB_REF" == refs/tags/v* && "${GITHUB_REF_NAME#v}" != "$version" ]]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match pubspec version $version"
+            exit 1
+          fi
+          grep -q "appVersion = '$version'" lib/core/app_info.dart \
+            || { echo "::error::lib/core/app_info.dart is not $version"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.0
+          cache: true
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            choco install innosetup -y --no-progress
+          }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=${{ needs.version.outputs.version }}" packaging\windows\kyndrel.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: build/installer/*.exe
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    env:
+      HAS_CERT: ${{ secrets.MACOS_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.0
+          cache: true
+      - run: flutter pub get
+      - run: flutter build macos --release
+      - name: Import signing certificate
+        if: env.HAS_CERT == 'true'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$MACOS_CERTIFICATE" | base64 --decode > cert.p12
+          security create-keychain -p ci build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci build.keychain
+          security import cert.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
+          rm cert.p12
+      - name: DMG
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: packaging/macos/make_dmg.sh ${{ needs.version.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: build/installer/*.dmg
+
+  linux:
+    needs: version
+    # The oldest supported base: the AppImage runs on newer glibc only.
+    runs-on: ubuntu-24.04
+    env:
+      APPIMAGE_EXTRACT_AND_RUN: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev libmpv-dev libsqlite3-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.0
+          cache: true
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - run: packaging/linux/make_deb.sh ${{ needs.version.outputs.version }}
+      - name: AppImage
+        run: |
+          mkdir -p "$HOME/bin"
+          base=https://github.com/linuxdeploy
+          curl -fsSL -o "$HOME/bin/linuxdeploy-x86_64.AppImage" \
+            "$base/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
+          curl -fsSL -o "$HOME/bin/linuxdeploy-plugin-appimage-x86_64.AppImage" \
+            "$base/linuxdeploy-plugin-appimage/releases/download/continuous/linuxdeploy-plugin-appimage-x86_64.AppImage"
+          chmod +x "$HOME"/bin/*.AppImage
+          export PATH="$HOME/bin:$PATH"
+          packaging/linux/make_appimage.sh ${{ needs.version.outputs.version }}
+      - name: Smoke test the AppImage
+        run: |
+          sudo apt-get install -y xvfb
+          app=$(ls build/installer/*.AppImage)
+          timeout 20 xvfb-run -a "$app" --perf-log 2> perf.log || true
+          grep -q "kyndrel-perf first-frame" perf.log \
+            || { cat perf.log; echo "::error::AppImage did not start"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            build/installer/*.deb
+            build/installer/*.AppImage
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, windows, macos, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Release notes from CHANGELOG.md
+        run: |
+          v=${{ needs.version.outputs.version }}
+          awk -v v="$v" '$0 ~ "^## \\[?" v "\\]?" {on=1; next} /^## / && on {exit} on' \
+            CHANGELOG.md > notes.md || true
+          [ -s notes.md ] || echo "Kyndrel $v" > notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: Kyndrel ${{ needs.version.outputs.version }}
+          body_path: notes.md
+          files: dist/*

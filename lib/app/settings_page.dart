@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/app_info.dart';
 import 'package:kyndrel/core/ui/settings_widgets.dart';
@@ -6,6 +9,7 @@ import 'package:kyndrel/features/effects/effects_dialog.dart';
 import 'package:kyndrel/features/scripts/scripts_settings.dart';
 import 'package:kyndrel/features/settings/settings_sections.dart';
 import 'package:kyndrel/features/translate/translate_settings.dart';
+import 'package:kyndrel/features/update/update_controller.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -162,6 +166,7 @@ class AboutSection extends StatelessWidget {
           title: Text('$appName $appVersion'),
           subtitle: Text('GPL-3.0 · $appRepository'),
         ),
+        const _UpdateCheckButton(),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: TextButton(
@@ -197,4 +202,51 @@ class _Picture extends StatelessWidget {
     title: context.l10n.settingsPicture,
     children: const [VideoEffectsSection()],
   );
+}
+
+/// Settings › About › Check for updates (task 5.6). Reports "up to date"
+/// and failures, which the automatic check keeps quiet; an available
+/// update shows the banner on the player page.
+class _UpdateCheckButton extends ConsumerWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status = ref.watch(updateProvider);
+    final l = context.l10n;
+    final message = switch (status) {
+      UpdateUpToDate() => l.updateUpToDate,
+      UpdateFailed(:final message) => l.updateFailed(message),
+      UpdateAvailable(:final info) ||
+      UpdateDownloading(:final info) => l.updateAvailable('${info.version}'),
+      _ => null,
+    };
+    return Row(
+      children: [
+        TextButton.icon(
+          key: const Key('settings-check-updates'),
+          onPressed: status is UpdateChecking
+              ? null
+              : () => unawaited(
+                  ref.read(updateProvider.notifier).check(manual: true),
+                ),
+          icon: status is UpdateChecking
+              ? const SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.system_update_alt, size: 18),
+          label: Text(l.updateCheckNow),
+        ),
+        if (message != null)
+          Flexible(
+            child: Text(
+              message,
+              key: const Key('settings-update-result'),
+              style: const TextStyle(color: KyndrelColors.textSecondary),
+            ),
+          ),
+      ],
+    );
+  }
 }

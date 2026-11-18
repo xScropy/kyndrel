@@ -168,5 +168,35 @@
     }
   },
   "videoSurface": "Video",
-  "videoSurfaceHint": "Tap to show controls, double-tap for full screen"
+  "videoSurfaceHint": "Tap to show controls, double-tap for full screen",
+  "updateAvailable": "Kyndrel {version} is available",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateInstall": "Install and restart",
+  "updateDownload": "Download",
+  "updateWhatsNew": "What's new",
+  "updateLater": "Later",
+  "updateDownloading": "Downloading update… {percent} %",
+  "@updateDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "updateUpToDate": "Kyndrel is up to date.",
+  "updateFailed": "Could not check for updates: {reason}",
+  "@updateFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCheckNow": "Check for updates"
 }

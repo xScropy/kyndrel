@@ -46,6 +46,7 @@ import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
 import 'package:kyndrel/features/translate/translate_button.dart';
+import 'package:kyndrel/features/update/update_banner.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -265,6 +266,12 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   left: 0,
                   right: 0,
                   child: Center(child: OsdView()),
+                ),
+                const Positioned(
+                  top: 56,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: UpdateBanner()),
                 ),
                 if (widget.launch.showDiagnostics)
                   const PositionedDirectional(

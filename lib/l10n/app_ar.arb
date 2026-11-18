@@ -109,5 +109,14 @@
   "seekLabel": "التقديم والإرجاع",
   "seekValue": "{elapsed} من {total}",
   "videoSurface": "الفيديو",
-  "videoSurfaceHint": "انقر لإظهار عناصر التحكم، وانقر مرتين لملء الشاشة"
+  "videoSurfaceHint": "انقر لإظهار عناصر التحكم، وانقر مرتين لملء الشاشة",
+  "updateAvailable": "يتوفر Kyndrel {version}",
+  "updateInstall": "التثبيت وإعادة التشغيل",
+  "updateDownload": "تنزيل",
+  "updateWhatsNew": "ما الجديد",
+  "updateLater": "لاحقًا",
+  "updateDownloading": "جارٍ تنزيل التحديث… {percent}٪",
+  "updateUpToDate": "Kyndrel محدّث.",
+  "updateFailed": "تعذر التحقق من التحديثات: {reason}",
+  "updateCheckNow": "التحقق من التحديثات"
 }

@@ -356,4 +356,37 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get videoSurfaceHint =>
       'انقر لإظهار عناصر التحكم، وانقر مرتين لملء الشاشة';
+
+  @override
+  String updateAvailable(String version) {
+    return 'يتوفر Kyndrel $version';
+  }
+
+  @override
+  String get updateInstall => 'التثبيت وإعادة التشغيل';
+
+  @override
+  String get updateDownload => 'تنزيل';
+
+  @override
+  String get updateWhatsNew => 'ما الجديد';
+
+  @override
+  String get updateLater => 'لاحقًا';
+
+  @override
+  String updateDownloading(int percent) {
+    return 'جارٍ تنزيل التحديث… $percent٪';
+  }
+
+  @override
+  String get updateUpToDate => 'Kyndrel محدّث.';
+
+  @override
+  String updateFailed(String reason) {
+    return 'تعذر التحقق من التحديثات: $reason';
+  }
+
+  @override
+  String get updateCheckNow => 'التحقق من التحديثات';
 }

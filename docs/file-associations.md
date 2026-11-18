@@ -2,8 +2,8 @@
 
 | Platform | How a file reaches Kyndrel | Registered by |
 |---|---|---|
-| Windows | Path as the first command-line argument (`kyndrel.exe "C:\film.mkv"`), parsed by `LaunchOptions` | The installer (task 5.6) writes `HKCU\Software\Classes\Applications\kyndrel.exe\SupportedTypes` and a ProgID per extension. Until then: right-click a file › Open with › Choose another app › browse to `kyndrel.exe`. |
-| Linux | `%f` in `linux/kyndrel.desktop` (command-line argument) | Packaging (AppImage/deb, task 5.6) installs the `.desktop` file; for a manual install copy it to `~/.local/share/applications/` and run `update-desktop-database`. |
+| Windows | Path as the first command-line argument (`kyndrel.exe "C:\film.mkv"`), parsed by `LaunchOptions` | The installer (`packaging/windows/kyndrel.iss`) registers the `Kyndrel.Media` ProgID, `OpenWithProgids` for each extension, `Applications\kyndrel.exe\SupportedTypes`, and Default-apps capabilities. A portable copy: right-click a file › Open with › Choose another app › browse to `kyndrel.exe`. |
+| Linux | `%f` in `linux/kyndrel.desktop` (command-line argument) | The `.deb` installs the `.desktop` file (the AppImage embeds it; AppImageLauncher or `appimaged` integrates it); for a manual install copy it to `~/.local/share/applications/` and run `update-desktop-database`. |
 | macOS | Apple Event → `AppDelegate.application(_:open:)` → `kyndrel/open_file` method channel → `PlayerPage` | `CFBundleDocumentTypes` in `macos/Runner/Info.plist` (video and audio, rank *Alternate*). |
 
 Other ways to open media: the file picker (Ctrl+O, or the button on the

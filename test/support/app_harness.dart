@@ -27,7 +27,14 @@ import 'test_database.dart';
 /// Everything a full-page test needs, with fakes for the engine, the window
 /// and storage.
 class AppHarness {
-  new _(this.backend, this.service, this.window, this.db, this.settings);
+  new _(
+    this.backend,
+    this.service,
+    this.window,
+    this.db,
+    this.settings, [
+    this.extraOverrides = const [],
+  ]);
 
   final FakePlayerBackend backend;
   final PlayerService service;
@@ -37,11 +44,19 @@ class AppHarness {
   final FakePreviewSource previews = FakePreviewSource();
   late ProviderContainer container;
 
+  /// Extra provider overrides for one test (e.g. a fake update server).
+  final List<Override> extraOverrides;
+
   /// Builds the harness inside the test body (fake-async zone).
   static Future<AppHarness> create({
     Map<String, Object> prefs = const {},
+    List<Override> overrides = const [],
   }) async {
-    SharedPreferences.setMockInitialValues(prefs);
+    // No GitHub update check unless a test asks for one (task 5.6).
+    SharedPreferences.setMockInitialValues({
+      'checkForUpdates': false,
+      ...prefs,
+    });
     final backend = FakePlayerBackend();
     final h = AppHarness._(
       backend,
@@ -49,6 +64,7 @@ class AppHarness {
       FakeWindowService(),
       testDatabase(),
       await SettingsRepository.create(),
+      overrides,
     );
     addTearDown(h.service.dispose);
     addTearDown(h.db.close);
@@ -62,6 +78,7 @@ class AppHarness {
     databaseProvider.overrideWithValue(db),
     appCacheDirProvider.overrideWithValue(Directory.systemTemp),
     previewSourceProvider.overrideWithValue(previews),
+    ...extraOverrides,
   ];
 
   Future<void> pump(
