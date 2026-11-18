@@ -36,6 +36,7 @@ jobs:
   engine:
     # PlayerService against the real libmpv with generated media.
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - run: |
@@ -48,7 +49,8 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: scripts/make_test_media.sh
-      - run: flutter test -t engine --run-skipped test/engine
+      # Expanded output names each test, so a hang shows where it is.
+      - run: flutter test -t engine --run-skipped -r expanded --timeout 120s test/engine
 
   build-windows:
     runs-on: windows-latest
