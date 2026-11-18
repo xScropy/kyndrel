@@ -3,7 +3,7 @@
 All notable changes to Kyndrel. The release workflow copies a version's
 section into its GitHub release.
 
-## [1.0.0] - unreleased
+## [1.0.0] - 2026-11-18
 
 The first release: a desktop video player for Windows, macOS and Linux,
 built on libmpv with a dark, orange-accented interface.

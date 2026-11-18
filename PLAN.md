@@ -144,7 +144,7 @@ Rules:
 - [x] 5.6 Packaging: Windows installer (MSIX or Inno Setup), macOS signed DMG, Linux AppImage/deb, with auto-update.
 - [x] 5.7 Crash and log reporting (opt-in), a user-facing log viewer, and docs/README with screenshots.
 - [x] 5.8 Licence audit for bundled libmpv/FFmpeg builds and an `ATTRIBUTION.md`.
-- [ ] 5.9 v1.0 release notes and tagged GitHub release.
+- [x] 5.9 v1.0 release notes and tagged GitHub release.
 
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.
