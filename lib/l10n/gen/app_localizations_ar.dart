@@ -458,4 +458,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get allFolders => 'الكل';
+
+  @override
+  String get settingsGestures => 'الإيماءات';
 }

@@ -36,7 +36,7 @@ is out of date. Do not edit by hand.
 
 ## Dart and Flutter packages (runtime)
 
-122 packages: Apache-2.0 7, BSD-3-Clause 81, MIT 33, MPL-2.0 1.
+131 packages: Apache-2.0 7, BSD-3-Clause 82, MIT 41, MPL-2.0 1.
 
 | Package | Version | Licence |
 |---|---|---|
@@ -72,8 +72,10 @@ is out of date. Do not edit by hand.
 | [fixnum](https://github.com/dart-lang/core/tree/main/pkgs/fixnum) | 1.1.1 | BSD-3-Clause |
 | [flutter](https://github.com/flutter/flutter) | SDK | BSD-3-Clause |
 | [flutter_localizations](https://github.com/flutter/flutter) | SDK | BSD-3-Clause |
+| [flutter_plugin_android_lifecycle](https://github.com/flutter/packages/tree/main/packages/flutter_plugin_android_lifecycle) | 2.0.35 | BSD-3-Clause |
 | [flutter_riverpod](https://github.com/rrousselGit/riverpod) | 3.5.0 | MIT |
 | [flutter_test](https://github.com/flutter/flutter) | SDK | BSD-3-Clause |
+| [flutter_volume_controller](https://github.com/yosemiteyss/flutter_volume_controller) | 2.0.2 | MIT |
 | [flutter_web_plugins](https://github.com/flutter/flutter) | SDK | BSD-3-Clause |
 | [glob](https://github.com/dart-lang/tools/tree/main/pkgs/glob) | 2.2.0 | BSD-3-Clause |
 | [hooks](https://github.com/dart-lang/native/tree/main/pkgs/hooks) | 2.2.0 | BSD-3-Clause |
@@ -124,6 +126,13 @@ is out of date. Do not edit by hand.
 | [record_use](https://github.com/dart-lang/native/tree/main/pkgs/record_use) | 1.1.1 | BSD-3-Clause |
 | [riverpod](https://github.com/rrousselGit/riverpod) | 3.5.0 | MIT |
 | [safe_local_storage](https://github.com/alexmercerind/safe_local_storage.git) | 2.0.7 | MIT |
+| [screen_brightness](https://github.com/aaassseee/screen_brightness/tree/master/screen_brightness) | 2.1.11 | MIT |
+| [screen_brightness_android](https://github.com/aaassseee/screen_brightness/tree/master/screen_brightness_android) | 2.1.6 | MIT |
+| [screen_brightness_ios](https://github.com/aaassseee/screen_brightness/tree/master/screen_brightness_ios) | 2.1.4 | MIT |
+| [screen_brightness_macos](https://github.com/aaassseee/screen_brightness/tree/master/screen_brightness_macos) | 2.1.4 | MIT |
+| [screen_brightness_ohos](https://github.com/aaassseee/screen_brightness/tree/master/screen_brightness_ohos) | 2.1.4 | MIT |
+| [screen_brightness_platform_interface](https://github.com/aaassseee/screen_brightness/tree/patch-1/screen_brightness_platform_interface) | 2.1.2 | MIT |
+| [screen_brightness_windows](https://github.com/aaassseee/screen_brightness/tree/master/screen_brightness_windows) | 2.1.2 | MIT |
 | [screen_retriever](https://github.com/leanflutter/screen_retriever) | 0.2.2 | MIT |
 | [screen_retriever_linux](https://github.com/leanflutter/screen_retriever/tree/main/packages/screen_retriever_linux) | 0.2.2 | MIT |
 | [screen_retriever_macos](https://github.com/leanflutter/screen_retriever/tree/main/packages/screen_retriever_macos) | 0.2.2 | MIT |

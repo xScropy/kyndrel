@@ -459,4 +459,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allFolders => 'All';
+
+  @override
+  String get settingsGestures => 'Gestures';
 }

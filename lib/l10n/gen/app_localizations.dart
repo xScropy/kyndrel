@@ -937,6 +937,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All'**
   String get allFolders;
+
+  /// No description provided for @settingsGestures.
+  ///
+  /// In en, this message translates to:
+  /// **'Gestures'**
+  String get settingsGestures;
 }
 
 class _AppLocalizationsDelegate

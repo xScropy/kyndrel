@@ -61,6 +61,12 @@ class _SettingsPageState extends State<SettingsPage> {
           const [_Picture()],
         ),
         (
+          'Gestures',
+          (l) => l.settingsGestures,
+          Icons.touch_app_outlined,
+          const [GestureSettings()],
+        ),
+        (
           'Shortcuts',
           (l) => l.settingsShortcuts,
           Icons.keyboard_outlined,

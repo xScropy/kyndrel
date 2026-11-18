@@ -13,6 +13,7 @@ import 'package:kyndrel/app/player_shortcuts.dart';
 import 'package:kyndrel/app/settings_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/window/window_title_bar.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
@@ -33,6 +34,7 @@ import 'package:kyndrel/features/logs/crash_prompt.dart';
 import 'package:kyndrel/features/network/open_url_dialog.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
+import 'package:kyndrel/features/playback/gesture_lock.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
@@ -202,6 +204,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final panelOpen = ref.watch(subtitlePanelProvider) != null;
     final queueOpen = ref.watch(playlistPanelProvider);
     final hasMedia = !idle && status != PlaybackStatus.error;
+    final mobile = ref.watch(platformCapabilitiesProvider).isMobile;
+    // Screen lock (task 6.3): no controls, no gestures until unlocked.
+    final locked = hasMedia && ref.watch(gestureLockProvider);
     if (ref.watch(pipProvider)) {
       return Scaffold(
         backgroundColor: KyndrelColors.background,
@@ -281,6 +286,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   right: 0,
                   child: Center(child: OsdView()),
                 ),
+                // Brightness/volume level while swiping (task 6.3).
+                const Center(child: LevelOsdView()),
                 const Positioned(
                   top: 56,
                   left: 0,
@@ -304,30 +311,35 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   right: 0,
                   child: Center(child: ResumeBanner()),
                 ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: fade(
-                    WindowTitleBar(
-                      showButtons: !fullScreen,
-                      child: TopBarContent(
-                        onBack: () =>
-                            unawaited(ref.read(playerServiceProvider).close()),
-                        onInfo: _showInfo,
+                if (!locked)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: fade(
+                      WindowTitleBar(
+                        showButtons: !fullScreen,
+                        child: TopBarContent(
+                          onBack: () => unawaited(
+                            ref.read(playerServiceProvider).close(),
+                          ),
+                          onInfo: _showInfo,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (hasMedia)
+                if (hasMedia && !locked)
                   Positioned(
                     left: 0,
                     right: 0,
                     bottom: 0,
                     child: fade(
-                      const BottomControls(
-                        leftActions: [DownloadButton()],
-                        rightActions: [
+                      BottomControls(
+                        leftActions: [
+                          if (mobile) const LockButton(),
+                          const DownloadButton(),
+                        ],
+                        rightActions: const [
                           PlaylistButton(),
                           FitMenuButton(),
                           TranslateButton(),
@@ -356,6 +368,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                           unawaited(OpenActions.pickFolder(ref)),
                     ),
                   ),
+                if (locked) const Positioned.fill(child: LockedOverlay()),
                 if (_dragging) const IgnorePointer(child: _DropHint()),
               ],
             ),

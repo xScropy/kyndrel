@@ -139,5 +139,6 @@
   "showPhoneVideos": "عرض الفيديوهات على هذا الهاتف",
   "phoneVideosDenied": "يحتاج Kyndrel إلى إذن لعرض فيديوهاتك.",
   "phoneVideosNone": "لا توجد فيديوهات على هذا الهاتف بعد.",
-  "allFolders": "الكل"
+  "allFolders": "الكل",
+  "settingsGestures": "الإيماءات"
 }

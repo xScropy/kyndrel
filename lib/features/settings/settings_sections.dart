@@ -481,3 +481,77 @@ class _ShortcutSettingsState extends ConsumerState<ShortcutSettings> {
     );
   }
 }
+
+/// Touch gestures on the video (task 6.3).
+class GestureSettings extends ConsumerWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(settingsProvider);
+    SwitchListTile tile(
+      String key,
+      String title,
+      String subtitle,
+      bool value,
+      AppSettings Function(AppSettings, bool) change,
+    ) => SwitchListTile(
+      key: Key('settings-gesture-$key'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(title),
+      subtitle: Text(subtitle),
+      value: value,
+      onChanged: (v) => updateSettings(ref, (x) => change(x, v)),
+    );
+    return SettingsSection(
+      title: 'Gestures',
+      children: [
+        tile(
+          'brightness',
+          'Brightness swipe',
+          'Swipe up or down on the left side. Changes Kyndrel only, not the '
+              'system setting.',
+          s.gestureBrightness,
+          (x, v) => x.copyWith(gestureBrightness: v),
+        ),
+        tile(
+          'volume',
+          'Volume swipe',
+          "Swipe up or down on the right side: the phone's volume, then "
+              "Kyndrel's boost up to 200 %.",
+          s.gestureVolume,
+          (x, v) => x.copyWith(gestureVolume: v),
+        ),
+        tile(
+          'seek',
+          'Seek swipe',
+          'Swipe left or right to move through the video, with a preview.',
+          s.gestureSeek,
+          (x, v) => x.copyWith(gestureSeek: v),
+        ),
+        tile(
+          'double-tap',
+          'Double-tap to skip',
+          'Double-tap the left or right side to go back or forward by the '
+              'skip length; again to skip more. The middle plays or pauses.',
+          s.gestureDoubleTap,
+          (x, v) => x.copyWith(gestureDoubleTap: v),
+        ),
+        tile(
+          'pinch',
+          'Pinch to zoom',
+          'Two fingers zoom the picture in and out.',
+          s.gesturePinch,
+          (x, v) => x.copyWith(gesturePinch: v),
+        ),
+        tile(
+          'long-press',
+          'Hold for 2× speed',
+          'Press and hold the video to play twice as fast until you let go.',
+          s.gestureLongPress,
+          (x, v) => x.copyWith(gestureLongPress: v),
+        ),
+      ],
+    );
+  }
+}

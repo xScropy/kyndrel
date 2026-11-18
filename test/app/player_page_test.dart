@@ -379,7 +379,8 @@ void main() {
     expect(find.byKey(const Key('window-close')), findsOneWidget);
     expect(find.byKey(const Key('title-bar-drag-area')), findsOneWidget);
     for (final name in [
-      'Playback', 'Subtitles', 'Audio', 'Video', 'Shortcuts', 'Library', //
+      'Playback', 'Subtitles', 'Audio', 'Video', 'Gestures', 'Shortcuts', //
+      'Library',
       'Appearance', 'Language', 'Advanced', 'About',
     ]) {
       await tester.tap(find.byKey(Key('settings-section-$name')));

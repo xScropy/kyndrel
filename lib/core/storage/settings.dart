@@ -16,6 +16,12 @@ class AppSettings {
     this.volume = 100,
     this.skipSeconds = 10,
     this.upNextSeconds = 10,
+    this.gestureBrightness = true,
+    this.gestureVolume = true,
+    this.gestureSeek = true,
+    this.gestureDoubleTap = true,
+    this.gesturePinch = true,
+    this.gestureLongPress = true,
     this.limiterEnabled = true,
     this.showRemainingTime = false,
     this.autoLoadSubtitles = true,
@@ -60,6 +66,25 @@ class AppSettings {
 
   /// "Up next" countdown before the queue moves on; 0 = straight away.
   final int upNextSeconds;
+
+  // Touch gestures on the video (task 6.3), each on by default.
+  /// Left-side vertical swipe: screen brightness.
+  final bool gestureBrightness;
+
+  /// Right-side vertical swipe: volume (phone, then boost).
+  final bool gestureVolume;
+
+  /// Horizontal swipe: seek with a preview.
+  final bool gestureSeek;
+
+  /// Double-tap the sides: back/forward by the skip length.
+  final bool gestureDoubleTap;
+
+  /// Pinch: zoom the picture.
+  final bool gesturePinch;
+
+  /// Long-press: 2× speed while held.
+  final bool gestureLongPress;
 
   /// Limiter above 100 % volume (task 1.6).
   final bool limiterEnabled;
@@ -148,6 +173,12 @@ class AppSettings {
     double? volume,
     int? skipSeconds,
     int? upNextSeconds,
+    bool? gestureBrightness,
+    bool? gestureVolume,
+    bool? gestureSeek,
+    bool? gestureDoubleTap,
+    bool? gesturePinch,
+    bool? gestureLongPress,
     bool? limiterEnabled,
     bool? showRemainingTime,
     bool? autoLoadSubtitles,
@@ -187,6 +218,12 @@ class AppSettings {
       volume: volume ?? this.volume,
       skipSeconds: skipSeconds ?? this.skipSeconds,
       upNextSeconds: upNextSeconds ?? this.upNextSeconds,
+      gestureBrightness: gestureBrightness ?? this.gestureBrightness,
+      gestureVolume: gestureVolume ?? this.gestureVolume,
+      gestureSeek: gestureSeek ?? this.gestureSeek,
+      gestureDoubleTap: gestureDoubleTap ?? this.gestureDoubleTap,
+      gesturePinch: gesturePinch ?? this.gesturePinch,
+      gestureLongPress: gestureLongPress ?? this.gestureLongPress,
       limiterEnabled: limiterEnabled ?? this.limiterEnabled,
       showRemainingTime: showRemainingTime ?? this.showRemainingTime,
       autoLoadSubtitles: autoLoadSubtitles ?? this.autoLoadSubtitles,
@@ -270,6 +307,15 @@ class SettingsRepository {
       volume: (_prefs.getDouble('volume') ?? d.volume).clamp(0, 400),
       skipSeconds: _prefs.getInt('skipSeconds') ?? d.skipSeconds,
       upNextSeconds: _prefs.getInt('upNextSeconds') ?? d.upNextSeconds,
+      gestureBrightness:
+          _prefs.getBool('gestureBrightness') ?? d.gestureBrightness,
+      gestureVolume: _prefs.getBool('gestureVolume') ?? d.gestureVolume,
+      gestureSeek: _prefs.getBool('gestureSeek') ?? d.gestureSeek,
+      gestureDoubleTap:
+          _prefs.getBool('gestureDoubleTap') ?? d.gestureDoubleTap,
+      gesturePinch: _prefs.getBool('gesturePinch') ?? d.gesturePinch,
+      gestureLongPress:
+          _prefs.getBool('gestureLongPress') ?? d.gestureLongPress,
       limiterEnabled: _prefs.getBool('limiterEnabled') ?? d.limiterEnabled,
       showRemainingTime:
           _prefs.getBool('showRemainingTime') ?? d.showRemainingTime,
@@ -353,6 +399,12 @@ class SettingsRepository {
     await _prefs.setDouble('volume', s.volume);
     await _prefs.setInt('skipSeconds', s.skipSeconds);
     await _prefs.setInt('upNextSeconds', s.upNextSeconds);
+    await _prefs.setBool('gestureBrightness', s.gestureBrightness);
+    await _prefs.setBool('gestureVolume', s.gestureVolume);
+    await _prefs.setBool('gestureSeek', s.gestureSeek);
+    await _prefs.setBool('gestureDoubleTap', s.gestureDoubleTap);
+    await _prefs.setBool('gesturePinch', s.gesturePinch);
+    await _prefs.setBool('gestureLongPress', s.gestureLongPress);
     await _prefs.setBool('limiterEnabled', s.limiterEnabled);
     await _prefs.setBool('showRemainingTime', s.showRemainingTime);
     await _prefs.setBool('autoLoadSubtitles', s.autoLoadSubtitles);
