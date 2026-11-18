@@ -12,14 +12,21 @@ class ResumeRepository {
   /// Positions closer than this to the start aren't worth resuming.
   static const minPosition = Duration(seconds: 10);
 
-  /// Positions this close to the end count as finished.
+  /// Positions this close to the end count as finished (credits)...
   static const endMargin = Duration(seconds: 30);
+
+  /// ...but at most a tenth of a short video, so a 40 s clip isn't
+  /// "finished" from its tenth second on.
+  static Duration endMarginFor(Duration duration) {
+    final tenth = duration * 0.1;
+    return tenth < endMargin ? tenth : endMargin;
+  }
 
   /// Whether [position] in a file of [duration] is worth offering.
   static bool isResumable(Duration position, Duration duration) {
     if (position < minPosition) return false;
     if (duration <= Duration.zero) return true; // Live / unknown length.
-    if (position > duration - endMargin) return false;
+    if (position > duration - endMarginFor(duration)) return false;
     return position < duration * 0.95;
   }
 

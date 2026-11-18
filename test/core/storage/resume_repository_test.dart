@@ -58,4 +58,19 @@ void main() {
       isTrue,
     );
   });
+
+  test('short videos: the finished margin shrinks to a tenth', () {
+    const clip = Duration(seconds: 40);
+    expect(ResumeRepository.endMarginFor(clip), const Duration(seconds: 4));
+    expect(ResumeRepository.endMarginFor(hour), ResumeRepository.endMargin);
+    // 20 s into a 40 s clip is mid-way, not "finished".
+    expect(
+      ResumeRepository.isResumable(const Duration(seconds: 20), clip),
+      isTrue,
+    );
+    expect(
+      ResumeRepository.isResumable(const Duration(seconds: 37), clip),
+      isFalse,
+    );
+  });
 }

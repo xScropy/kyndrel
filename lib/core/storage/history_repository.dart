@@ -48,7 +48,7 @@ class HistoryRepository {
     final done =
         finished ??
         (duration > Duration.zero &&
-            position >= duration - ResumeRepository.endMargin);
+            position >= duration - ResumeRepository.endMarginFor(duration));
     final existing = await _row(source);
     await _db
         .into(_db.historyEntries)
