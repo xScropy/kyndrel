@@ -44,15 +44,22 @@ worst cases; on real hardware mpv decodes with the GPU (`hwdec=auto-safe`).
 |---|---|---|---|---|---|
 | 4K H.264 30 fps, 40 s | 311 ms | 692 ms | 200 % | 549 → 569 MB | 1, at start |
 | 1080p H.264 24 fps, 5 min | 300 ms | 928 ms | 114 % | 429 → 452 MB | 6 in 5 min |
-| 720p H.264 24 fps, 25 min | SOAK_FRAME | SOAK_VIDEO | SOAK_CPU | SOAK_RSS | SOAK_DROPPED |
+| 720p H.264 24 fps, 25 min | 277 ms | 514 ms | 101 % | 404 → 433 MB (peak 443) | 13 in 25 min |
 
 Cold start, with nothing in the OS file cache, was 1.1 s to the first
-frame. Both clips played at their full frame rate.
+frame. All three clips played at their full frame rate.
 
-SOAK_NOTE
+**Memory over time.** In the 25-minute run RSS rose 29 MB, with the peak
+(443 MB) before the end; a straight-line fit of the second half gives
+about +84 MB/hour. That is not conclusive either way: the curve isn't
+monotonic (mpv's demuxer and decoder buffers, Flutter's raster cache and
+the Dart heap all breathe), and other work was running on the machine
+during parts of the soak. A real 3-hour run on a desktop is the check that
+matters; if it keeps climbing, the next step is `--perf-log` plus Dart
+DevTools' memory view to split Dart heap from native (mpv) growth.
 
 ## Still to measure on real machines
-- **Memory over a 3-hour film:** run the probe for 10 800 s on Windows,
+- **Memory over a 3-hour film** (see above): run the probe for 10 800 s on Windows,
   macOS and Linux desktops (macOS/Windows need the `/proc` parts swapped
   for `ps`/`Get-Process`).
 - **CPU in 4K with hardware decoding:** expect single-digit percent with
