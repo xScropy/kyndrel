@@ -15,7 +15,9 @@ Icons for every platform come from `scripts/make_icons.py`.
 - on a `vX.Y.Z` tag: checks that the tag, `pubspec.yaml` and
   `lib/core/app_info.dart` agree, then attaches the packages to a **draft**
   GitHub release with that version's section of `CHANGELOG.md`. A
-  maintainer reviews and publishes it.
+  maintainer reviews and publishes it, by hand or with the manual
+  **Publish release** workflow (`publish-release.yml`), which first checks
+  that all eight packages (including the four APKs) are attached.
 - on any push that touches `packaging/` or the workflow, and on manual
   runs: packages only, as workflow artifacts.
 

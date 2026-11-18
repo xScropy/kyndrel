@@ -1,0 +1,48 @@
+name: Publish release
+
+# Publishes the draft release a tag build made (Release workflow), after
+# checking that every package is attached: Windows, macOS, .deb, AppImage
+# and the four Android APKs. Run it by hand (Actions > Publish release).
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release to publish (e.g. v1.1.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Check the packages
+        run: |
+          v=${TAG#v}
+          names=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')
+          echo "Attached:"; echo "$names"
+          missing=0
+          for want in \
+            "Kyndrel-$v-windows-x64-setup.exe" \
+            "*.dmg" \
+            "*_amd64.deb" \
+            "Kyndrel-$v-x86_64.AppImage" \
+            "Kyndrel-$v-android-arm64-v8a.apk" \
+            "Kyndrel-$v-android-armeabi-v7a.apk" \
+            "Kyndrel-$v-android-x86_64.apk" \
+            "Kyndrel-$v-android-universal.apk"; do
+            found=0
+            while IFS= read -r n; do
+              # shellcheck disable=SC2053 # $want is a pattern on purpose
+              [[ $n == $want ]] && found=1
+            done <<< "$names"
+            if [ "$found" != 1 ]; then echo "::error::missing $want"; missing=1; fi
+          done
+          exit $missing
+      - name: Publish
+        run: gh release edit "$TAG" --draft=false --latest --repo "$GITHUB_REPOSITORY"
