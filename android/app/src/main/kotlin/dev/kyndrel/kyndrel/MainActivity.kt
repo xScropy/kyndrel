@@ -5,6 +5,8 @@ import android.content.ActivityNotFoundException
 import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,6 +15,9 @@ import android.provider.OpenableColumns
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
+import java.io.FileOutputStream
+import java.util.concurrent.Executors
 
 /**
  * Android glue for the Dart side (tasks 6.1, 6.2):
@@ -20,12 +25,19 @@ import io.flutter.plugin.common.MethodChannel
  * - `kyndrel/open_file`: files from "Open with" / share; same protocol as
  *   macOS (`pending` at start, then `open` calls), with {uri, name} maps.
  * - `kyndrel/android_media`: document picker, video permission, MediaStore.
+ * - `kyndrel/frames`: seek-preview frames (task 6.4).
  */
 class MainActivity : FlutterActivity() {
     private var openChannel: MethodChannel? = null
     private val pending = mutableListOf<Map<String, String>>()
     private var pickResult: MethodChannel.Result? = null
     private var accessResult: MethodChannel.Result? = null
+
+    // Preview frames are decoded off the main thread, one at a time, with
+    // one retriever kept open for the current file.
+    private val frameExecutor = Executors.newSingleThreadExecutor()
+    private var retriever: MediaMetadataRetriever? = null
+    private var retrieverSource: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +82,25 @@ class MainActivity : FlutterActivity() {
                     }
                     else -> result.notImplemented()
                 }
+            }
+        }
+
+        MethodChannel(messenger, "kyndrel/frames").setMethodCallHandler { call, result ->
+            if (call.method != "frame") return@setMethodCallHandler result.notImplemented()
+            val source = call.argument<String>("source")
+            val path = call.argument<String>("path")
+            val ms = (call.argument<Number>("ms") ?: 0).toLong()
+            val width = (call.argument<Number>("width") ?: 480).toInt()
+            if (source == null || path == null) {
+                return@setMethodCallHandler result.error("args", "source and path", null)
+            }
+            frameExecutor.execute {
+                val ok = try {
+                    writeFrame(source, ms, width, path)
+                } catch (e: Exception) {
+                    false
+                }
+                runOnUiThread { result.success(ok) }
             }
         }
 
@@ -233,6 +264,56 @@ class MainActivity : FlutterActivity() {
             }
         }
         return out
+    }
+
+    // ------------------------------------------------------------ frames
+
+    private fun retrieverFor(source: String): MediaMetadataRetriever {
+        retriever?.let { if (retrieverSource == source) return it }
+        retriever?.release()
+        val r = MediaMetadataRetriever()
+        if (source.startsWith("content://")) {
+            r.setDataSource(this, Uri.parse(source))
+        } else {
+            r.setDataSource(source.removePrefix("file://"))
+        }
+        retriever = r
+        retrieverSource = source
+        return r
+    }
+
+    private fun writeFrame(source: String, ms: Long, width: Int, path: String): Boolean {
+        val r = retrieverFor(source)
+        val us = ms * 1000
+        val option = MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+        val w = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
+        val h = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
+        val bitmap: Bitmap = (
+            if (Build.VERSION.SDK_INT >= 27 && w > 0 && h > 0) {
+                r.getScaledFrameAtTime(us, option, width, maxOf(1, width * h / w))
+            } else {
+                r.getFrameAtTime(us, option)?.let { full ->
+                    if (full.width <= width) {
+                        full
+                    } else {
+                        Bitmap.createScaledBitmap(
+                            full, width, maxOf(1, width * full.height / full.width), true,
+                        ).also { full.recycle() }
+                    }
+                }
+            }
+        ) ?: return false
+        File(path).parentFile?.mkdirs()
+        FileOutputStream(path).use { bitmap.compress(Bitmap.CompressFormat.JPEG, 80, it) }
+        bitmap.recycle()
+        return true
+    }
+
+    override fun onDestroy() {
+        frameExecutor.shutdown()
+        retriever?.release()
+        retriever = null
+        super.onDestroy()
     }
 
     companion object {

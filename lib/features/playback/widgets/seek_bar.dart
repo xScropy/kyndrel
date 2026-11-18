@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/storage/settings.dart';
@@ -87,6 +88,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
   double? _dragFraction;
   Timer? _throttle;
   Duration? _pendingSeek;
+  PointerDeviceKind? _dragKind;
   Timer? _previewDebounce;
   String? _preview;
   int _previewRequest = 0;
@@ -134,6 +136,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
 
   @override
   Widget build(BuildContext context) {
+    final phone = ref.watch(platformCapabilitiesProvider).isMobile;
     final state = ref.watch(playbackStateProvider).value;
     final duration = state?.duration ?? Duration.zero;
     final position = state?.position ?? Duration.zero;
@@ -215,9 +218,12 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                     )
                   : null,
               onHorizontalDragStart: enabled
-                  ? (d) => setState(
-                      () => _dragFraction = fractionAt(d.localPosition.dx),
-                    )
+                  ? (d) {
+                      _dragKind = d.kind;
+                      setState(
+                        () => _dragFraction = fractionAt(d.localPosition.dx),
+                      );
+                    }
                   : null,
               onHorizontalDragUpdate: enabled
                   ? (d) {
@@ -242,7 +248,16 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                               .seek(_at(f, duration)),
                         );
                       }
-                      setState(() => _dragFraction = null);
+                      setState(() {
+                        _dragFraction = null;
+                        // A finger has no hover: the preview goes with it.
+                        if (_dragKind == PointerDeviceKind.touch ||
+                            _dragKind == PointerDeviceKind.stylus) {
+                          _hoverX = null;
+                          _preview = null;
+                          _previewRequest++;
+                        }
+                      });
                     }
                   : null,
               child: SizedBox(
@@ -274,7 +289,13 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                             if (c.start <= at) chapter = c.title;
                           }
                           final preview = _preview;
-                          final bubble = preview == null ? 140.0 : 180.0;
+                          // Phones: a big frame to find the scene (6.4).
+                          final frameWidth = phone
+                              ? (width * 0.4).clamp(200.0, 360.0)
+                              : 176.0;
+                          final bubble = preview == null
+                              ? 140.0
+                              : frameWidth + 4;
                           return Positioned(
                             left: (hoverX - bubble / 2).clamp(
                               0,
@@ -298,7 +319,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                                     clipBehavior: Clip.antiAlias,
                                     child: Image.file(
                                       File(preview),
-                                      width: 176,
+                                      width: frameWidth,
                                       fit: BoxFit.cover,
                                       gaplessPlayback: true,
                                       errorBuilder: (_, _, _) =>

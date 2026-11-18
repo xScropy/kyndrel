@@ -4,7 +4,7 @@ import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 class FakePreviewSource implements PreviewSource {
   new([this.path]);
 
-  final String? path;
+  String? path;
   final requests = <Duration>[];
 
   @override

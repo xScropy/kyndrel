@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/gestures.dart';
@@ -18,6 +19,7 @@ import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_video_view.dart';
+import 'package:kyndrel/core/player/preview_prewarm.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
@@ -44,6 +46,7 @@ import 'package:kyndrel/features/playback/widgets/diagnostics_overlay.dart';
 import 'package:kyndrel/features/playback/widgets/fit_menu.dart';
 import 'package:kyndrel/features/playback/widgets/fullscreen_button.dart';
 import 'package:kyndrel/features/playback/widgets/status_layer.dart';
+import 'package:kyndrel/features/playback/widgets/swipe_seek_preview.dart';
 import 'package:kyndrel/features/playback/widgets/top_bar.dart';
 import 'package:kyndrel/features/playback/widgets/video_gesture_layer.dart';
 import 'package:kyndrel/features/scripts/script_manager.dart';
@@ -80,6 +83,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(mediaSessionSyncProvider)
       ..read(scriptManagerProvider)
       ..read(logSyncProvider);
+    // Phones: cache seek-preview frames in the background (task 6.4).
+    if (Platform.isAndroid) ref.read(previewPrewarmProvider);
     PerfLog.start(ref);
     final resume = ref.read(resumeControllerProvider.notifier);
     final history = ref.read(historyControllerProvider.notifier);
@@ -288,6 +293,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 ),
                 // Brightness/volume level while swiping (task 6.3).
                 const Center(child: LevelOsdView()),
+                // The scene under the finger while swipe-seeking (6.4).
+                const Center(child: SwipeSeekPreview()),
                 const Positioned(
                   top: 56,
                   left: 0,

@@ -15,6 +15,8 @@ import 'package:kyndrel/core/platform/mobile_window_service.dart';
 import 'package:kyndrel/core/platform/mpris.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
+import 'package:kyndrel/core/player/android_frame_source.dart';
+import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/features/scripts/script_manager.dart';
@@ -87,6 +89,11 @@ Future<void> main(List<String> args) async {
         crashMonitorProvider.overrideWithValue(crashes),
         settingsRepositoryProvider.overrideWithValue(settings),
         appCacheDirProvider.overrideWithValue(cacheDir),
+        // Phones decode preview frames with Android's own retriever (6.4).
+        if (Platform.isAndroid)
+          previewSourceProvider.overrideWithValue(
+            AndroidFrameSource(cacheDir: cacheDir),
+          ),
         mediaSessionProvider.overrideWithValue(mediaSession),
         scriptsDefaultFolderProvider.overrideWithValue(
           '${supportDir.path}${Platform.pathSeparator}scripts',
