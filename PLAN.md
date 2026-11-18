@@ -150,10 +150,10 @@ Rules:
 Decisions: brightness changes the player window only; volume swipes move the
 phone's media volume, then Kyndrel's boost to 200 %; the seek bar shows a big
 preview frame while dragging; releases are signed APKs on GitHub.
-- [ ] 6.1 Android project, desktop-only start-up split off, a `WindowService` for phones (immersive full screen, orientation); APK builds in CI.
-- [ ] 6.2 Opening media: "Open with"/share intents (content:// URIs), file picker, "Videos on this phone" from MediaStore.
-- [ ] 6.3 Touch gestures: left swipe brightness, right swipe volume then boost, horizontal seek, double-tap ±10 s (adds up), pinch zoom, long-press 2×, lock; level OSD; Settings › Gestures.
-- [ ] 6.4 Scene preview while seeking: big frame above the thumb on touch drags and during swipe-seek, with time and chapter; Android frame source if mpv's image output is missing.
+- [x] 6.1 Android project, desktop-only start-up split off, a `WindowService` for phones (immersive full screen, orientation); APK builds in CI.
+- [x] 6.2 Opening media: "Open with"/share intents (content:// URIs), file picker, "Videos on this phone" from MediaStore.
+- [x] 6.3 Touch gestures: left swipe brightness, right swipe volume then boost, horizontal seek, double-tap ±10 s (adds up), pinch zoom, long-press 2×, lock; level OSD; Settings › Gestures.
+- [x] 6.4 Scene preview while seeking: big frame above the thumb on touch drags and during swipe-seek, with time and chapter; Android frame source if mpv's image output is missing.
 - [x] 6.5 Phone layout: fewer buttons plus a "more" sheet, panels as bottom sheets, 48 dp targets, cutouts, rotate/lock orientation, keep screen on.
 - [ ] 6.6 Android integration: media notification and session, background audio, audio focus, pause on unplug, native PiP, multicast lock for DLNA, hide features needing ffmpeg/yt-dlp.
 - [ ] 6.7 Performance and battery: mediacodec decoding, less work when hidden.
