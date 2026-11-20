@@ -23,36 +23,6 @@ class DeviceFile {
   }
 }
 
-/// A video from the phone's media library (MediaStore).
-@immutable
-class DeviceVideo {
-  const new({
-    required this.file,
-    required this.folder,
-    required this.duration,
-    required this.size,
-    required this.added,
-  });
-
-  factory fromMap(Map<Object?, Object?> m) => DeviceVideo(
-    file: DeviceFile.fromMap(m),
-    folder: (m['folder'] as String?) ?? '',
-    duration: Duration(milliseconds: (m['durationMs'] as num?)?.toInt() ?? 0),
-    size: (m['size'] as num?)?.toInt() ?? 0,
-    added: DateTime.fromMillisecondsSinceEpoch(
-      ((m['addedS'] as num?)?.toInt() ?? 0) * 1000,
-    ),
-  );
-
-  final DeviceFile file;
-
-  /// MediaStore bucket name, e.g. `Camera`, `Download`, `WhatsApp Video`.
-  final String folder;
-  final Duration duration;
-  final int size;
-  final DateTime added;
-}
-
 /// The phone's own file and media access (task 6.2).
 abstract interface class DeviceMedia {
   /// The system document picker (no copy: big videos play in place).
@@ -62,12 +32,6 @@ abstract interface class DeviceMedia {
   /// when cancelled. For subtitles: mpv needs a path with the extension
   /// (task 7.1).
   Future<String?> pickFileCopy();
-
-  /// Asks for the "videos" permission when needed; true when granted.
-  Future<bool> requestVideoAccess();
-
-  /// Every video in the media library, newest first.
-  Future<List<DeviceVideo>> videos();
 }
 
 /// [DeviceMedia] over the `kyndrel/android_media` channel (MainActivity.kt).
@@ -90,21 +54,6 @@ class AndroidDeviceMedia implements DeviceMedia {
 
   @override
   Future<String?> pickFileCopy() => _channel.invokeMethod<String>('pickCopy');
-
-  @override
-  Future<bool> requestVideoAccess() async =>
-      await _channel.invokeMethod<bool>('requestVideoAccess') ?? false;
-
-  @override
-  Future<List<DeviceVideo>> videos() async {
-    final list = await _channel.invokeListMethod<Map<Object?, Object?>>(
-      'videos',
-    );
-    return [
-      for (final m in list ?? const <Map<Object?, Object?>>[])
-        DeviceVideo.fromMap(m),
-    ];
-  }
 }
 
 /// Null where the desktop file picker and folders are used instead.

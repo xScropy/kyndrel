@@ -26,6 +26,7 @@ abstract final class FolderAccess {
   static Future<void> restore(List<String> bookmarks) async {
     if (!Platform.isMacOS) return;
     for (final data in bookmarks) {
+      if (data.isEmpty) continue;
       try {
         await _channel.invokeMethod<String>('resolve', {'data': data});
       } on PlatformException {

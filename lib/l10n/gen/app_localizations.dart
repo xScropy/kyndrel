@@ -1003,6 +1003,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This subtitle track can\'t be shown'**
   String get subtitleNotShown;
+
+  /// No description provided for @libraryHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get libraryHome;
+
+  /// No description provided for @libraryVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get libraryVideos;
+
+  /// No description provided for @libraryMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Music'**
+  String get libraryMusic;
+
+  /// No description provided for @libraryFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get libraryFolders;
+
+  /// No description provided for @libraryAllVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'All videos'**
+  String get libraryAllVideos;
+
+  /// No description provided for @librarySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get librarySearch;
+
+  /// No description provided for @librarySort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get librarySort;
+
+  /// No description provided for @sortDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date added'**
+  String get sortDate;
+
+  /// No description provided for @sortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortName;
+
+  /// No description provided for @sortSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get sortSize;
+
+  /// No description provided for @sortLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Length'**
+  String get sortLength;
+
+  /// No description provided for @layoutList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get layoutList;
+
+  /// No description provided for @layoutGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get layoutGrid;
+
+  /// No description provided for @libraryRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get libraryRefresh;
+
+  /// No description provided for @libraryEmptyVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'No videos found yet'**
+  String get libraryEmptyVideos;
+
+  /// No description provided for @libraryNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches your search'**
+  String get libraryNoMatch;
+
+  /// No description provided for @libraryAllowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See the videos and music on this phone'**
+  String get libraryAllowTitle;
+
+  /// No description provided for @libraryAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access'**
+  String get libraryAllow;
+
+  /// No description provided for @libraryScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for videos and music…'**
+  String get libraryScanning;
+
+  /// No description provided for @libraryManageFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Library folders'**
+  String get libraryManageFolders;
+
+  /// No description provided for @libraryAddFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add folder'**
+  String get libraryAddFolder;
+
+  /// No description provided for @libraryRemoveFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get libraryRemoveFolder;
+
+  /// No description provided for @libraryDefaultFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Videos and Music folders are used until you add your own.'**
+  String get libraryDefaultFolders;
+
+  /// No description provided for @libraryNew.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get libraryNew;
+
+  /// No description provided for @libraryPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get libraryPlay;
+
+  /// No description provided for @libraryEnqueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue'**
+  String get libraryEnqueue;
+
+  /// No description provided for @libraryOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in folder'**
+  String get libraryOpenFolder;
+
+  /// No description provided for @libraryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get libraryDetails;
+
+  /// No description provided for @detailFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get detailFolder;
+
+  /// No description provided for @detailLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Length'**
+  String get detailLength;
+
+  /// No description provided for @detailResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution'**
+  String get detailResolution;
+
+  /// No description provided for @detailVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get detailVideo;
+
+  /// No description provided for @detailAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get detailAudio;
+
+  /// No description provided for @detailSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get detailSize;
+
+  /// No description provided for @detailModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get detailModified;
+
+  /// No description provided for @detailAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get detailAdded;
+
+  /// No description provided for @detailWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Watched'**
+  String get detailWatched;
+
+  /// No description provided for @videoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 video} other{{count} videos}}'**
+  String videoCount(int count);
 }
 
 class _AppLocalizationsDelegate

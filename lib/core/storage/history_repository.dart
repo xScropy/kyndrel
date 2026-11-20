@@ -118,3 +118,11 @@ final recentHistoryProvider = StreamProvider<List<HistoryItem>>(
 final continueWatchingProvider = StreamProvider<List<HistoryItem>>(
   (ref) => ref.watch(historyRepositoryProvider).watchContinue(),
 );
+
+/// Progress per source, for the library's progress bars (task 7.4).
+final watchProgressProvider = StreamProvider<Map<String, HistoryItem>>(
+  (ref) => ref
+      .watch(historyRepositoryProvider)
+      .watchRecent(limit: 100000)
+      .map((items) => {for (final i in items) i.source: i}),
+);

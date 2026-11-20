@@ -492,4 +492,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subtitleNotShown => 'This subtitle track can\'t be shown';
+
+  @override
+  String get libraryHome => 'Home';
+
+  @override
+  String get libraryVideos => 'Videos';
+
+  @override
+  String get libraryMusic => 'Music';
+
+  @override
+  String get libraryFolders => 'Folders';
+
+  @override
+  String get libraryAllVideos => 'All videos';
+
+  @override
+  String get librarySearch => 'Search';
+
+  @override
+  String get librarySort => 'Sort';
+
+  @override
+  String get sortDate => 'Date added';
+
+  @override
+  String get sortName => 'Name';
+
+  @override
+  String get sortSize => 'Size';
+
+  @override
+  String get sortLength => 'Length';
+
+  @override
+  String get layoutList => 'List';
+
+  @override
+  String get layoutGrid => 'Grid';
+
+  @override
+  String get libraryRefresh => 'Refresh';
+
+  @override
+  String get libraryEmptyVideos => 'No videos found yet';
+
+  @override
+  String get libraryNoMatch => 'Nothing matches your search';
+
+  @override
+  String get libraryAllowTitle => 'See the videos and music on this phone';
+
+  @override
+  String get libraryAllow => 'Allow access';
+
+  @override
+  String get libraryScanning => 'Looking for videos and music…';
+
+  @override
+  String get libraryManageFolders => 'Library folders';
+
+  @override
+  String get libraryAddFolder => 'Add folder';
+
+  @override
+  String get libraryRemoveFolder => 'Remove';
+
+  @override
+  String get libraryDefaultFolders =>
+      'Your Videos and Music folders are used until you add your own.';
+
+  @override
+  String get libraryNew => 'NEW';
+
+  @override
+  String get libraryPlay => 'Play';
+
+  @override
+  String get libraryEnqueue => 'Add to queue';
+
+  @override
+  String get libraryOpenFolder => 'Show in folder';
+
+  @override
+  String get libraryDetails => 'Details';
+
+  @override
+  String get detailFolder => 'Folder';
+
+  @override
+  String get detailLength => 'Length';
+
+  @override
+  String get detailResolution => 'Resolution';
+
+  @override
+  String get detailVideo => 'Video';
+
+  @override
+  String get detailAudio => 'Audio';
+
+  @override
+  String get detailSize => 'Size';
+
+  @override
+  String get detailModified => 'Modified';
+
+  @override
+  String get detailAdded => 'Added';
+
+  @override
+  String get detailWatched => 'Watched';
+
+  @override
+  String videoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count videos',
+      one: '1 video',
+    );
+    return '$_temp0';
+  }
 }

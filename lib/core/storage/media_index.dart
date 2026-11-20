@@ -71,7 +71,13 @@ class MediaIndex {
   Future<void>? _refreshing;
 
   MediaIndexStatus get status => _current;
-  Stream<MediaIndexStatus> get statuses => _status.stream;
+
+  /// The current status first, then each change.
+  Stream<MediaIndexStatus> get statuses => Stream.multi((c) {
+    c.add(_current);
+    final sub = _status.stream.listen(c.addSync, onDone: c.close);
+    c.onCancel = sub.cancel;
+  });
 
   void _set(MediaIndexStatus s) {
     _current = s;
@@ -258,10 +264,6 @@ final StreamProviderFamily<List<LibraryItem>, MediaKind> libraryItemsProvider =
       (ref, kind) => ref.watch(mediaIndexProvider).watch(kind),
     );
 
-final mediaIndexStatusProvider = StreamProvider<MediaIndexStatus>((ref) {
-  final index = ref.watch(mediaIndexProvider);
-  return Stream.value(index.status).asyncExpand((first) async* {
-    yield first;
-    yield* index.statuses;
-  });
-});
+final mediaIndexStatusProvider = StreamProvider<MediaIndexStatus>(
+  (ref) => ref.watch(mediaIndexProvider).statuses,
+);

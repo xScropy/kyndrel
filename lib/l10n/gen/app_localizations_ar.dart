@@ -491,4 +491,131 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get subtitleNotShown => 'تعذّر عرض مسار الترجمة هذا';
+
+  @override
+  String get libraryHome => 'الرئيسية';
+
+  @override
+  String get libraryVideos => 'الفيديو';
+
+  @override
+  String get libraryMusic => 'الموسيقى';
+
+  @override
+  String get libraryFolders => 'المجلدات';
+
+  @override
+  String get libraryAllVideos => 'كل الفيديوهات';
+
+  @override
+  String get librarySearch => 'بحث';
+
+  @override
+  String get librarySort => 'ترتيب';
+
+  @override
+  String get sortDate => 'تاريخ الإضافة';
+
+  @override
+  String get sortName => 'الاسم';
+
+  @override
+  String get sortSize => 'الحجم';
+
+  @override
+  String get sortLength => 'المدة';
+
+  @override
+  String get layoutList => 'قائمة';
+
+  @override
+  String get layoutGrid => 'شبكة';
+
+  @override
+  String get libraryRefresh => 'تحديث';
+
+  @override
+  String get libraryEmptyVideos => 'لم يُعثر على فيديوهات بعد';
+
+  @override
+  String get libraryNoMatch => 'لا شيء يطابق بحثك';
+
+  @override
+  String get libraryAllowTitle => 'اعرض الفيديوهات والموسيقى على هذا الهاتف';
+
+  @override
+  String get libraryAllow => 'السماح بالوصول';
+
+  @override
+  String get libraryScanning => 'جارٍ البحث عن الفيديوهات والموسيقى…';
+
+  @override
+  String get libraryManageFolders => 'مجلدات المكتبة';
+
+  @override
+  String get libraryAddFolder => 'إضافة مجلد';
+
+  @override
+  String get libraryRemoveFolder => 'إزالة';
+
+  @override
+  String get libraryDefaultFolders =>
+      'تُستخدم مجلدات الفيديو والموسيقى لديك حتى تضيف مجلداتك.';
+
+  @override
+  String get libraryNew => 'جديد';
+
+  @override
+  String get libraryPlay => 'تشغيل';
+
+  @override
+  String get libraryEnqueue => 'إضافة إلى قائمة التشغيل';
+
+  @override
+  String get libraryOpenFolder => 'إظهار في المجلد';
+
+  @override
+  String get libraryDetails => 'التفاصيل';
+
+  @override
+  String get detailFolder => 'المجلد';
+
+  @override
+  String get detailLength => 'المدة';
+
+  @override
+  String get detailResolution => 'الدقة';
+
+  @override
+  String get detailVideo => 'الفيديو';
+
+  @override
+  String get detailAudio => 'الصوت';
+
+  @override
+  String get detailSize => 'الحجم';
+
+  @override
+  String get detailModified => 'آخر تعديل';
+
+  @override
+  String get detailAdded => 'أضيف';
+
+  @override
+  String get detailWatched => 'تمت المشاهدة';
+
+  @override
+  String videoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فيديو',
+      many: '$count فيديو',
+      few: '$count فيديوهات',
+      two: 'فيديوهان',
+      one: 'فيديو واحد',
+      zero: 'لا فيديوهات',
+    );
+    return '$_temp0';
+  }
 }

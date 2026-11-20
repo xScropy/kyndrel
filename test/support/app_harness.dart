@@ -14,12 +14,14 @@ import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/player/storyboard.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/database.dart';
+import 'package:kyndrel/core/storage/media_index.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'fake_media_library.dart';
 import 'fake_player_backend.dart';
 import 'fake_preview_source.dart';
 import 'fake_storyboard_source.dart';
@@ -45,6 +47,8 @@ class AppHarness {
   final SettingsRepository settings;
   final FakePreviewSource previews = FakePreviewSource();
   final FakeStoryboardSource storyboards = FakeStoryboardSource();
+  final FakeMediaScanner scanner = FakeMediaScanner();
+  final FakeMediaProber prober = FakeMediaProber();
 
   /// A cache folder of its own (storyboards are written there).
   final Directory cacheDir = Directory.systemTemp.createTempSync('kyndrel_c');
@@ -86,6 +90,8 @@ class AppHarness {
     appCacheDirProvider.overrideWithValue(cacheDir),
     previewSourceProvider.overrideWithValue(previews),
     storyboardSourceProvider.overrideWithValue(storyboards),
+    mediaScannerProvider.overrideWithValue(scanner),
+    mediaProberProvider.overrideWithValue(prober),
     ...extraOverrides,
   ];
 

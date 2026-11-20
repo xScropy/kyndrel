@@ -244,5 +244,50 @@
   "moreDownload": "Download",
   "rotate": "Rotate",
   "morePip": "Small window",
-  "subtitleNotShown": "This subtitle track can't be shown"
+  "subtitleNotShown": "This subtitle track can't be shown",
+  "libraryHome": "Home",
+  "libraryVideos": "Videos",
+  "libraryMusic": "Music",
+  "libraryFolders": "Folders",
+  "libraryAllVideos": "All videos",
+  "librarySearch": "Search",
+  "librarySort": "Sort",
+  "sortDate": "Date added",
+  "sortName": "Name",
+  "sortSize": "Size",
+  "sortLength": "Length",
+  "layoutList": "List",
+  "layoutGrid": "Grid",
+  "libraryRefresh": "Refresh",
+  "libraryEmptyVideos": "No videos found yet",
+  "libraryNoMatch": "Nothing matches your search",
+  "libraryAllowTitle": "See the videos and music on this phone",
+  "libraryAllow": "Allow access",
+  "libraryScanning": "Looking for videos and music…",
+  "libraryManageFolders": "Library folders",
+  "libraryAddFolder": "Add folder",
+  "libraryRemoveFolder": "Remove",
+  "libraryDefaultFolders": "Your Videos and Music folders are used until you add your own.",
+  "libraryNew": "NEW",
+  "libraryPlay": "Play",
+  "libraryEnqueue": "Add to queue",
+  "libraryOpenFolder": "Show in folder",
+  "libraryDetails": "Details",
+  "detailFolder": "Folder",
+  "detailLength": "Length",
+  "detailResolution": "Resolution",
+  "detailVideo": "Video",
+  "detailAudio": "Audio",
+  "detailSize": "Size",
+  "detailModified": "Modified",
+  "detailAdded": "Added",
+  "detailWatched": "Watched",
+  "videoCount": "{count, plural, =1{1 video} other{{count} videos}}",
+  "@videoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -31,7 +31,8 @@ import java.util.concurrent.Executors
  * - `kyndrel/open_external`: open a link in the browser.
  * - `kyndrel/open_file`: files from "Open with" / share; same protocol as
  *   macOS (`pending` at start, then `open` calls), with {uri, name} maps.
- * - `kyndrel/android_media`: document picker, video permission, MediaStore.
+ * - `kyndrel/android_media`: document picker, library permission,
+ *   MediaStore videos and music, thumbnails (tasks 6.2, 7.3).
  * - `kyndrel/frames`: seek-preview frames (task 6.4).
  * - `kyndrel/media_session`: notification and media buttons (task 6.6,
  *   see KyndrelMedia).
@@ -205,8 +206,6 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "pick" -> pick(call.argument<Boolean>("multiple") ?: false, result)
                 "pickCopy" -> pickCopy(result)
-                "requestVideoAccess" -> requestVideoAccess(result)
-                "videos" -> result.success(queryVideos())
                 "requestLibraryAccess" -> requestLibraryAccess(result)
                 "library" -> frameExecutor.execute {
                     val items = try {
@@ -371,19 +370,6 @@ class MainActivity : FlutterActivity() {
 
     // ------------------------------------------------------------ media library
 
-    private val videoPermission =
-        if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_VIDEO
-        else Manifest.permission.READ_EXTERNAL_STORAGE
-
-    private fun requestVideoAccess(result: MethodChannel.Result) {
-        if (checkSelfPermission(videoPermission) == PackageManager.PERMISSION_GRANTED) {
-            return result.success(true)
-        }
-        if (accessResult != null) return result.error("busy", "Already asking", null)
-        accessResult = result
-        requestPermissions(arrayOf(videoPermission), ACCESS_REQUEST)
-    }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -533,39 +519,6 @@ class MainActivity : FlutterActivity() {
         FileOutputStream(path).use { bitmap.compress(Bitmap.CompressFormat.JPEG, 80, it) }
         bitmap.recycle()
         return true
-    }
-
-    private fun queryVideos(): List<Map<String, Any>> {
-        if (checkSelfPermission(videoPermission) != PackageManager.PERMISSION_GRANTED) {
-            return emptyList()
-        }
-        val collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-        val columns = arrayOf(
-            MediaStore.Video.Media._ID,
-            MediaStore.Video.Media.DISPLAY_NAME,
-            MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
-            MediaStore.Video.Media.DURATION,
-            MediaStore.Video.Media.SIZE,
-            MediaStore.Video.Media.DATE_ADDED,
-        )
-        val out = mutableListOf<Map<String, Any>>()
-        contentResolver.query(
-            collection, columns, null, null,
-            "${MediaStore.Video.Media.DATE_ADDED} DESC",
-        )?.use { c ->
-            while (c.moveToNext()) {
-                val id = c.getLong(0)
-                out += mapOf(
-                    "uri" to ContentUris.withAppendedId(collection, id).toString(),
-                    "name" to (c.getString(1) ?: "$id"),
-                    "folder" to (c.getString(2) ?: ""),
-                    "durationMs" to c.getLong(3),
-                    "size" to c.getLong(4),
-                    "addedS" to c.getLong(5),
-                )
-            }
-        }
-        return out
     }
 
     // ------------------------------------------------------------ frames

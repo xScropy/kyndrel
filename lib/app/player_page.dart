@@ -31,6 +31,7 @@ import 'package:kyndrel/features/info/media_info_dialog.dart';
 import 'package:kyndrel/features/library/edit_details_dialog.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
 import 'package:kyndrel/features/library/library_home.dart';
+import 'package:kyndrel/features/library/library_shell.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/library/up_next_card.dart';
 import 'package:kyndrel/features/logs/crash_prompt.dart';
@@ -335,15 +336,18 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 if (hasMedia) VideoGestureLayer(onSecondaryTap: _contextMenu),
                 StatusLayer(
                   onPickFile: _pickFile,
-                  idle: (prompt) => LibraryHome(
-                    openPrompt: prompt,
-                    onOpen: (s) => unawaited(OpenActions.openSource(ref, s)),
-                    onResume: (s) {
-                      ref
-                          .read(resumeControllerProvider.notifier)
-                          .resumeNextLoadOf(s);
-                      unawaited(ref.read(playlistProvider.notifier).open(s));
-                    },
+                  // Home and the device's library (task 7.4).
+                  idle: (prompt) => LibraryShell(
+                    home: LibraryHome(
+                      openPrompt: prompt,
+                      onOpen: (s) => unawaited(OpenActions.openSource(ref, s)),
+                      onResume: (s) {
+                        ref
+                            .read(resumeControllerProvider.notifier)
+                            .resumeNextLoadOf(s);
+                        unawaited(ref.read(playlistProvider.notifier).open(s));
+                      },
+                    ),
                   ),
                 ),
                 const Center(child: CastingBanner()),

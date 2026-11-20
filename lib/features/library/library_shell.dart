@@ -1,0 +1,120 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/features/library/video_library.dart';
+import 'package:kyndrel/l10n/l10n.dart';
+import 'package:material_ui/material_ui.dart';
+
+/// The start screen's sections (task 7.4).
+enum LibrarySection { home, videos }
+
+class LibrarySectionController extends Notifier<LibrarySection> {
+  @override
+  LibrarySection build() => LibrarySection.home;
+
+  // ignore: use_setters_to_change_properties, reads better at call sites
+  void show(LibrarySection section) => state = section;
+}
+
+final librarySectionProvider =
+    NotifierProvider<LibrarySectionController, LibrarySection>(
+      LibrarySectionController.new,
+    );
+
+/// When nothing is playing: Home (open, continue watching, recent) and the
+/// library of the device's videos. A bar along the bottom on phones, a
+/// rail on the side on wider screens.
+class LibraryShell extends ConsumerWidget {
+  const new({required this.home, super.key});
+
+  /// The Home section (`LibraryHome`).
+  final Widget home;
+
+  /// Height of the player's top bar, which overlays this screen.
+  static const topBar = 52.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final section = ref.watch(librarySectionProvider);
+    final controller = ref.read(librarySectionProvider.notifier);
+    final l = context.l10n;
+    final wide = MediaQuery.sizeOf(context).width >= 600;
+    final top = MediaQuery.paddingOf(context).top + topBar;
+
+    final content = switch (section) {
+      LibrarySection.home => home,
+      LibrarySection.videos => Padding(
+        padding: EdgeInsets.only(top: top),
+        child: const VideoLibrary(),
+      ),
+    };
+    final destinations = [
+      (LibrarySection.home, Icons.home_outlined, Icons.home, l.libraryHome),
+      (
+        LibrarySection.videos,
+        Icons.video_library_outlined,
+        Icons.video_library,
+        l.libraryVideos,
+      ),
+    ];
+
+    if (wide) {
+      return Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: top),
+            child: NavigationRail(
+              key: const Key('library-rail'),
+              backgroundColor: KyndrelColors.background,
+              selectedIndex: section.index,
+              onDestinationSelected: (i) =>
+                  controller.show(LibrarySection.values[i]),
+              labelType: NavigationRailLabelType.all,
+              indicatorColor: KyndrelColors.rowActive,
+              selectedIconTheme: const IconThemeData(
+                color: KyndrelColors.accent,
+              ),
+              destinations: [
+                for (final (s, icon, selected, label) in destinations)
+                  NavigationRailDestination(
+                    icon: Icon(icon, key: Key('section-${s.name}')),
+                    selectedIcon: Icon(selected),
+                    label: Text(label),
+                  ),
+              ],
+            ),
+          ),
+          // 80 + 2: an even width left, so centred text sits on whole
+          // pixels (crisp on 1× screens).
+          const VerticalDivider(
+            width: 2,
+            thickness: 1,
+            color: KyndrelColors.panelBorder,
+          ),
+          Expanded(child: content),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        Expanded(child: content),
+        NavigationBar(
+          key: const Key('library-bar'),
+          height: 64,
+          backgroundColor: KyndrelColors.surface,
+          indicatorColor: KyndrelColors.rowActive,
+          selectedIndex: section.index,
+          onDestinationSelected: (i) =>
+              controller.show(LibrarySection.values[i]),
+          destinations: [
+            for (final (s, icon, selected, label) in destinations)
+              NavigationDestination(
+                icon: Icon(icon, key: Key('section-${s.name}')),
+                selectedIcon: Icon(selected, color: KyndrelColors.accent),
+                label: label,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}

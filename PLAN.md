@@ -164,7 +164,7 @@ preview frame while dragging; releases are signed APKs on GitHub.
 - [x] 7.1 Subtitles that don't appear: reproduce with real libmpv (embedded/external/image tracks, during load, after file change, secondary track, visibility, hidden styles), fix, and report failures on screen instead of silently.
 - [x] 7.2 Storyboard: frames for the whole video prepared in advance (one-pass mpv on desktop, MediaMetadataRetriever on Android), shown instantly while dragging, refined to the exact frame when the finger rests.
 - [x] 7.3 Media index: Drift `LibraryItems`, MediaStore videos and audio on Android, Videos/Music folders plus added ones on desktop (macOS bookmarks), details and thumbnails probed in the background.
-- [ ] 7.4 Video library like MX Player: folders and all videos, list/grid, thumbnails with duration and progress, resolution, size, date, NEW, sort, search, details sheet.
+- [x] 7.4 Video library like MX Player: folders and all videos, list/grid, thumbnails with duration and progress, resolution, size, date, NEW, sort, search, details sheet.
 - [ ] 7.5 Music library, separate from videos: songs, albums, artists, folders, shuffle, mini player.
 - [ ] 7.6 Music player: spinning disc with the cover art, tags, live orange waves following the loudness (mpv astats), less-motion setting.
 - [ ] 7.7 Release 1.2.0.

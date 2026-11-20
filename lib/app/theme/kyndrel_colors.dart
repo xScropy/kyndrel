@@ -95,6 +95,12 @@ abstract final class KyndrelTokens {
   /// Corner radius of translucent panels.
   static const double panelRadius = 24;
 
+  /// Corner radius of library thumbnails and tiles (task 7.4).
+  static const double tileRadius = 8;
+
+  /// Corner radius of small labels on thumbnails (length, NEW).
+  static const double badgeRadius = 4;
+
   /// Letter spacing for small-caps section labels.
   static const double sectionLabelLetterSpacing = 1.4;
 
