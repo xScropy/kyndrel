@@ -63,6 +63,15 @@ void main() {
     });
   }
 
+  testWidgets('a small phone (320 dp) fits the bar too', (tester) async {
+    // The emulator in CI caught an overflow here (48 dp buttons, 7.x).
+    await phone(tester, size: const Size(320, 640));
+    expect(tester.takeException(), isNull);
+    for (final key in ['lock', 'subtitles-button', 'play-pause', 'more']) {
+      expect(find.byKey(Key(key)).hitTestable(), findsOneWidget, reason: key);
+    }
+  });
+
   testWidgets('"More" holds the other controls, and they still work', (
     tester,
   ) async {

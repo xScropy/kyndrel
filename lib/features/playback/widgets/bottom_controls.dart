@@ -64,7 +64,10 @@ class BottomControls extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Align(
+                    // Small phones: the buttons shrink to fit rather than
+                    // overflow (320 dp leaves about 60 px a side).
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
                       alignment: AlignmentDirectional.centerStart,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -77,7 +80,10 @@ class BottomControls extends StatelessWidget {
                     child: TransportControls(),
                   ),
                   Expanded(
-                    child: Align(
+                    // Small phones: the buttons shrink to fit rather than
+                    // overflow (320 dp leaves about 60 px a side).
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
                       alignment: AlignmentDirectional.centerEnd,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
