@@ -105,6 +105,15 @@ with open(sys.argv[1], "w", encoding="utf-8") as f:
         f.write(f"{i + 1}\n{ts(a)} --> {ts(b)}\nLine {i + 1} of a very long subtitle file\n\n")
 PY
 
+# Music with tags and cover art (tasks 7.3, 7.6), and one without a cover.
+"${FF[@]}" -f lavfi -i testsrc2=size=300x300 -frames:v 1 cover.png
+"${FF[@]}" -f lavfi -i "sine=frequency=330:duration=6" -i cover.png \
+  -map 0:a -map 1:v -c:a libmp3lame -q:a 6 -c:v mjpeg -disposition:v attached_pic \
+  -id3v2_version 3 -metadata title="Night Drive" -metadata artist="Kyndrel Tests" \
+  -metadata album="Test Tones" -metadata track=3 song.mp3
+"${FF[@]}" -f lavfi -i "sine=frequency=440:duration=6" -c:a flac \
+  -metadata title="Plain Tone" plain.flac
+
 # Not a video at all.
 echo "this is not a video" > broken.mkv
 echo "Generated in $OUT:"; ls -1

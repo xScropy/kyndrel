@@ -141,6 +141,8 @@ class PreviewThumbnailer implements PreviewSource {
       ('aid', 'no'),
       ('sid', 'no'),
       ('vid', 'auto'),
+      // A song's cover art is its picture (task 7.3).
+      ('audio-display', 'embedded-first'),
       ('vo', 'image'),
       ('vo-image-format', 'jpg'),
       ('vo-image-jpeg-quality', '75'),

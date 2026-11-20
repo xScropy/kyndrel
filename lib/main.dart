@@ -10,6 +10,7 @@ import 'package:kyndrel/app/perf_log.dart';
 import 'package:kyndrel/core/app_info.dart';
 import 'package:kyndrel/core/logging/app_log.dart';
 import 'package:kyndrel/core/logging/crash_monitor.dart';
+import 'package:kyndrel/core/platform/folder_access.dart';
 import 'package:kyndrel/core/platform/media_session.dart';
 import 'package:kyndrel/core/platform/mobile_window_service.dart';
 import 'package:kyndrel/core/platform/mpris.dart';
@@ -44,6 +45,8 @@ Future<void> main(List<String> args) async {
       ? await _openDesktopWindow()
       : MobileWindowService();
   final settings = await SettingsRepository.create();
+  // macOS: library folders the user added stay readable (task 7.3).
+  await FolderAccess.restore(settings.load().libraryBookmarks);
   final cacheDir = await getApplicationCacheDirectory();
   final supportDir = await getApplicationSupportDirectory();
   // libass draws text subtitles with these (task 7.1; needed on Android).

@@ -207,6 +207,31 @@ class MainActivity : FlutterActivity() {
                 "pickCopy" -> pickCopy(result)
                 "requestVideoAccess" -> requestVideoAccess(result)
                 "videos" -> result.success(queryVideos())
+                "requestLibraryAccess" -> requestLibraryAccess(result)
+                "library" -> frameExecutor.execute {
+                    val items = try {
+                        queryLibrary()
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                    runOnUiThread { result.success(items) }
+                }
+                "thumbnail" -> {
+                    val uri = call.argument<String>("uri")
+                    val path = call.argument<String>("path")
+                    val size = (call.argument<Number>("size") ?: 320).toInt()
+                    if (uri == null || path == null) {
+                        return@setMethodCallHandler result.error("args", "uri and path", null)
+                    }
+                    storyboardExecutor.execute {
+                        val ok = try {
+                            writeThumbnail(Uri.parse(uri), path, size)
+                        } catch (e: Exception) {
+                            false
+                        }
+                        runOnUiThread { result.success(ok) }
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -366,10 +391,148 @@ class MainActivity : FlutterActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != ACCESS_REQUEST) return
-        val granted = grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        // Videos or music (or both) is enough to show something.
+        val granted = grantResults.any { it == PackageManager.PERMISSION_GRANTED }
         accessResult?.success(granted)
         accessResult = null
+    }
+
+    // ------------------------------------------------- library (task 7.3)
+
+    private val libraryPermissions =
+        if (Build.VERSION.SDK_INT >= 33) {
+            arrayOf(Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO)
+        } else {
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+    private fun hasAny(permissions: Array<String>) =
+        permissions.any { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+
+    private fun requestLibraryAccess(result: MethodChannel.Result) {
+        if (libraryPermissions.all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }) {
+            return result.success(true)
+        }
+        if (accessResult != null) return result.error("busy", "Already asking", null)
+        accessResult = result
+        requestPermissions(libraryPermissions, ACCESS_REQUEST)
+    }
+
+    /** Every video and song MediaStore knows, with what it knows about them. */
+    private fun queryLibrary(): List<Map<String, Any?>> {
+        if (!hasAny(libraryPermissions)) return emptyList()
+        val out = mutableListOf<Map<String, Any?>>()
+        @Suppress("DEPRECATION")
+        val data = MediaStore.MediaColumns.DATA
+
+        val videos = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        contentResolver.query(
+            videos,
+            arrayOf(
+                MediaStore.Video.Media._ID,
+                MediaStore.Video.Media.DISPLAY_NAME,
+                data,
+                MediaStore.Video.Media.DURATION,
+                MediaStore.Video.Media.SIZE,
+                MediaStore.Video.Media.DATE_ADDED,
+                MediaStore.Video.Media.DATE_MODIFIED,
+                MediaStore.Video.Media.WIDTH,
+                MediaStore.Video.Media.HEIGHT,
+            ),
+            null, null, null,
+        )?.use { c ->
+            while (c.moveToNext()) {
+                val id = c.getLong(0)
+                val path = c.getString(2) ?: ""
+                out += mapOf(
+                    "uri" to ContentUris.withAppendedId(videos, id).toString(),
+                    "kind" to "video",
+                    "name" to (c.getString(1) ?: "$id"),
+                    "folderPath" to (File(path).parent ?: ""),
+                    "durationMs" to c.getLong(3),
+                    "size" to c.getLong(4),
+                    "addedS" to c.getLong(5),
+                    "modifiedS" to c.getLong(6),
+                    "width" to c.getInt(7),
+                    "height" to c.getInt(8),
+                )
+            }
+        }
+
+        val audio = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        contentResolver.query(
+            audio,
+            arrayOf(
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.DISPLAY_NAME,
+                data,
+                MediaStore.Audio.Media.DURATION,
+                MediaStore.Audio.Media.SIZE,
+                MediaStore.Audio.Media.DATE_ADDED,
+                MediaStore.Audio.Media.DATE_MODIFIED,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.TRACK,
+            ),
+            // Ringtones and notification sounds aren't music.
+            "${MediaStore.Audio.Media.IS_MUSIC} != 0", null, null,
+        )?.use { c ->
+            while (c.moveToNext()) {
+                val id = c.getLong(0)
+                val path = c.getString(2) ?: ""
+                val artist = c.getString(8)
+                out += mapOf(
+                    "uri" to ContentUris.withAppendedId(audio, id).toString(),
+                    "kind" to "audio",
+                    "name" to (c.getString(1) ?: "$id"),
+                    "folderPath" to (File(path).parent ?: ""),
+                    "durationMs" to c.getLong(3),
+                    "size" to c.getLong(4),
+                    "addedS" to c.getLong(5),
+                    "modifiedS" to c.getLong(6),
+                    "title" to c.getString(7),
+                    "artist" to artist?.takeIf { it != MediaStore.UNKNOWN_STRING },
+                    "album" to c.getString(9),
+                    // MediaStore stores disc * 1000 + track.
+                    "trackNo" to (c.getInt(10) % 1000).takeIf { it > 0 },
+                )
+            }
+        }
+        return out
+    }
+
+    /** A video frame or a song's cover, as a JPEG at [path]. */
+    private fun writeThumbnail(uri: Uri, path: String, size: Int): Boolean {
+        val bitmap: Bitmap? = if (Build.VERSION.SDK_INT >= 29) {
+            try {
+                contentResolver.loadThumbnail(uri, android.util.Size(size, size), null)
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            val r = MediaMetadataRetriever()
+            try {
+                r.setDataSource(this, uri)
+                val art = r.embeddedPicture
+                if (art != null) {
+                    android.graphics.BitmapFactory.decodeByteArray(art, 0, art.size)
+                } else {
+                    val ms = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        ?.toLongOrNull() ?: 0
+                    r.getFrameAtTime(ms * 100, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                }
+            } catch (e: Exception) {
+                null
+            } finally {
+                r.release()
+            }
+        }
+        if (bitmap == null) return false
+        File(path).parentFile?.mkdirs()
+        FileOutputStream(path).use { bitmap.compress(Bitmap.CompressFormat.JPEG, 80, it) }
+        bitmap.recycle()
+        return true
     }
 
     private fun queryVideos(): List<Map<String, Any>> {

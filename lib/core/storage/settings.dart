@@ -16,6 +16,8 @@ class AppSettings {
     this.volume = 100,
     this.skipSeconds = 10,
     this.upNextSeconds = 10,
+    this.libraryFolders = const [],
+    this.libraryBookmarks = const [],
     this.gestureBrightness = true,
     this.gestureVolume = true,
     this.gestureSeek = true,
@@ -68,6 +70,13 @@ class AppSettings {
 
   /// "Up next" countdown before the queue moves on; 0 = straight away.
   final int upNextSeconds;
+
+  /// Desktop library folders (task 7.3); empty means the user's Videos
+  /// (Movies) and Music folders.
+  final List<String> libraryFolders;
+
+  /// macOS: access to [libraryFolders] across restarts (sandbox bookmarks).
+  final List<String> libraryBookmarks;
 
   // Touch gestures on the video (task 6.3), each on by default.
   /// Left-side vertical swipe: screen brightness.
@@ -181,6 +190,8 @@ class AppSettings {
     double? volume,
     int? skipSeconds,
     int? upNextSeconds,
+    List<String>? libraryFolders,
+    List<String>? libraryBookmarks,
     bool? gestureBrightness,
     bool? gestureVolume,
     bool? gestureSeek,
@@ -228,6 +239,8 @@ class AppSettings {
       volume: volume ?? this.volume,
       skipSeconds: skipSeconds ?? this.skipSeconds,
       upNextSeconds: upNextSeconds ?? this.upNextSeconds,
+      libraryFolders: libraryFolders ?? this.libraryFolders,
+      libraryBookmarks: libraryBookmarks ?? this.libraryBookmarks,
       gestureBrightness: gestureBrightness ?? this.gestureBrightness,
       gestureVolume: gestureVolume ?? this.gestureVolume,
       gestureSeek: gestureSeek ?? this.gestureSeek,
@@ -319,6 +332,10 @@ class SettingsRepository {
       volume: (_prefs.getDouble('volume') ?? d.volume).clamp(0, 400),
       skipSeconds: _prefs.getInt('skipSeconds') ?? d.skipSeconds,
       upNextSeconds: _prefs.getInt('upNextSeconds') ?? d.upNextSeconds,
+      libraryFolders:
+          _prefs.getStringList('libraryFolders') ?? d.libraryFolders,
+      libraryBookmarks:
+          _prefs.getStringList('libraryBookmarks') ?? d.libraryBookmarks,
       gestureBrightness:
           _prefs.getBool('gestureBrightness') ?? d.gestureBrightness,
       gestureVolume: _prefs.getBool('gestureVolume') ?? d.gestureVolume,
@@ -413,6 +430,8 @@ class SettingsRepository {
     await _prefs.setDouble('volume', s.volume);
     await _prefs.setInt('skipSeconds', s.skipSeconds);
     await _prefs.setInt('upNextSeconds', s.upNextSeconds);
+    await _prefs.setStringList('libraryFolders', s.libraryFolders);
+    await _prefs.setStringList('libraryBookmarks', s.libraryBookmarks);
     await _prefs.setBool('gestureBrightness', s.gestureBrightness);
     await _prefs.setBool('gestureVolume', s.gestureVolume);
     await _prefs.setBool('gestureSeek', s.gestureSeek);

@@ -4,6 +4,8 @@ import FlutterMacOS
 class MainFlutterWindow: NSWindow {
   /// Now Playing and remote commands (task 4.8).
   private var mediaSession: MediaSession?
+  /// Library folders kept across restarts (task 7.3).
+  private var folderBookmarks: FolderBookmarks?
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -30,6 +32,7 @@ class MainFlutterWindow: NSWindow {
     }
 
     mediaSession = MediaSession(messenger: flutterViewController.engine.binaryMessenger)
+    folderBookmarks = FolderBookmarks(messenger: flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
   }

@@ -44,7 +44,44 @@ class MediaMetadata extends Table {
   Set<Column<Object>> get primaryKey => {source};
 }
 
-@DriftDatabase(tables: [ResumePoints, HistoryEntries, MediaMetadata])
+/// The videos and music found on the device (task 7.3).
+class LibraryItems extends Table {
+  /// A file path, or a `content://` URI on Android.
+  TextColumn get uri => text()();
+  TextColumn get name => text()();
+
+  /// Where it lives: [folderPath] groups, [folder] is shown.
+  TextColumn get folder => text()();
+  TextColumn get folderPath => text()();
+
+  /// `video` or `audio`.
+  TextColumn get kind => text()();
+  IntColumn get size => integer().withDefault(const Constant(0))();
+  DateTimeColumn get modified => dateTime()();
+
+  /// When Kyndrel first saw it (for "NEW").
+  DateTimeColumn get added => dateTime()();
+  IntColumn get durationMs => integer().nullable()();
+  IntColumn get width => integer().nullable()();
+  IntColumn get height => integer().nullable()();
+  TextColumn get videoCodec => text().nullable()();
+  TextColumn get audioCodec => text().nullable()();
+  TextColumn get title => text().nullable()();
+  TextColumn get artist => text().nullable()();
+  TextColumn get album => text().nullable()();
+  IntColumn get trackNo => integer().nullable()();
+  TextColumn get thumbnailPath => text().nullable()();
+
+  /// Details and thumbnail have been read for this size and date.
+  BoolColumn get probed => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {uri};
+}
+
+@DriftDatabase(
+  tables: [ResumePoints, HistoryEntries, MediaMetadata, LibraryItems],
+)
 class KyndrelDatabase extends _$KyndrelDatabase {
   new([QueryExecutor? executor])
     : super(
@@ -60,7 +97,7 @@ class KyndrelDatabase extends _$KyndrelDatabase {
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -69,6 +106,7 @@ class KyndrelDatabase extends _$KyndrelDatabase {
         await m.createTable(historyEntries);
         await m.createTable(mediaMetadata);
       }
+      if (from < 3) await m.createTable(libraryItems);
     },
   );
 }
