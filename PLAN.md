@@ -160,6 +160,15 @@ preview frame while dragging; releases are signed APKs on GitHub.
 - [x] 6.8 Tests and CI: gesture tests with fake platform services, phone goldens, emulator smoke test.
 - [x] 6.9 Release: signed per-ABI APKs on GitHub releases, update check for APKs, licence audit, 1.1.0 notes.
 
+### Phase 7: Library, music and scrubbing (1.2, Android + Windows/macOS)
+- [x] 7.1 Subtitles that don't appear: reproduce with real libmpv (embedded/external/image tracks, during load, after file change, secondary track, visibility, hidden styles), fix, and report failures on screen instead of silently.
+- [ ] 7.2 Storyboard: frames for the whole video prepared in advance (one-pass mpv on desktop, MediaMetadataRetriever on Android), shown instantly while dragging, refined to the exact frame when the finger rests.
+- [ ] 7.3 Media index: Drift `LibraryItems`, MediaStore videos and audio on Android, Videos/Music folders plus added ones on desktop (macOS bookmarks), details and thumbnails probed in the background.
+- [ ] 7.4 Video library like MX Player: folders and all videos, list/grid, thumbnails with duration and progress, resolution, size, date, NEW, sort, search, details sheet.
+- [ ] 7.5 Music library, separate from videos: songs, albums, artists, folders, shuffle, mini player.
+- [ ] 7.6 Music player: spinning disc with the cover art, tags, live orange waves following the loudness (mpv astats), less-motion setting.
+- [ ] 7.7 Release 1.2.0.
+
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.
 - **Widget and golden:** seek bar, volume slider, speed popover, subtitle panel.

@@ -46,7 +46,10 @@ class SyncView extends ConsumerWidget {
           dropdownColor: KyndrelColors.surface,
           items: [
             const DropdownMenuItem(child: Text('Off')),
-            for (final t in tracks.subtitles.where((t) => !t.isImageSubtitle))
+            // Not the main track: mpv can't show one track twice (7.1).
+            for (final t in tracks.subtitles.where(
+              (t) => !t.isImageSubtitle && t.id != tracks.subtitleId,
+            ))
               DropdownMenuItem(value: t.id, child: Text(trackLabel(t))),
           ],
           onChanged: (id) => unawaited(service.selectSecondarySubtitle(id)),

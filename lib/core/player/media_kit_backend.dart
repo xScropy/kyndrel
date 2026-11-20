@@ -11,16 +11,25 @@ import 'package:media_kit_video/media_kit_video.dart';
 /// media_kit.
 class MediaKitBackend implements PlayerBackend {
   /// [withVideo] is false only for headless engine tests.
-  new({bool withVideo = true})
+  /// [subtitleFontsDir] holds the fonts libass draws text subtitles with
+  /// (see `SubtitleFonts`).
+  new({bool withVideo = true, String? subtitleFontsDir})
     : player = Player(
         configuration: const PlayerConfiguration(
           // mpv renders subtitles into the frame (libass). This is what makes
           // image subtitles (PGS, VobSub) and the sub-* style options work.
           libass: true,
+          // Android: libass has no system fonts, so without one text
+          // subtitles draw nothing (task 7.1).
+          libassAndroidFont: 'assets/fonts/Inter.ttf',
+          libassAndroidFontName: 'Inter',
           logLevel: MPVLogLevel.warn,
           title: 'Kyndrel',
         ),
       ) {
+    if (subtitleFontsDir != null) {
+      unawaited(setProperty('sub-fonts-dir', subtitleFontsDir));
+    }
     if (withVideo) {
       videoController = VideoController(
         player,

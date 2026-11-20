@@ -13,6 +13,12 @@ class FakeDeviceMedia implements DeviceMedia {
   @override
   Future<List<DeviceFile>> pick({bool multiple = false}) async => picks;
 
+  /// What the "any file" picker returns (a local copy's path).
+  String? pickedCopy;
+
+  @override
+  Future<String?> pickFileCopy() async => pickedCopy;
+
   @override
   Future<bool> requestVideoAccess() async => granted = granted || grant;
 

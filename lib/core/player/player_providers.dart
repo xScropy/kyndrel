@@ -3,10 +3,13 @@ import 'package:kyndrel/core/player/media_kit_backend.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_service.dart';
+import 'package:kyndrel/core/player/subtitle_fonts.dart';
 
 /// The app's one [PlayerService]. Override it in tests with a fake backend.
 final playerServiceProvider = Provider<PlayerService>((ref) {
-  final service = PlayerService(MediaKitBackend());
+  final service = PlayerService(
+    MediaKitBackend(subtitleFontsDir: ref.watch(subtitleFontsDirProvider)),
+  );
   ref.onDispose(service.dispose);
   return service;
 });

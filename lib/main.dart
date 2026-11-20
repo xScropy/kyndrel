@@ -17,6 +17,7 @@ import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/android_frame_source.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
+import 'package:kyndrel/core/player/subtitle_fonts.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/features/scripts/script_manager.dart';
@@ -44,6 +45,8 @@ Future<void> main(List<String> args) async {
   final settings = await SettingsRepository.create();
   final cacheDir = await getApplicationCacheDirectory();
   final supportDir = await getApplicationSupportDirectory();
+  // libass draws text subtitles with these (task 7.1; needed on Android).
+  final subtitleFonts = await SubtitleFonts.prepare(supportDir);
   // Log file and crash detection (task 5.7). The monitor reads what the
   // previous session left before this one writes anything.
   final logsDir = Directory('${supportDir.path}${Platform.pathSeparator}logs');
@@ -89,6 +92,7 @@ Future<void> main(List<String> args) async {
         crashMonitorProvider.overrideWithValue(crashes),
         settingsRepositoryProvider.overrideWithValue(settings),
         appCacheDirProvider.overrideWithValue(cacheDir),
+        subtitleFontsDirProvider.overrideWithValue(subtitleFonts),
         // Phones decode preview frames with Android's own retriever (6.4).
         if (Platform.isAndroid)
           previewSourceProvider.overrideWithValue(

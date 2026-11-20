@@ -243,5 +243,6 @@
   "moreCast": "Cast",
   "moreDownload": "Download",
   "rotate": "Rotate",
-  "morePip": "Small window"
+  "morePip": "Small window",
+  "subtitleNotShown": "This subtitle track can't be shown"
 }

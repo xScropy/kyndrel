@@ -489,4 +489,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get morePip => 'Small window';
+
+  @override
+  String get subtitleNotShown => 'This subtitle track can\'t be shown';
 }

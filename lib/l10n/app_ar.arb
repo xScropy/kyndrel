@@ -149,5 +149,6 @@
   "moreCast": "البث",
   "moreDownload": "تنزيل",
   "rotate": "تدوير الشاشة",
-  "morePip": "نافذة صغيرة"
+  "morePip": "نافذة صغيرة",
+  "subtitleNotShown": "تعذّر عرض مسار الترجمة هذا"
 }

@@ -9,6 +9,7 @@ import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
+import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/core/ui/popover.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
 import 'package:kyndrel/features/subtitles/subtitle_search_controller.dart';
@@ -194,7 +195,7 @@ class _TrackColumn extends ConsumerWidget {
             key: Key('sub-${t.id}'),
             track: t,
             selected: tracks.subtitleId == t.id,
-            onTap: () => unawaited(service.selectSubtitle(t.id)),
+            onTap: () => unawaited(_select(context, ref, t.id)),
           ),
         if (tracks.audio.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -320,4 +321,12 @@ class _FooterState extends ConsumerState<_Footer> {
       ],
     );
   }
+}
+
+/// Selects [id] and says so on screen when mpv refuses it, instead of
+/// failing silently (task 7.1).
+Future<void> _select(BuildContext context, WidgetRef ref, int id) async {
+  final message = context.l10n.subtitleNotShown;
+  final ok = await ref.read(playerServiceProvider).selectSubtitle(id);
+  if (!ok) ref.read(osdProvider.notifier).show(message);
 }

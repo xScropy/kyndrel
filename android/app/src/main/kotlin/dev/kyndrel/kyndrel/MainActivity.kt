@@ -42,6 +42,7 @@ class MainActivity : FlutterActivity() {
     private var openChannel: MethodChannel? = null
     private val pending = mutableListOf<Map<String, String>>()
     private var pickResult: MethodChannel.Result? = null
+    private var copyResult: MethodChannel.Result? = null
     private var accessResult: MethodChannel.Result? = null
 
     // Preview frames are decoded off the main thread, one at a time, with
@@ -172,6 +173,7 @@ class MainActivity : FlutterActivity() {
         MethodChannel(messenger, "kyndrel/android_media").setMethodCallHandler { call, result ->
             when (call.method) {
                 "pick" -> pick(call.argument<Boolean>("multiple") ?: false, result)
+                "pickCopy" -> pickCopy(result)
                 "requestVideoAccess" -> requestVideoAccess(result)
                 "videos" -> result.success(queryVideos())
                 else -> result.notImplemented()
@@ -244,10 +246,51 @@ class MainActivity : FlutterActivity() {
         startActivityForResult(intent, PICK_REQUEST)
     }
 
+    /**
+     * Any file (subtitles have no reliable MIME type), copied into the cache
+     * under its own name: mpv reads the extension to know the format
+     * (task 7.1). Returns the copy's path, or null when cancelled.
+     */
+    private fun pickCopy(result: MethodChannel.Result) {
+        if (copyResult != null) return result.error("busy", "A picker is already open", null)
+        copyResult = result
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+        }
+        @Suppress("DEPRECATION")
+        startActivityForResult(intent, PICK_COPY_REQUEST)
+    }
+
+    private fun copyToCache(uri: Uri): String? {
+        val name = (file(uri)["name"] ?: "subtitle").replace('/', '_')
+        val dir = File(cacheDir, "picked").apply { mkdirs() }
+        val out = File(dir, name)
+        contentResolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(out).use { input.copyTo(it) }
+        } ?: return null
+        return out.absolutePath
+    }
+
     @Deprecated("Activity result API needs a ComponentActivity")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         @Suppress("DEPRECATION")
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PICK_COPY_REQUEST) {
+            val result = copyResult ?: return
+            copyResult = null
+            val uri = data?.data
+            if (resultCode != RESULT_OK || uri == null) return result.success(null)
+            frameExecutor.execute {
+                val path = try {
+                    copyToCache(uri)
+                } catch (e: Exception) {
+                    null
+                }
+                runOnUiThread { result.success(path) }
+            }
+            return
+        }
         if (requestCode != PICK_REQUEST) return
         val result = pickResult ?: return
         pickResult = null
@@ -460,6 +503,7 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val PICK_REQUEST = 4201
+        private const val PICK_COPY_REQUEST = 4203
         private const val ACCESS_REQUEST = 4202
     }
 }

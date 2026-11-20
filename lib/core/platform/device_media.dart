@@ -58,6 +58,11 @@ abstract interface class DeviceMedia {
   /// The system document picker (no copy: big videos play in place).
   Future<List<DeviceFile>> pick({bool multiple = false});
 
+  /// Any file, copied to the cache under its own name; its path, or null
+  /// when cancelled. For subtitles: mpv needs a path with the extension
+  /// (task 7.1).
+  Future<String?> pickFileCopy();
+
   /// Asks for the "videos" permission when needed; true when granted.
   Future<bool> requestVideoAccess();
 
@@ -82,6 +87,9 @@ class AndroidDeviceMedia implements DeviceMedia {
         DeviceFile.fromMap(m),
     ];
   }
+
+  @override
+  Future<String?> pickFileCopy() => _channel.invokeMethod<String>('pickCopy');
 
   @override
   Future<bool> requestVideoAccess() async =>

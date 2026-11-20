@@ -488,4 +488,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get morePip => 'نافذة صغيرة';
+
+  @override
+  String get subtitleNotShown => 'تعذّر عرض مسار الترجمة هذا';
 }

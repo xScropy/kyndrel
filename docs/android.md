@@ -83,6 +83,7 @@ release:
 - [ ] Hardware decoding shown in the media info (MediaCodec) for H.264/HEVC
 - [ ] Casting to a TV on the same Wi-Fi
 - [ ] Arabic layout
+- [ ] Text subtitles (SRT/ASS) draw on the video, including Arabic ones; a subtitle file loads from the phone
 - [ ] The update check offers the right APK, and it installs over the old one
 
 ## Release key

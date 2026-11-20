@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/platform/device_media.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 
 /// What the panel's right pane shows.
@@ -36,6 +37,15 @@ abstract final class SubtitleFileActions {
 
   /// Picks a subtitle file and loads it as the active track (task 2.6).
   static Future<void> loadFile(WidgetRef ref) async {
+    // Android: the system picker, with a local copy mpv can read (7.1).
+    final device = ref.read(deviceMediaProvider);
+    if (device != null) {
+      final path = await device.pickFileCopy();
+      if (path != null) {
+        await ref.read(playerServiceProvider).addSubtitle(path);
+      }
+      return;
+    }
     final file = await openFile(
       acceptedTypeGroups: const [
         XTypeGroup(label: 'Subtitles', extensions: extensions),

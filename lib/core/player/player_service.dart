@@ -346,8 +346,25 @@ class PlayerService {
   // -------------------------------------------------------------- subtitles
 
   /// Selects a subtitle track, or turns subtitles off when [id] is null.
-  Future<void> selectSubtitle(int? id) =>
-      backend.setProperty('sid', id == null ? 'no' : '$id');
+  /// False when mpv didn't take the track (task 7.1).
+  Future<bool> selectSubtitle(int? id) async {
+    if (id == null) {
+      await backend.setProperty('sid', 'no');
+      return true;
+    }
+    // mpv can't show one track in both places: a track that is the
+    // secondary line moves to the main one.
+    if (_tracks.secondarySubtitleId == id) {
+      await backend.setProperty('secondary-sid', 'no');
+    }
+    await backend.setProperty('sub-visibility', 'yes');
+    await backend.setProperty('sid', '$id');
+    // Before the file has loaded there is no track list yet; mpv applies
+    // the choice when it loads.
+    if (_tracks.subtitles.every((t) => t.id != id)) return true;
+    final now = await backend.getProperty('sid');
+    return now == null || now == '$id';
+  }
 
   /// Second subtitle line shown at the top (dual subtitles).
   Future<void> selectSecondarySubtitle(int? id) =>

@@ -130,8 +130,13 @@ class FakePlayerBackend implements PlayerBackend {
   @override
   Future<String?> getProperty(String name) async => properties[name];
 
+  /// Properties this fake mpv refuses to change (like a track it can't
+  /// show).
+  final refused = <String>{};
+
   @override
   Future<void> setProperty(String name, String value) async {
+    if (refused.contains(name)) return;
     emitProperty(name, value);
   }
 

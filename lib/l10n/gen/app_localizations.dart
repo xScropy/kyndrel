@@ -997,6 +997,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Small window'**
   String get morePip;
+
+  /// No description provided for @subtitleNotShown.
+  ///
+  /// In en, this message translates to:
+  /// **'This subtitle track can\'t be shown'**
+  String get subtitleNotShown;
 }
 
 class _AppLocalizationsDelegate
