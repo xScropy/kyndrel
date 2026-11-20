@@ -57,6 +57,7 @@ uses them.
 | `af add/remove @kyndrel-eq:lavfi=[equalizer=…]`, `@kyndrel-norm:lavfi=[loudnorm\|dynaudnorm]` | command | write | Equalizer and loudness normalization | 4.7 |
 | `frame-step`, `frame-back-step` | command | write | Frame stepping | 3.9 |
 | `screenshot-to-file <path> video\|subtitles` | command | write | History thumbnails (3.3), screenshots (3.8) | 3.3 |
+| storyboard mpv: `vo=image`, `vf=scale`, `hr-seek=no`, `keep-open=always`, `pause`, `seek <t> absolute+keyframes`, `time-pos`, `seeking`, `stop` | options/command/property | write/read | Seek-bar storyboard: one paused load, one keyframe seek per frame | 7.2 |
 | `sub-fonts-dir` | option | write | Fonts libass draws text subtitles with (Kyndrel's Inter and Noto Sans Arabic; needed on Android) | 7.1 |
 | `sub-visibility` | property | write | Turned back on when a subtitle track is chosen | 7.1 |
 | `sub-text` | property | read | Engine tests: the text of the current cue | 7.1 |

@@ -11,6 +11,7 @@ import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
+import 'package:kyndrel/core/player/storyboard.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
@@ -21,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_player_backend.dart';
 import 'fake_preview_source.dart';
+import 'fake_storyboard_source.dart';
 import 'fake_window_service.dart';
 import 'test_database.dart';
 
@@ -42,6 +44,10 @@ class AppHarness {
   final KyndrelDatabase db;
   final SettingsRepository settings;
   final FakePreviewSource previews = FakePreviewSource();
+  final FakeStoryboardSource storyboards = FakeStoryboardSource();
+
+  /// A cache folder of its own (storyboards are written there).
+  final Directory cacheDir = Directory.systemTemp.createTempSync('kyndrel_c');
   late ProviderContainer container;
 
   /// Extra provider overrides for one test (e.g. a fake update server).
@@ -67,6 +73,7 @@ class AppHarness {
       overrides,
     );
     addTearDown(h.service.dispose);
+    addTearDown(() => h.cacheDir.deleteSync(recursive: true));
     addTearDown(h.db.close);
     return h;
   }
@@ -76,8 +83,9 @@ class AppHarness {
     windowServiceProvider.overrideWithValue(window),
     settingsRepositoryProvider.overrideWithValue(settings),
     databaseProvider.overrideWithValue(db),
-    appCacheDirProvider.overrideWithValue(Directory.systemTemp),
+    appCacheDirProvider.overrideWithValue(cacheDir),
     previewSourceProvider.overrideWithValue(previews),
+    storyboardSourceProvider.overrideWithValue(storyboards),
     ...extraOverrides,
   ];
 

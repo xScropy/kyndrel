@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/gestures.dart';
@@ -20,7 +19,7 @@ import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_video_view.dart';
-import 'package:kyndrel/core/player/preview_prewarm.dart';
+import 'package:kyndrel/core/player/storyboard.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
@@ -86,9 +85,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(engineSyncProvider)
       ..read(mediaSessionSyncProvider)
       ..read(scriptManagerProvider)
-      ..read(logSyncProvider);
-    // Phones: cache seek-preview frames in the background (task 6.4).
-    if (Platform.isAndroid) ref.read(previewPrewarmProvider);
+      ..read(logSyncProvider)
+      // Frames for the whole video, made in the background (task 7.2).
+      ..read(storyboardProvider);
     // Phones: immersive full screen and rotation while a video plays.
     if (ref.read(platformCapabilitiesProvider).isMobile) {
       ref.read(phonePlaybackProvider);

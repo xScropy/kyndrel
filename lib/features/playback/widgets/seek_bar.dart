@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
-import 'package:kyndrel/core/player/preview_thumbnailer.dart';
+import 'package:kyndrel/core/player/scrub_preview.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/l10n/l10n.dart';
@@ -89,32 +89,26 @@ class _SeekBarState extends ConsumerState<SeekBar> {
   Timer? _throttle;
   Duration? _pendingSeek;
   PointerDeviceKind? _dragKind;
-  Timer? _previewDebounce;
   String? _preview;
-  int _previewRequest = 0;
+  late final _scrub = ScrubPreview(ref, (path) {
+    if (mounted && _hoverX != null && path != _preview) {
+      setState(() => _preview = path);
+    }
+  });
 
   @override
   void dispose() {
     _throttle?.cancel();
-    _previewDebounce?.cancel();
+    _scrub.cancel();
     super.dispose();
   }
 
-  /// Asks for a preview frame of the hovered time (task 3.7), debounced so
-  /// fast mouse moves don't queue renders.
+  /// The scene at the hovered or dragged time: the storyboard frame at
+  /// once, the exact one when the pointer rests (tasks 3.7, 7.2).
   void _requestPreview(Duration at, Duration duration) {
-    _previewDebounce?.cancel();
     final source = ref.read(playerServiceProvider).state.source;
     if (source == null) return;
-    final id = ++_previewRequest;
-    _previewDebounce = Timer(const Duration(milliseconds: 60), () async {
-      final path = await ref
-          .read(previewSourceProvider)
-          .frameAt(source, at, duration);
-      if (mounted && id == _previewRequest && path != null) {
-        setState(() => _preview = path);
-      }
-    });
+    _scrub.request(source, at, duration);
   }
 
   void _seekThrottled(Duration target) {
@@ -177,7 +171,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
           onExit: (_) => setState(() {
             _hoverX = null;
             _preview = null;
-            _previewRequest++;
+            _scrub.cancel();
           }),
           // A screen-reader slider: arrow/volume-key gestures seek by the
           // skip interval (task 5.3).
@@ -255,7 +249,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                             _dragKind == PointerDeviceKind.stylus) {
                           _hoverX = null;
                           _preview = null;
-                          _previewRequest++;
+                          _scrub.cancel();
                         }
                       });
                     }

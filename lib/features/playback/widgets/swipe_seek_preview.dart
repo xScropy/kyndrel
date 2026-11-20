@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
-import 'package:kyndrel/core/player/preview_thumbnailer.dart';
+import 'package:kyndrel/core/player/scrub_preview.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/features/playback/widgets/video_gesture_layer.dart';
 import 'package:material_ui/material_ui.dart';
@@ -22,8 +21,11 @@ class SwipeSeekPreview extends ConsumerStatefulWidget {
 class _SwipeSeekPreviewState extends ConsumerState<SwipeSeekPreview> {
   Duration? _at;
   String? _frame;
-  Timer? _debounce;
-  int _request = 0;
+  late final _scrub = ScrubPreview(ref, (path) {
+    if (mounted && _at != null && path != _frame) {
+      setState(() => _frame = path);
+    }
+  });
 
   @override
   void initState() {
@@ -34,7 +36,7 @@ class _SwipeSeekPreviewState extends ConsumerState<SwipeSeekPreview> {
   @override
   void dispose() {
     VideoGestureLayer.seekPreview.removeListener(_onTarget);
-    _debounce?.cancel();
+    _scrub.cancel();
     super.dispose();
   }
 
@@ -44,19 +46,14 @@ class _SwipeSeekPreviewState extends ConsumerState<SwipeSeekPreview> {
       _at = at;
       if (at == null) _frame = null;
     });
-    _debounce?.cancel();
     final state = ref.read(playerServiceProvider).state;
     final source = state.source;
-    if (at == null || source == null) return;
-    final id = ++_request;
-    _debounce = Timer(const Duration(milliseconds: 60), () async {
-      final path = await ref
-          .read(previewSourceProvider)
-          .frameAt(source, at, state.duration);
-      if (mounted && id == _request && path != null && _at != null) {
-        setState(() => _frame = path);
-      }
-    });
+    if (at == null || source == null) {
+      _scrub.cancel();
+      return;
+    }
+    // Storyboard frame at once, the exact one when the finger rests (7.2).
+    _scrub.request(source, at, state.duration);
   }
 
   @override

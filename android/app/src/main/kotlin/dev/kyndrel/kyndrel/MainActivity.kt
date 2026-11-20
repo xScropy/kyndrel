@@ -48,6 +48,8 @@ class MainActivity : FlutterActivity() {
     // Preview frames are decoded off the main thread, one at a time, with
     // one retriever kept open for the current file.
     private val frameExecutor = Executors.newSingleThreadExecutor()
+    private val storyboardExecutor = Executors.newSingleThreadExecutor()
+    @Volatile private var storyboardCancelled = false
     private var retriever: MediaMetadataRetriever? = null
     private var retrieverSource: String? = null
 
@@ -103,21 +105,50 @@ class MainActivity : FlutterActivity() {
         }
 
         MethodChannel(messenger, "kyndrel/frames").setMethodCallHandler { call, result ->
-            if (call.method != "frame") return@setMethodCallHandler result.notImplemented()
-            val source = call.argument<String>("source")
-            val path = call.argument<String>("path")
-            val ms = (call.argument<Number>("ms") ?: 0).toLong()
-            val width = (call.argument<Number>("width") ?: 480).toInt()
-            if (source == null || path == null) {
-                return@setMethodCallHandler result.error("args", "source and path", null)
-            }
-            frameExecutor.execute {
-                val ok = try {
-                    writeFrame(source, ms, width, path)
-                } catch (e: Exception) {
-                    false
+            when (call.method) {
+                "frame" -> {
+                    val source = call.argument<String>("source")
+                    val path = call.argument<String>("path")
+                    val ms = (call.argument<Number>("ms") ?: 0).toLong()
+                    val width = (call.argument<Number>("width") ?: 480).toInt()
+                    val exact = call.argument<Boolean>("exact") ?: false
+                    if (source == null || path == null) {
+                        return@setMethodCallHandler result.error("args", "source and path", null)
+                    }
+                    frameExecutor.execute {
+                        val ok = try {
+                            val r = retrieverFor(source)
+                            writeFrame(r, ms, width, path, exact)
+                        } catch (e: Exception) {
+                            false
+                        }
+                        runOnUiThread { result.success(ok) }
+                    }
                 }
-                runOnUiThread { result.success(ok) }
+                "storyboard" -> {
+                    val source = call.argument<String>("source")
+                    val dir = call.argument<String>("dir")
+                    val stepMs = (call.argument<Number>("stepMs") ?: 2000).toLong()
+                    val count = (call.argument<Number>("count") ?: 0).toInt()
+                    val width = (call.argument<Number>("width") ?: 160).toInt()
+                    if (source == null || dir == null) {
+                        return@setMethodCallHandler result.error("args", "source and dir", null)
+                    }
+                    storyboardCancelled = false
+                    storyboardExecutor.execute {
+                        val ok = try {
+                            writeStoryboard(source, dir, stepMs, count, width)
+                        } catch (e: Exception) {
+                            false
+                        }
+                        runOnUiThread { result.success(ok) }
+                    }
+                }
+                "cancelStoryboard" -> {
+                    storyboardCancelled = true
+                    result.success(null)
+                }
+                else -> result.notImplemented()
             }
         }
 
@@ -390,10 +421,41 @@ class MainActivity : FlutterActivity() {
         return r
     }
 
-    private fun writeFrame(source: String, ms: Long, width: Int, path: String): Boolean {
-        val r = retrieverFor(source)
+    /**
+     * The storyboard (task 7.2): a frame every [stepMs] for the whole video,
+     * on its own thread and retriever so preview requests aren't held up.
+     * Frames already on disk are kept, so a cancelled run picks up again.
+     */
+    private fun writeStoryboard(source: String, dir: String, stepMs: Long, count: Int, width: Int): Boolean {
+        val r = MediaMetadataRetriever()
+        try {
+            if (source.startsWith("content://")) {
+                r.setDataSource(this, Uri.parse(source))
+            } else {
+                r.setDataSource(source.removePrefix("file://"))
+            }
+            File(dir).mkdirs()
+            for (i in 0 until count) {
+                if (storyboardCancelled) return false
+                val out = File(dir, "$i.jpg")
+                if (out.exists()) continue
+                // Written under another name first: Dart only sees whole files.
+                val part = File(dir, "$i.part")
+                if (writeFrame(r, i * stepMs, width, part.path, false)) part.renameTo(out)
+            }
+            return true
+        } finally {
+            r.release()
+        }
+    }
+
+    private fun writeFrame(r: MediaMetadataRetriever, ms: Long, width: Int, path: String, exact: Boolean): Boolean {
         val us = ms * 1000
-        val option = MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+        val option = if (exact) {
+            MediaMetadataRetriever.OPTION_CLOSEST
+        } else {
+            MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+        }
         val w = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
         val h = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
         val bitmap: Bitmap = (
@@ -495,6 +557,8 @@ class MainActivity : FlutterActivity() {
         if (isFinishing) KyndrelMedia.release(this)
         KyndrelMedia.channel = null
         multicastLock?.takeIf { it.isHeld }?.release()
+        storyboardCancelled = true
+        storyboardExecutor.shutdown()
         frameExecutor.shutdown()
         retriever?.release()
         retriever = null

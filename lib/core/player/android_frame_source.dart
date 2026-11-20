@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
+import 'package:kyndrel/core/player/storyboard.dart';
 import 'package:kyndrel/core/utils/hashing.dart';
 import 'package:path/path.dart' as p;
 
@@ -20,7 +21,8 @@ class AndroidFrameSource implements PreviewSource {
 
   final Directory cacheDir;
   final MethodChannel _channel;
-  final _queue = Queue<({String source, int second, String path})>();
+  final _queue =
+      Queue<({String source, int second, String path, bool exact})>();
   final _waiting = <String, Completer<String?>>{};
   bool _busy = false;
 
@@ -30,18 +32,27 @@ class AndroidFrameSource implements PreviewSource {
     return Duration(seconds: s < 2 ? 2 : s);
   }
 
-  String _path(String source, int second) =>
-      p.join(cacheDir.path, 'previews', fnv1a64(source), '$second.jpg');
+  String _path(String source, int second, {bool exact = false}) => p.join(
+    cacheDir.path,
+    'previews',
+    fnv1a64(source),
+    exact ? '${second}x.jpg' : '$second.jpg',
+  );
 
   @override
-  Future<String?> frameAt(String source, Duration at, Duration duration) {
+  Future<String?> frameAt(
+    String source,
+    Duration at,
+    Duration duration, {
+    bool exact = false,
+  }) {
     // Network streams: decoding a second copy costs data and time.
     if (source.startsWith('http://') || source.startsWith('https://')) {
       return Future.value();
     }
     final step = stepFor(duration).inSeconds;
-    final second = (at.inSeconds ~/ step) * step;
-    final path = _path(source, second);
+    final second = exact ? at.inSeconds : (at.inSeconds ~/ step) * step;
+    final path = _path(source, second, exact: exact);
     if (File(path).existsSync()) return Future.value(path);
     final pending = _waiting[path];
     if (pending != null) return pending.future;
@@ -51,7 +62,7 @@ class AndroidFrameSource implements PreviewSource {
       final dropped = _queue.removeFirst();
       _waiting.remove(dropped.path)?.complete();
     }
-    _queue.add((source: source, second: second, path: path));
+    _queue.add((source: source, second: second, path: path, exact: exact));
     unawaited(_pump());
     return completer.future;
   }
@@ -69,6 +80,8 @@ class AndroidFrameSource implements PreviewSource {
             'ms': r.second * 1000,
             'width': width,
             'path': r.path,
+            // The exact frame decodes from the keyframe on: slower.
+            'exact': r.exact,
           });
           if ((ok ?? false) && File(r.path).existsSync()) result = r.path;
         } on PlatformException {
@@ -80,6 +93,46 @@ class AndroidFrameSource implements PreviewSource {
       }
     } finally {
       _busy = false;
+    }
+  }
+}
+
+/// Storyboards on Android (task 7.2): MediaMetadataRetriever walks the
+/// video on its own thread (`storyboard` on `kyndrel/frames`), nearest
+/// keyframe for each step, writing `<i>.jpg` into the storyboard folder.
+class AndroidStoryboardSource implements StoryboardSource {
+  new({MethodChannel? channel})
+    : _channel = channel ?? const MethodChannel('kyndrel/frames');
+
+  final MethodChannel _channel;
+
+  @override
+  Future<bool> render(Storyboard board) async {
+    try {
+      final ok = await _channel.invokeMethod<bool>('storyboard', {
+        'source': board.source,
+        'dir': board.directory,
+        'stepMs': board.step.inMilliseconds,
+        'count': board.count,
+        'width': Storyboard.width,
+      });
+      if (ok ?? false) board.writeIndex();
+      return ok ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> cancel() async {
+    try {
+      await _channel.invokeMethod<void>('cancelStoryboard');
+    } on PlatformException {
+      // Nothing running.
+    } on MissingPluginException {
+      // Tests.
     }
   }
 }

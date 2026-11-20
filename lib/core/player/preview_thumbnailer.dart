@@ -15,8 +15,15 @@ abstract interface class PreviewSource {
   Duration stepFor(Duration duration);
 
   /// A JPEG of [source] near [at], from the cache or rendered now. Null if
-  /// it can't be made (stream, no video, error).
-  Future<String?> frameAt(String source, Duration at, Duration duration);
+  /// it can't be made (stream, no video, error). [exact]: the frame at
+  /// [at]'s second rather than the nearest cached step (task 7.2, when the
+  /// finger rests on the seek bar).
+  Future<String?> frameAt(
+    String source,
+    Duration at,
+    Duration duration, {
+    bool exact = false,
+  });
 }
 
 /// Renders frames with a second, hidden mpv: `vo=image` writes one JPEG per
@@ -45,18 +52,27 @@ class PreviewThumbnailer implements PreviewSource {
     return Duration(seconds: s < 2 ? 2 : s);
   }
 
-  String _cachePath(String source, int second) =>
-      p.join(cacheDir.path, 'previews', fnv1a64(source), '$second.jpg');
+  String _cachePath(String source, int second, {bool exact = false}) => p.join(
+    cacheDir.path,
+    'previews',
+    fnv1a64(source),
+    exact ? '${second}x.jpg' : '$second.jpg',
+  );
 
   @override
-  Future<String?> frameAt(String source, Duration at, Duration duration) {
+  Future<String?> frameAt(
+    String source,
+    Duration at,
+    Duration duration, {
+    bool exact = false,
+  }) {
     // Only local files: rendering a network stream twice is too costly.
     if (source.contains('://') && !source.startsWith('file://')) {
       return Future.value();
     }
     final step = stepFor(duration).inSeconds;
-    final second = (at.inSeconds ~/ step) * step;
-    final path = _cachePath(source, second);
+    final second = exact ? at.inSeconds : (at.inSeconds ~/ step) * step;
+    final path = _cachePath(source, second, exact: exact);
     if (File(path).existsSync()) return Future.value(path);
     return _inFlight.putIfAbsent(path, () {
       final request = _Request(source, second, path);
