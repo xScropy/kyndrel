@@ -55,7 +55,7 @@ class _SettingsPageState extends State<SettingsPage> {
           'Audio',
           (l) => l.settingsAudio,
           Icons.graphic_eq,
-          const [AudioSettings(), _AudioEffects()],
+          const [AudioSettings(), MusicSettings(), _AudioEffects()],
         ),
         (
           'Video',

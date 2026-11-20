@@ -60,6 +60,8 @@ uses them.
 | storyboard mpv: `vo=image`, `vf=scale`, `hr-seek=no`, `keep-open=always`, `pause`, `seek <t> absolute+keyframes`, `time-pos`, `seeking`, `stop` | options/command/property | write/read | Seek-bar storyboard: one paused load, one keyframe seek per frame | 7.2 |
 | library probe mpv: `vo=null`, `pause`, `duration`, `track-list/count`, `track-list/N/{type,codec,demux-w,demux-h,albumart}`, `metadata/by-key/{title,artist,album,track}` | property | read | Library details without decoding | 7.3 |
 | `audio-display=embedded-first` (preview mpv) | option | write | A song's cover art becomes its thumbnail | 7.3 |
+| `af add/remove @kviz:lavfi=[astats=metadata=1:reset=1]`, `af-metadata/kviz` (whole JSON only: reading one key, `af-metadata/kviz/<key>`, crashes libmpv) | command/property | write/read | Loudness for the music view's waves | 7.6 |
+| `track-list/N/albumart`, `metadata/by-key/{title,artist,album}` | property | read | Music: cover art is not video; the song's tags | 7.6 |
 | `sub-fonts-dir` | option | write | Fonts libass draws text subtitles with (Kyndrel's Inter and Noto Sans Arabic; needed on Android) | 7.1 |
 | `sub-visibility` | property | write | Turned back on when a subtitle track is chosen | 7.1 |
 | `sub-text` | property | read | Engine tests: the text of the current cue | 7.1 |

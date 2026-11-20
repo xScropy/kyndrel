@@ -35,6 +35,8 @@ import 'package:kyndrel/features/library/library_shell.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/library/up_next_card.dart';
 import 'package:kyndrel/features/logs/crash_prompt.dart';
+import 'package:kyndrel/features/music/music_player_view.dart';
+import 'package:kyndrel/features/music/now_playing.dart';
 import 'package:kyndrel/features/network/open_url_dialog.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
@@ -49,6 +51,7 @@ import 'package:kyndrel/features/playback/widgets/diagnostics_overlay.dart';
 import 'package:kyndrel/features/playback/widgets/fit_menu.dart';
 import 'package:kyndrel/features/playback/widgets/fullscreen_button.dart';
 import 'package:kyndrel/features/playback/widgets/more_sheet.dart';
+import 'package:kyndrel/features/playback/widgets/open_source_prompt.dart';
 import 'package:kyndrel/features/playback/widgets/status_layer.dart';
 import 'package:kyndrel/features/playback/widgets/swipe_seek_preview.dart';
 import 'package:kyndrel/features/playback/widgets/top_bar.dart';
@@ -88,7 +91,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(scriptManagerProvider)
       ..read(logSyncProvider)
       // Frames for the whole video, made in the background (task 7.2).
-      ..read(storyboardProvider);
+      ..read(storyboardProvider)
+      // Music: tags, cover and the level meter (task 7.6).
+      ..read(nowPlayingProvider);
     // Phones: immersive full screen and rotation while a video plays.
     if (ref.read(platformCapabilitiesProvider).isMobile) {
       ref.read(phonePlaybackProvider);
@@ -243,6 +248,16 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     }
   }
 
+  /// The library's Home section around [prompt].
+  Widget _home(Widget prompt) => LibraryHome(
+    openPrompt: prompt,
+    onOpen: (s) => unawaited(OpenActions.openSource(ref, s)),
+    onResume: (s) {
+      ref.read(resumeControllerProvider.notifier).resumeNextLoadOf(s);
+      unawaited(ref.read(playlistProvider.notifier).open(s));
+    },
+  );
+
   @override
   Widget build(BuildContext context) {
     ref
@@ -268,6 +283,35 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     final compact = mobile || screen.width < 600;
     // Screen lock (task 6.3): no controls, no gestures until unlocked.
     final locked = hasMedia && ref.watch(gestureLockProvider);
+    // Music (task 7.6): the record view, or the library with a mini player.
+    final audioOnly =
+        hasMedia &&
+        ref.watch(
+          trackStateProvider.select((t) => t.value?.isAudioOnly ?? false),
+        );
+    if (audioOnly && ref.watch(musicMinimizedProvider)) {
+      return Scaffold(
+        backgroundColor: KyndrelColors.background,
+        body: PlayerShortcuts(
+          onOpenSettings: _showSettings,
+          onShowInfo: _showInfo,
+          onToggleQueue: ref.read(playlistPanelProvider.notifier).toggle,
+          child: SafeArea(
+            bottom: false,
+            child: LibraryShell(
+              topInset: 0,
+              home: _home(
+                OpenSourcePrompt(
+                  onOpen: ref.read(playlistProvider.notifier).open,
+                  onPickFile: _pickFile,
+                ),
+              ),
+              bottom: const MiniPlayer(),
+            ),
+          ),
+        ),
+      );
+    }
     if (ref.watch(pipProvider) && ref.watch(nativePipProvider) != null) {
       // Android's PiP window: just the picture; Android draws the buttons.
       return const Scaffold(
@@ -329,26 +373,19 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
               children: [
                 // Own layer: overlay fades, OSD and seek-bar ticks must not
                 // repaint the video (task 5.4).
-                const RepaintBoundary(
-                  key: Key('video-layer'),
-                  child: PlayerVideoView(),
+                RepaintBoundary(
+                  key: const Key('video-layer'),
+                  child: audioOnly
+                      ? const MusicPlayerView()
+                      : const PlayerVideoView(),
                 ),
-                if (hasMedia) VideoGestureLayer(onSecondaryTap: _contextMenu),
+                // Music has its own buttons; there's no picture to touch.
+                if (hasMedia && !audioOnly)
+                  VideoGestureLayer(onSecondaryTap: _contextMenu),
                 StatusLayer(
                   onPickFile: _pickFile,
                   // Home and the device's library (task 7.4).
-                  idle: (prompt) => LibraryShell(
-                    home: LibraryHome(
-                      openPrompt: prompt,
-                      onOpen: (s) => unawaited(OpenActions.openSource(ref, s)),
-                      onResume: (s) {
-                        ref
-                            .read(resumeControllerProvider.notifier)
-                            .resumeNextLoadOf(s);
-                        unawaited(ref.read(playlistProvider.notifier).open(s));
-                      },
-                    ),
-                  ),
+                  idle: (prompt) => LibraryShell(home: _home(prompt)),
                 ),
                 const Center(child: CastingBanner()),
                 const Positioned(

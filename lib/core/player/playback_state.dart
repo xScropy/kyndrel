@@ -170,3 +170,32 @@ class PlaybackState {
   String toString() =>
       'PlaybackState($status, $position/$duration, source: $source)';
 }
+
+/// How loud the music is now, 0–1 (task 7.6).
+@immutable
+class AudioLevel {
+  const new(this.rms, this.peak);
+
+  /// From mpv's `astats` metadata (JSON with levels in dB); quiet below
+  /// -60 dB.
+  factory parse(String? json) {
+    if (json == null) return silent;
+    double level(String key) {
+      final m = RegExp('"lavfi.astats.Overall.$key":"([^"]+)"')
+          .firstMatch(json);
+      final db = double.tryParse(m?.group(1) ?? '');
+      if (db == null || db.isNaN) return 0;
+      return ((db + 60) / 60).clamp(0.0, 1.0);
+    }
+
+    return AudioLevel(level('RMS_level'), level('Peak_level'));
+  }
+
+  static const silent = AudioLevel(0, 0);
+
+  /// Average loudness.
+  final double rms;
+
+  /// Loudest moment.
+  final double peak;
+}

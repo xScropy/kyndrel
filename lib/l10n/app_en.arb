@@ -305,5 +305,12 @@
         "type": "int"
       }
     }
-  }
+  },
+  "musicMinimize": "Back to the library",
+  "musicNext": "Next",
+  "settingsMusic": "MUSIC",
+  "musicWavesSetting": "Waves that follow the music",
+  "musicWavesHelp": "Orange waves under the record move with the loudness.",
+  "reduceMotionSetting": "Less motion",
+  "reduceMotionHelp": "The record stays still and the waves move gently."
 }

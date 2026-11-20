@@ -596,3 +596,37 @@ class PhoneSettings extends ConsumerWidget {
     );
   }
 }
+
+/// The music view's waves and motion (task 7.6).
+class MusicSettings extends ConsumerWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(settingsProvider);
+    final l = context.l10n;
+    return SettingsSection(
+      title: l.settingsMusic,
+      children: [
+        SwitchListTile(
+          key: const Key('settings-music-waves'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l.musicWavesSetting),
+          subtitle: Text(l.musicWavesHelp),
+          value: s.musicWaves,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(musicWaves: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-reduce-motion'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l.reduceMotionSetting),
+          subtitle: Text(l.reduceMotionHelp),
+          value: s.reduceMotion,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(reduceMotion: v)),
+        ),
+      ],
+    );
+  }
+}

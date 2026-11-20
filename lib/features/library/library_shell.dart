@@ -25,10 +25,21 @@ final librarySectionProvider =
 /// device's videos and its music. A bar along the bottom on phones, a
 /// rail on the side on wider screens.
 class LibraryShell extends ConsumerWidget {
-  const new({required this.home, super.key});
+  const new({
+    required this.home,
+    this.bottom,
+    this.topInset = topBar,
+    super.key,
+  });
 
   /// The Home section (`LibraryHome`).
   final Widget home;
+
+  /// Along the bottom, above the section bar: the mini player (7.6).
+  final Widget? bottom;
+
+  /// Room left at the top for the player's top bar.
+  final double topInset;
 
   /// Height of the player's top bar, which overlays this screen.
   static const topBar = 52.0;
@@ -39,7 +50,7 @@ class LibraryShell extends ConsumerWidget {
     final controller = ref.read(librarySectionProvider.notifier);
     final l = context.l10n;
     final wide = MediaQuery.sizeOf(context).width >= 600;
-    final top = MediaQuery.paddingOf(context).top + topBar;
+    final top = MediaQuery.paddingOf(context).top + topInset;
 
     final content = switch (section) {
       LibrarySection.home => home,
@@ -70,7 +81,7 @@ class LibraryShell extends ConsumerWidget {
     ];
 
     if (wide) {
-      return Row(
+      final rail = Row(
         children: [
           Padding(
             padding: EdgeInsets.only(top: top),
@@ -105,10 +116,18 @@ class LibraryShell extends ConsumerWidget {
           Expanded(child: content),
         ],
       );
+      if (bottom == null) return rail;
+      return Column(
+        children: [
+          Expanded(child: rail),
+          bottom!,
+        ],
+      );
     }
     return Column(
       children: [
         Expanded(child: content),
+        ?bottom,
         NavigationBar(
           key: const Key('library-bar'),
           height: 64,

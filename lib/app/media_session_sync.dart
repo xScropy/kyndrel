@@ -7,6 +7,7 @@ import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/utils/media_title.dart';
+import 'package:kyndrel/features/music/now_playing.dart';
 
 /// The OS media session; replaced in `main.dart` with the platform one.
 final mediaSessionProvider = Provider<MediaSession>(
@@ -26,6 +27,21 @@ final mediaSessionSyncProvider = Provider<void>((ref) {
     final source = s.source;
     final queue = ref.read(playlistProvider);
     if (source == null) return const MediaSessionState();
+    // Music: its tags and cover (task 7.6).
+    final song = ref.read(nowPlayingProvider);
+    if (song != null && song.source == source) {
+      return MediaSessionState(
+        title: song.title,
+        subtitle: [?song.artist, ?song.album].join(' · '),
+        artUrl: song.cover,
+        playing: s.isPlaying,
+        position: s.position,
+        duration: s.duration,
+        canNext: queue.hasNext,
+        canPrevious: queue.items.length > 1,
+        volume: (s.volume / 100).clamp(0, 1),
+      );
+    }
     final details = ref.read(mediaDetailsProvider(source)).value;
     final parsed = parseMediaTitle(source);
     return MediaSessionState(

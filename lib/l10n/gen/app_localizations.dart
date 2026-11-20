@@ -1285,6 +1285,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 song} other{{count} songs}}'**
   String songCount(int count);
+
+  /// No description provided for @musicMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the library'**
+  String get musicMinimize;
+
+  /// No description provided for @musicNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get musicNext;
+
+  /// No description provided for @settingsMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'MUSIC'**
+  String get settingsMusic;
+
+  /// No description provided for @musicWavesSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waves that follow the music'**
+  String get musicWavesSetting;
+
+  /// No description provided for @musicWavesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange waves under the record move with the loudness.'**
+  String get musicWavesHelp;
+
+  /// No description provided for @reduceMotionSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Less motion'**
+  String get reduceMotionSetting;
+
+  /// No description provided for @reduceMotionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The record stays still and the waves move gently.'**
+  String get reduceMotionHelp;
 }
 
 class _AppLocalizationsDelegate

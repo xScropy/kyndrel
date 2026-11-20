@@ -16,6 +16,7 @@ class MediaTrack {
     this.isDefault = false,
     this.isForced = false,
     this.channels,
+    this.isCoverArt = false,
   });
 
   /// mpv track id (per type), as used by `aid`/`sid`.
@@ -33,6 +34,9 @@ class MediaTrack {
 
   /// Audio channel count.
   final int? channels;
+
+  /// A song's picture rather than a real video track (task 7.6).
+  final bool isCoverArt;
 
   /// Bitmap subtitle formats (PGS, VobSub, DVB) that libass can't restyle.
   bool get isImageSubtitle => const {
@@ -111,6 +115,9 @@ class TrackState {
 
   final List<MediaTrack> video;
   final List<MediaTrack> audio;
+
+  /// Music: sound and at most a cover picture (task 7.6).
+  bool get isAudioOnly => audio.isNotEmpty && video.every((v) => v.isCoverArt);
   final List<MediaTrack> subtitles;
 
   /// Selected ids; null means none ("no").

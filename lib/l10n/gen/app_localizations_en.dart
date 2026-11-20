@@ -650,4 +650,27 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get musicMinimize => 'Back to the library';
+
+  @override
+  String get musicNext => 'Next';
+
+  @override
+  String get settingsMusic => 'MUSIC';
+
+  @override
+  String get musicWavesSetting => 'Waves that follow the music';
+
+  @override
+  String get musicWavesHelp =>
+      'Orange waves under the record move with the loudness.';
+
+  @override
+  String get reduceMotionSetting => 'Less motion';
+
+  @override
+  String get reduceMotionHelp =>
+      'The record stays still and the waves move gently.';
 }

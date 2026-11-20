@@ -18,7 +18,7 @@ void main() {
 
   testWidgets('colour tokens golden', (tester) async {
     tester.view
-      ..physicalSize = const Size(640, 640)
+      ..physicalSize = const Size(640, 860)
       ..devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 

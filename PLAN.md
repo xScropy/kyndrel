@@ -166,7 +166,7 @@ preview frame while dragging; releases are signed APKs on GitHub.
 - [x] 7.3 Media index: Drift `LibraryItems`, MediaStore videos and audio on Android, Videos/Music folders plus added ones on desktop (macOS bookmarks), details and thumbnails probed in the background.
 - [x] 7.4 Video library like MX Player: folders and all videos, list/grid, thumbnails with duration and progress, resolution, size, date, NEW, sort, search, details sheet.
 - [x] 7.5 Music library, separate from videos: songs, albums, artists, folders, shuffle, mini player.
-- [ ] 7.6 Music player: spinning disc with the cover art, tags, live orange waves following the loudness (mpv astats), less-motion setting.
+- [x] 7.6 Music player: spinning disc with the cover art, tags, live orange waves following the loudness (mpv astats), less-motion setting.
 - [ ] 7.7 Release 1.2.0.
 
 ## 4. Testing strategy

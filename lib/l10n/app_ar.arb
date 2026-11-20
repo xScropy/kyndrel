@@ -197,5 +197,12 @@
   "unknownAlbum": "ألبوم غير معروف",
   "unknownArtist": "فنان غير معروف",
   "libraryEmptyMusic": "لم يُعثر على موسيقى بعد",
-  "songCount": "{count, plural, zero{لا أغاني} one{أغنية واحدة} two{أغنيتان} few{{count} أغانٍ} many{{count} أغنية} other{{count} أغنية}}"
+  "songCount": "{count, plural, zero{لا أغاني} one{أغنية واحدة} two{أغنيتان} few{{count} أغانٍ} many{{count} أغنية} other{{count} أغنية}}",
+  "musicMinimize": "العودة إلى المكتبة",
+  "musicNext": "التالي",
+  "settingsMusic": "الموسيقى",
+  "musicWavesSetting": "موجات تتبع الموسيقى",
+  "musicWavesHelp": "موجات برتقالية تحت الأسطوانة تتحرك مع ارتفاع الصوت.",
+  "reduceMotionSetting": "حركة أقل",
+  "reduceMotionHelp": "تبقى الأسطوانة ثابتة وتتحرك الموجات بهدوء."
 }

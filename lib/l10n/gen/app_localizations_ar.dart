@@ -657,4 +657,26 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get musicMinimize => 'العودة إلى المكتبة';
+
+  @override
+  String get musicNext => 'التالي';
+
+  @override
+  String get settingsMusic => 'الموسيقى';
+
+  @override
+  String get musicWavesSetting => 'موجات تتبع الموسيقى';
+
+  @override
+  String get musicWavesHelp =>
+      'موجات برتقالية تحت الأسطوانة تتحرك مع ارتفاع الصوت.';
+
+  @override
+  String get reduceMotionSetting => 'حركة أقل';
+
+  @override
+  String get reduceMotionHelp => 'تبقى الأسطوانة ثابتة وتتحرك الموجات بهدوء.';
 }

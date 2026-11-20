@@ -498,6 +498,45 @@ class PlayerService {
     }
   }
 
+  // ------------------------------------------------------ music (7.6)
+
+  /// The level meter's mpv filter label.
+  static const _meter = '@kviz';
+  bool _meterOn = false;
+
+  /// Measures the loudness for the music view's waves (an `astats` audio
+  /// filter); off when nothing shows it.
+  Future<void> setLevelMeter({required bool enabled}) async {
+    if (enabled == _meterOn) return;
+    _meterOn = enabled;
+    await backend.command(
+      enabled
+          ? ['af', 'add', '$_meter:lavfi=[astats=metadata=1:reset=1]']
+          : ['af', 'remove', _meter],
+    );
+  }
+
+  /// The loudness about every [interval] while listened to and the meter
+  /// is on. The whole `af-metadata` object is read: asking mpv for one of
+  /// its keys crashes libmpv.
+  Stream<AudioLevel> levels({
+    Duration interval = const Duration(milliseconds: 60),
+  }) => Stream<void>.periodic(interval).asyncMap((_) async {
+    if (!_meterOn || !_state.isPlaying) return AudioLevel.silent;
+    return AudioLevel.parse(await backend.getProperty('af-metadata/kviz'));
+  });
+
+  /// The current file's title, artist and album tags.
+  Future<({String? title, String? artist, String? album})> readTags() async {
+    Future<String?> tag(String key) async =>
+        _nonEmpty(await backend.getProperty('metadata/by-key/$key'));
+    return (
+      title: await tag('title'),
+      artist: await tag('artist'),
+      album: await tag('album'),
+    );
+  }
+
   // --------------------------------------------------------- audio effects
 
   static const eqLabel = '@kyndrel-eq';
@@ -688,6 +727,7 @@ class PlayerService {
         isDefault: await p('default') == 'yes',
         isForced: await p('forced') == 'yes',
         channels: int.tryParse(await p('demux-channel-count') ?? ''),
+        isCoverArt: await p('albumart') == 'yes',
       );
       (switch (type) {
         MediaTrackType.video => video,

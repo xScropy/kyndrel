@@ -101,7 +101,8 @@ object KyndrelMedia {
         if (url != artUrl) {
             artUrl = url
             art = null
-            if (url != null && url.startsWith("http")) loadArt(url)
+            // A poster from the web, or a song's cover file (task 7.6).
+            if (url != null && (url.startsWith("http") || url.startsWith("/"))) loadArt(url)
         }
 
         if (playing) {
@@ -177,7 +178,11 @@ object KyndrelMedia {
     private fun loadArt(url: String) {
         artLoader.execute {
             val bitmap = try {
-                URL(url).openStream().use { BitmapFactory.decodeStream(it) }
+                if (url.startsWith("/")) {
+                    BitmapFactory.decodeFile(url)
+                } else {
+                    URL(url).openStream().use { BitmapFactory.decodeStream(it) }
+                }
             } catch (e: Exception) {
                 null
             } ?: return@execute

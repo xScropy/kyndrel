@@ -146,6 +146,26 @@ class AppHarness {
   }
 
   /// Simulates mpv finishing loading the opened file, with tracks.
+  /// A song with cover art and tags is playing (task 7.6).
+  void loadSong({
+    String title = 'Night Drive',
+    String artist = 'Kyndrel Tests',
+    String album = 'Test Tones',
+    bool playing = true,
+  }) {
+    backend
+      ..emitDuration(const Duration(minutes: 3, seconds: 30))
+      ..emitPlaying(value: playing)
+      ..emitProperty('metadata/by-key/title', title)
+      ..emitProperty('metadata/by-key/artist', artist)
+      ..emitProperty('metadata/by-key/album', album)
+      ..emitTracks([
+        {'id': '1', 'type': 'audio', 'codec': 'mp3', 'default': 'yes'},
+        {'id': '1', 'type': 'video', 'codec': 'mjpeg', 'albumart': 'yes'},
+      ])
+      ..emitProperty('aid', '1');
+  }
+
   void load({
     Duration duration = const Duration(minutes: 60),
     int width = 1920,

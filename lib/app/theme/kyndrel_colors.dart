@@ -65,6 +65,22 @@ abstract final class KyndrelColors {
   /// Error text and icons.
   static const Color error = Color(0xFFFF5A5F);
 
+  /// Accent, deeper: the edge of the plain disc label (task 7.6).
+  static const Color accentPressed = Color(0xFFB8480C);
+
+  /// The music view's record.
+  static const Color vinyl = Color(0xFF101012);
+  static const Color vinylGroove = Color(0x14FFFFFF);
+  static const Color vinylEdge = Color(0x26FFFFFF);
+  static const Color vinylSheen = Color(0x1AFFFFFF);
+
+  /// The waves behind the front one.
+  static const Color waveMiddle = Color(0x99F26A1B);
+  static const Color waveBack = Color(0x4DF26A1B);
+
+  /// The warm light behind the music view's record.
+  static const Color musicGlow = Color(0x33F26A1B);
+
   /// All tokens by name. Used by the golden test so a colour change is a
   /// deliberate, reviewed diff.
   static const Map<String, Color> all = {
@@ -87,6 +103,14 @@ abstract final class KyndrelColors {
     'windowCloseHover': windowCloseHover,
     'titleBarScrim': titleBarScrim,
     'error': error,
+    'accentPressed': accentPressed,
+    'vinyl': vinyl,
+    'vinylGroove': vinylGroove,
+    'vinylEdge': vinylEdge,
+    'vinylSheen': vinylSheen,
+    'waveMiddle': waveMiddle,
+    'waveBack': waveBack,
+    'musicGlow': musicGlow,
   };
 }
 
