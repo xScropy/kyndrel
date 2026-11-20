@@ -188,5 +188,14 @@
   "detailModified": "آخر تعديل",
   "detailAdded": "أضيف",
   "detailWatched": "تمت المشاهدة",
-  "videoCount": "{count, plural, zero{لا فيديوهات} one{فيديو واحد} two{فيديوهان} few{{count} فيديوهات} many{{count} فيديو} other{{count} فيديو}}"
+  "videoCount": "{count, plural, zero{لا فيديوهات} one{فيديو واحد} two{فيديوهان} few{{count} فيديوهات} many{{count} فيديو} other{{count} فيديو}}",
+  "musicSongs": "الأغاني",
+  "musicAlbums": "الألبومات",
+  "musicArtists": "الفنانون",
+  "musicShuffle": "تشغيل الكل عشوائيًا",
+  "musicPlayAll": "تشغيل الكل",
+  "unknownAlbum": "ألبوم غير معروف",
+  "unknownArtist": "فنان غير معروف",
+  "libraryEmptyMusic": "لم يُعثر على موسيقى بعد",
+  "songCount": "{count, plural, zero{لا أغاني} one{أغنية واحدة} two{أغنيتان} few{{count} أغانٍ} many{{count} أغنية} other{{count} أغنية}}"
 }

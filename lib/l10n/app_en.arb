@@ -289,5 +289,21 @@
         "type": "int"
       }
     }
+  },
+  "musicSongs": "Songs",
+  "musicAlbums": "Albums",
+  "musicArtists": "Artists",
+  "musicShuffle": "Shuffle all",
+  "musicPlayAll": "Play all",
+  "unknownAlbum": "Unknown album",
+  "unknownArtist": "Unknown artist",
+  "libraryEmptyMusic": "No music found yet",
+  "songCount": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@songCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

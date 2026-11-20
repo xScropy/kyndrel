@@ -615,4 +615,39 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get musicSongs => 'Songs';
+
+  @override
+  String get musicAlbums => 'Albums';
+
+  @override
+  String get musicArtists => 'Artists';
+
+  @override
+  String get musicShuffle => 'Shuffle all';
+
+  @override
+  String get musicPlayAll => 'Play all';
+
+  @override
+  String get unknownAlbum => 'Unknown album';
+
+  @override
+  String get unknownArtist => 'Unknown artist';
+
+  @override
+  String get libraryEmptyMusic => 'No music found yet';
+
+  @override
+  String songCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
 }

@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/features/library/music_library.dart';
 import 'package:kyndrel/features/library/video_library.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The start screen's sections (task 7.4).
-enum LibrarySection { home, videos }
+enum LibrarySection { home, videos, music }
 
 class LibrarySectionController extends Notifier<LibrarySection> {
   @override
@@ -20,8 +21,8 @@ final librarySectionProvider =
       LibrarySectionController.new,
     );
 
-/// When nothing is playing: Home (open, continue watching, recent) and the
-/// library of the device's videos. A bar along the bottom on phones, a
+/// When nothing is playing: Home (open, continue watching, recent), the
+/// device's videos and its music. A bar along the bottom on phones, a
 /// rail on the side on wider screens.
 class LibraryShell extends ConsumerWidget {
   const new({required this.home, super.key});
@@ -46,6 +47,11 @@ class LibraryShell extends ConsumerWidget {
         padding: EdgeInsets.only(top: top),
         child: const VideoLibrary(),
       ),
+      // Its own section, separate from the videos (task 7.5).
+      LibrarySection.music => Padding(
+        padding: EdgeInsets.only(top: top),
+        child: const MusicLibrary(),
+      ),
     };
     final destinations = [
       (LibrarySection.home, Icons.home_outlined, Icons.home, l.libraryHome),
@@ -54,6 +60,12 @@ class LibraryShell extends ConsumerWidget {
         Icons.video_library_outlined,
         Icons.video_library,
         l.libraryVideos,
+      ),
+      (
+        LibrarySection.music,
+        Icons.library_music_outlined,
+        Icons.library_music,
+        l.libraryMusic,
       ),
     ];
 

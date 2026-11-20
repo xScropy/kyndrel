@@ -618,4 +618,43 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get musicSongs => 'الأغاني';
+
+  @override
+  String get musicAlbums => 'الألبومات';
+
+  @override
+  String get musicArtists => 'الفنانون';
+
+  @override
+  String get musicShuffle => 'تشغيل الكل عشوائيًا';
+
+  @override
+  String get musicPlayAll => 'تشغيل الكل';
+
+  @override
+  String get unknownAlbum => 'ألبوم غير معروف';
+
+  @override
+  String get unknownArtist => 'فنان غير معروف';
+
+  @override
+  String get libraryEmptyMusic => 'لم يُعثر على موسيقى بعد';
+
+  @override
+  String songCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أغنية',
+      many: '$count أغنية',
+      few: '$count أغانٍ',
+      two: 'أغنيتان',
+      one: 'أغنية واحدة',
+      zero: 'لا أغاني',
+    );
+    return '$_temp0';
+  }
 }

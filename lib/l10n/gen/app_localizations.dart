@@ -1231,6 +1231,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 video} other{{count} videos}}'**
   String videoCount(int count);
+
+  /// No description provided for @musicSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get musicSongs;
+
+  /// No description provided for @musicAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get musicAlbums;
+
+  /// No description provided for @musicArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists'**
+  String get musicArtists;
+
+  /// No description provided for @musicShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle all'**
+  String get musicShuffle;
+
+  /// No description provided for @musicPlayAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all'**
+  String get musicPlayAll;
+
+  /// No description provided for @unknownAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown album'**
+  String get unknownAlbum;
+
+  /// No description provided for @unknownArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown artist'**
+  String get unknownArtist;
+
+  /// No description provided for @libraryEmptyMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'No music found yet'**
+  String get libraryEmptyMusic;
+
+  /// No description provided for @songCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}}'**
+  String songCount(int count);
 }
 
 class _AppLocalizationsDelegate

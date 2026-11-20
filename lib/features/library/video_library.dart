@@ -18,6 +18,7 @@ import 'package:kyndrel/core/ui/settings_widgets.dart';
 import 'package:kyndrel/core/utils/media_format.dart';
 import 'package:kyndrel/core/utils/natural_sort.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
+import 'package:kyndrel/features/library/library_widgets.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -178,7 +179,7 @@ class VideoLibrary extends ConsumerWidget {
 
     Widget body;
     if (!status.granted) {
-      body = _Message(
+      body = LibraryMessage(
         key: const Key('library-allow'),
         icon: Icons.video_library_outlined,
         text: l.libraryAllowTitle,
@@ -189,7 +190,7 @@ class VideoLibrary extends ConsumerWidget {
         ),
       );
     } else if (items.isEmpty) {
-      body = _Message(
+      body = LibraryMessage(
         key: const Key('library-empty'),
         icon: Icons.video_library_outlined,
         text: status.scanning ? l.libraryScanning : l.libraryEmptyVideos,
@@ -214,7 +215,7 @@ class VideoLibrary extends ConsumerWidget {
         view.sort,
       );
       body = shown.isEmpty
-          ? _Message(icon: Icons.search_off, text: l.libraryNoMatch)
+          ? LibraryMessage(icon: Icons.search_off, text: l.libraryNoMatch)
           : _VideoList(items: shown, layout: view.layout, progress: progress);
     } else {
       body = _FolderGrid(folders: folders, progress: progress);
@@ -409,46 +410,6 @@ class _HeaderState extends ConsumerState<_Header> {
   }
 }
 
-class _Message extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.text,
-    this.action,
-    this.busy = false,
-    super.key,
-  });
-
-  final IconData icon;
-  final String text;
-  final Widget? action;
-  final bool busy;
-
-  @override
-  Widget build(BuildContext context) => ListView(
-    // Scrollable, so pull-to-refresh works on an empty library too.
-    padding: const EdgeInsets.fromLTRB(24, 64, 24, 24),
-    children: [
-      Icon(icon, size: 56, color: KyndrelColors.textSecondary),
-      const SizedBox(height: 16),
-      Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: KyndrelColors.textSecondary),
-      ),
-      if (busy) ...[
-        const SizedBox(height: 16),
-        const Center(
-          child: CircularProgressIndicator(color: KyndrelColors.accent),
-        ),
-      ],
-      if (action != null) ...[
-        const SizedBox(height: 16),
-        Center(child: action),
-      ],
-    ],
-  );
-}
-
 class _FolderGrid extends ConsumerWidget {
   const new({required this.folders, required this.progress});
 
@@ -482,7 +443,7 @@ class _FolderGrid extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _Thumbnail(
+                child: LibraryThumbnail(
                   path: f.items.first.thumbnailPath,
                   icon: Icons.folder,
                   badge: newCount > 0 ? context.l10n.libraryNew : null,
@@ -588,7 +549,7 @@ class _VideoTile extends StatelessWidget {
       formatBytes(item.size),
       formatDate(item.added, Localizations.localeOf(context).toString()),
     ].join(' · ');
-    final thumb = _Thumbnail(
+    final thumb = LibraryThumbnail(
       path: item.thumbnailPath,
       icon: Icons.movie_outlined,
       duration: item.durationMs == null
@@ -647,99 +608,6 @@ class _VideoTile extends StatelessWidget {
             ),
     );
   }
-}
-
-/// A thumbnail with the length, progress and a badge on it.
-class _Thumbnail extends StatelessWidget {
-  const new({
-    required this.path,
-    required this.icon,
-    this.duration,
-    this.progress,
-    this.badge,
-  });
-
-  final String? path;
-  final IconData icon;
-  final Duration? duration;
-  final double? progress;
-  final String? badge;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = path;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(KyndrelTokens.tileRadius),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const ColoredBox(color: KyndrelColors.surface),
-          if (p != null)
-            Image.file(
-              File(p),
-              fit: BoxFit.cover,
-              cacheWidth: 320,
-              errorBuilder: (_, _, _) =>
-                  Icon(icon, color: KyndrelColors.textSecondary),
-            )
-          else
-            Icon(icon, size: 32, color: KyndrelColors.textSecondary),
-          if (badge != null)
-            PositionedDirectional(
-              top: 6,
-              start: 6,
-              child: _Badge(text: badge!, color: KyndrelColors.accent),
-            ),
-          if (duration != null)
-            PositionedDirectional(
-              bottom: 6,
-              end: 6,
-              child: _Badge(
-                text: formatDuration(duration!),
-                color: const Color(0xCC000000),
-              ),
-            ),
-          if (progress != null && progress! > 0)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 3,
-                color: KyndrelColors.accent,
-                backgroundColor: const Color(0x66000000),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const new({required this.text, required this.color});
-
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(KyndrelTokens.badgeRadius),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: KyndrelColors.textPrimary,
-          fontFeatures: [FontFeature.tabularFigures()],
-        ),
-      ),
-    ),
-  );
 }
 
 String _resolution(LibraryItem item) {
