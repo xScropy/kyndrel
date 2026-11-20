@@ -13,6 +13,14 @@ orange-accented Flutter interface.
 
 ## Features
 
+**Library and music** (1.2)
+- Videos and Music sections: your folders with thumbnails, length,
+  resolution, progress and NEW; songs, albums, artists; search and sort.
+- A music player with a turning record, the cover art and waves that move
+  with the music, and a mini player while you browse.
+- The seek bar shows the scene under your finger at once, from frames
+  prepared in advance.
+
 **Playback**
 - Plays what mpv plays (MP4, MKV, AVI, WebM, HEVC, AV1, 10-bit, HDR10,
   HLS, DASH…) with hardware decoding (`hwdec=auto-safe`).

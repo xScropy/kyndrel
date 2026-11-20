@@ -3,6 +3,53 @@
 All notable changes to Kyndrel. The release workflow copies a version's
 section into its GitHub release.
 
+## [1.2.0] - 2026-11-20
+
+A library and a music player, and a seek bar that shows the scene under
+your finger, on Android, Windows and macOS.
+
+### Library
+- The start screen has three sections: Home (open, continue watching,
+  recent), Videos and Music. A bar along the bottom on phones, a rail on
+  the side on computers.
+- Videos, like a phone video player: folders with thumbnails, then the
+  videos in a folder (or all of them), each with its thumbnail, length,
+  how much you've watched, resolution, size, date and NEW. List or grid,
+  sort by date, name, size or length, search. Tap to play with the rest
+  of the folder queued; long-press for the details.
+- Music, separate from the videos: songs, albums (with covers), artists
+  and folders, play all, shuffle and search.
+- Android reads the phone's videos and music; Windows and macOS look in
+  your Videos (Movies) and Music folders, plus folders you add (they stay
+  readable on macOS after a restart).
+
+### Music player
+- Songs play on a turning record with the cover art as its label, with
+  the title, artist and album, and orange waves that move with the music.
+- Shrink it to a mini player and keep browsing while it plays.
+- The notification and lock screen show the song and its cover.
+- Settings > Audio > Music: waves on or off, and less motion.
+
+### Seeking
+- Like YouTube: frames for the whole video are prepared in the
+  background, so dragging the seek bar or swiping shows the scene at
+  once; resting shows the exact frame.
+
+### Fixes
+- Android: text subtitles (SRT, ASS, VTT) were chosen but never shown,
+  because the subtitle renderer had no fonts. Kyndrel's own fonts are used
+  now, Arabic included.
+- Choosing the track that was the second subtitle line now moves it to the
+  main line instead of doing nothing; choosing a track turns subtitles
+  back on; a track that can't be shown says so.
+- Android: subtitle files can be loaded from the phone.
+
+### Known limitations
+- Library details on desktop are read in the background: a large music
+  collection takes a while to get its covers the first time.
+- Tested on an emulator in CI; the real-phone checklist is in
+  docs/android.md.
+
 ## [1.1.0] - 2026-11-18
 
 Kyndrel for Android: the same player on phones and tablets, with a touch

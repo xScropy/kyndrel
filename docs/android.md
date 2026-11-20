@@ -48,8 +48,8 @@ at the screen edges are left to Android (back gesture, notification shade).
   off). PiP is also in the "…" sheet.
 - Calls pause playback and it resumes afterwards. Another app playing stops
   Kyndrel. Unplugging headphones pauses.
-- "On this phone" on the start screen lists the phone's videos by folder.
-  "Open with" and Share from other apps work.
+- The Videos and Music sections list the phone's videos and music with
+  thumbnails and details. "Open with" and Share from other apps work.
 
 ## Not on Android
 
@@ -57,10 +57,9 @@ at the screen edges are left to Android (back gesture, notification shade).
   casting, translating subtitles that are inside the video, and
   site downloads. Subtitle files can still be translated, casting plays
   files the device supports, and plain links can be downloaded.
-- Subtitles next to a video are found automatically only for files from
-  "On this phone". For a file opened from elsewhere, load the subtitle
-  from the subtitles panel, because Android doesn't let apps read the
-  neighbouring files.
+- Subtitle files next to a video aren't loaded automatically: Android
+  doesn't let apps read the neighbouring files. Load them from the
+  subtitles panel (Load file).
 
 ## Checklist on a real phone
 
@@ -69,7 +68,6 @@ preview, subtitles). These need a person with a phone. Tick them per
 release:
 
 - [ ] Opens from Files and Photos/Gallery with "Open with", and from Share
-- [ ] "On this phone" asks for access once, then lists folders and plays
 - [ ] Brightness swipe; brightness is back to normal after leaving
 - [ ] Volume swipe moves the phone's volume, then the boost past 100 %
 - [ ] Swipe seek and seek-bar drag show the scene preview quickly
@@ -85,6 +83,15 @@ release:
 - [ ] Arabic layout
 - [ ] Text subtitles (SRT/ASS) draw on the video, including Arabic ones; a subtitle file loads from the phone
 - [ ] The update check offers the right APK, and it installs over the old one
+- [ ] Videos tab: asks for access once, then folders with thumbnails; NEW,
+      progress bars, sort, search, details; tapping plays with the folder
+      queued
+- [ ] Music tab: songs, albums with covers, artists, folders; shuffle
+- [ ] A song shows the turning record with its cover, tags and moving
+      waves; minimise to the mini player and back; the notification shows
+      the cover
+- [ ] Seek bar drag and swipe-seek show a frame at once (after the video
+      has played a few seconds), then the exact frame when you rest
 
 ## Release key
 

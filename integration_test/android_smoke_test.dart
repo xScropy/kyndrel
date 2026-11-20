@@ -3,8 +3,11 @@
 //   flutter test integration_test/android_smoke_test.dart \
 //     --dart-define=KYNDREL_SMOKE_URL=$KYNDREL_SMOKE_URL
 // CI serves test_media/generated/ from the runner (10.0.2.2 is the host).
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:kyndrel/app/player_page.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/main.dart' as app;
 import 'package:material_ui/material_ui.dart';
 
@@ -12,6 +15,9 @@ const _url = String.fromEnvironment(
   'KYNDREL_SMOKE_URL',
   defaultValue: 'http://10.0.2.2:8000/The.Test.Film.2019.1080p.mkv',
 );
+
+/// A song with cover art and tags (task 7.6), next to the film.
+final String _song = _url.replaceFirst(RegExp(r'[^/]+$'), 'song.mp3');
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +78,21 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
     }
     expect(panel, findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    // Music: the record view with the song's tags (task 7.6).
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(PlayerPage)),
+    );
+    await container.read(playlistProvider.notifier).open(_song);
+    var music = false;
+    for (var i = 0; i < 60 && !music; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+      music = find.byKey(const Key('music-view')).evaluate().isNotEmpty;
+    }
+    expect(music, isTrue, reason: 'the song never showed the music view');
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Night Drive'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
