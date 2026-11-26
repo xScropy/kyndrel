@@ -414,6 +414,24 @@ class AdvancedSettings extends ConsumerWidget {
       title: 'Advanced',
       children: [
         SettingsTextField(
+          key: const Key('settings-quick-commands'),
+          label: 'Quick commands (Ctrl+K)',
+          helper:
+              'One per line: Label | mpv command, e.g. '
+              'Night sky | set brightness 10',
+          maxLines: 4,
+          value: ref.watch(settingsProvider).customCommands.join('\n'),
+          onChanged: (v) => updateSettings(
+            ref,
+            (x) => x.copyWith(
+              customCommands: [
+                for (final line in v.split('\n'))
+                  if (line.trim().isNotEmpty) line.trim(),
+              ],
+            ),
+          ),
+        ),
+        SettingsTextField(
           key: const Key('settings-mpv-options'),
           label: 'mpv options',
           helper:
@@ -526,6 +544,7 @@ class _ShortcutSettingsState extends ConsumerState<ShortcutSettings> {
       child: SettingsSection(
         title: 'Shortcuts',
         children: [
+          const _MouseButtons(),
           const Text(
             'Click a shortcut, then press the new keys. A key already in '
             'use moves to the new action.',
@@ -726,6 +745,57 @@ class MusicSettings extends ConsumerWidget {
           value: s.reduceMotion,
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(reduceMotion: v)),
+        ),
+      ],
+    );
+  }
+}
+
+/// Middle and back/forward mouse buttons (task 8.8).
+class _MouseButtons extends ConsumerWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(settingsProvider);
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Middle mouse button'),
+          trailing: DropdownButton<String>(
+            key: const Key('settings-mouse-middle'),
+            value: s.mouseMiddle,
+            dropdownColor: KyndrelColors.surface,
+            items: const [
+              DropdownMenuItem(value: 'playPause', child: Text('Play / pause')),
+              DropdownMenuItem(value: 'mute', child: Text('Mute')),
+              DropdownMenuItem(value: 'fullscreen', child: Text('Full screen')),
+              DropdownMenuItem(value: 'screenshot', child: Text('Screenshot')),
+              DropdownMenuItem(value: 'none', child: Text('Nothing')),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(mouseMiddle: v)),
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Back / forward mouse buttons'),
+          trailing: DropdownButton<String>(
+            key: const Key('settings-mouse-side'),
+            value: s.mouseSide,
+            dropdownColor: KyndrelColors.surface,
+            items: const [
+              DropdownMenuItem(value: 'seek', child: Text('Seek')),
+              DropdownMenuItem(
+                value: 'playlist',
+                child: Text('Previous / next file'),
+              ),
+              DropdownMenuItem(value: 'none', child: Text('Nothing')),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(mouseSide: v)),
+          ),
         ),
       ],
     );

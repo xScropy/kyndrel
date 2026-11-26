@@ -81,6 +81,9 @@ class AppSettings {
     this.privatePin = '',
     this.browseServers = const [],
     this.audioPassthrough = false,
+    this.customCommands = const [],
+    this.mouseMiddle = 'playPause',
+    this.mouseSide = 'seek',
   });
 
   /// Last volume, 0–400.
@@ -242,6 +245,17 @@ class AppSettings {
   /// AC-3/DTS/TrueHD go untouched to an AV receiver (task 8.8).
   final bool audioPassthrough;
 
+  /// The user's quick commands, `Label | mpv command` each (task 8.8).
+  final List<String> customCommands;
+
+  /// What the middle mouse button does: `playPause`, `mute`, `fullscreen`,
+  /// `screenshot` or `none` (task 8.8).
+  final String mouseMiddle;
+
+  /// What the back/forward mouse buttons do: `seek`, `playlist` or
+  /// `none` (task 8.8).
+  final String mouseSide;
+
   static const hideChoices = [2, 3, 5, 10];
 
   static const frameCacheChoices = [200, 500, 1000, 2000];
@@ -309,6 +323,9 @@ class AppSettings {
     String? privatePin,
     List<String>? browseServers,
     bool? audioPassthrough,
+    List<String>? customCommands,
+    String? mouseMiddle,
+    String? mouseSide,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -373,6 +390,9 @@ class AppSettings {
       privatePin: privatePin ?? this.privatePin,
       browseServers: browseServers ?? this.browseServers,
       audioPassthrough: audioPassthrough ?? this.audioPassthrough,
+      customCommands: customCommands ?? this.customCommands,
+      mouseMiddle: mouseMiddle ?? this.mouseMiddle,
+      mouseSide: mouseSide ?? this.mouseSide,
     );
   }
 }
@@ -504,6 +524,10 @@ class SettingsRepository {
       browseServers: _prefs.getStringList('browseServers') ?? d.browseServers,
       audioPassthrough:
           _prefs.getBool('audioPassthrough') ?? d.audioPassthrough,
+      customCommands:
+          _prefs.getStringList('customCommands') ?? d.customCommands,
+      mouseMiddle: _prefs.getString('mouseMiddle') ?? d.mouseMiddle,
+      mouseSide: _prefs.getString('mouseSide') ?? d.mouseSide,
     );
   }
 
@@ -596,6 +620,9 @@ class SettingsRepository {
     await _prefs.setString('privatePin', s.privatePin);
     await _prefs.setStringList('browseServers', s.browseServers);
     await _prefs.setBool('audioPassthrough', s.audioPassthrough);
+    await _prefs.setStringList('customCommands', s.customCommands);
+    await _prefs.setString('mouseMiddle', s.mouseMiddle);
+    await _prefs.setString('mouseSide', s.mouseSide);
   }
 }
 

@@ -413,6 +413,10 @@ class PlayerService {
   Future<void> setSubtitleDelay(Duration delay) =>
       backend.setProperty('sub-delay', _formatSeconds(delay));
 
+  /// Runs one of the user's quick commands (task 8.8): any mpv command,
+  /// e.g. `cycle-values video-aspect-override 16:9 4:3 -1`.
+  Future<void> runUserCommand(List<String> args) => backend.command(args);
+
   /// Adds an external audio file (another language, a commentary) and
   /// selects it (task 8.8).
   Future<void> addAudioTrack(String path) =>

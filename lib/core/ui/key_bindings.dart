@@ -151,7 +151,19 @@ enum PlayerAction {
   bookmarks('Bookmarks', KeyCombo(LogicalKeyboardKey.keyB, ctrl: true)),
   jumpToTime('Jump to time', KeyCombo(LogicalKeyboardKey.keyG, ctrl: true)),
   decoder('Hardware / software decoding', KeyCombo(LogicalKeyboardKey.keyH)),
-  stats('Playback statistics', KeyCombo(LogicalKeyboardKey.keyI, shift: true));
+  stats('Playback statistics', KeyCombo(LogicalKeyboardKey.keyI, shift: true)),
+  subtitleLines(
+    'Subtitle lines',
+    KeyCombo(LogicalKeyboardKey.keyT, ctrl: true),
+  ),
+  quickCommands(
+    'Quick commands',
+    KeyCombo(LogicalKeyboardKey.keyK, ctrl: true),
+  ),
+  exportClip(
+    'Save the A-B loop as a clip',
+    KeyCombo(LogicalKeyboardKey.keyE, ctrl: true, shift: true),
+  );
 
   new(this.label, this.defaultCombo, {this.repeats = false});
 

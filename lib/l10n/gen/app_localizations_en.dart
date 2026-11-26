@@ -916,4 +916,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryForget => 'Remove from history';
+
+  @override
+  String get subtitleLines => 'Subtitle lines';
+
+  @override
+  String get subtitleLinesUnavailable =>
+      'Lines can be listed for subtitle files. Load one, or pick a file track.';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get quickCommands => 'Quick commands';
+
+  @override
+  String get quickCommandsEmpty =>
+      'No quick commands yet. Add them in Settings › Advanced.';
 }

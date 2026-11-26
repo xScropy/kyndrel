@@ -930,4 +930,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get libraryForget => 'إزالة من السجل';
+
+  @override
+  String get subtitleLines => 'أسطر الترجمة';
+
+  @override
+  String get subtitleLinesUnavailable =>
+      'تُعرض الأسطر لملفات الترجمة. حمّل ملفًا أو اختر مسارًا من ملف.';
+
+  @override
+  String get copy => 'نسخ';
+
+  @override
+  String get quickCommands => 'أوامر سريعة';
+
+  @override
+  String get quickCommandsEmpty =>
+      'لا أوامر سريعة بعد. أضفها من الإعدادات › متقدم.';
 }

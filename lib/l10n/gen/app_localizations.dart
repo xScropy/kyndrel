@@ -1765,6 +1765,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove from history'**
   String get libraryForget;
+
+  /// No description provided for @subtitleLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle lines'**
+  String get subtitleLines;
+
+  /// No description provided for @subtitleLinesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines can be listed for subtitle files. Load one, or pick a file track.'**
+  String get subtitleLinesUnavailable;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @quickCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick commands'**
+  String get quickCommands;
+
+  /// No description provided for @quickCommandsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No quick commands yet. Add them in Settings › Advanced.'**
+  String get quickCommandsEmpty;
 }
 
 class _AppLocalizationsDelegate

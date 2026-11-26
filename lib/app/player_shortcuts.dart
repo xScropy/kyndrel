@@ -11,12 +11,14 @@ import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
+import 'package:kyndrel/features/playback/clip_export.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
+import 'package:kyndrel/features/subtitles/subtitle_lines.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -182,7 +184,36 @@ class PlayerShortcuts extends ConsumerWidget {
         DecoderActions.next(ref);
       case PlayerAction.stats:
         ref.read(statsOverlayProvider.notifier).toggle();
+      case PlayerAction.subtitleLines:
+        unawaited(showSubtitleLines(context, ref));
+      case PlayerAction.quickCommands:
+        unawaited(showQuickCommands(context, ref));
+      case PlayerAction.exportClip:
+        unawaited(_exportClip(context, ref));
     }
+  }
+
+  /// Clip or GIF of the A-B loop (task 8.8).
+  static Future<void> _exportClip(BuildContext context, WidgetRef ref) async {
+    final gif = await showDialog<bool>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        key: const Key('export-clip'),
+        children: [
+          SimpleDialogOption(
+            key: const Key('export-video'),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Video clip'),
+          ),
+          SimpleDialogOption(
+            key: const Key('export-gif'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('GIF'),
+          ),
+        ],
+      ),
+    );
+    if (gif != null) await ClipExport.export(ref, gif: gif);
   }
 
   @override

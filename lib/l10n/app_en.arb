@@ -413,5 +413,10 @@
   "jumpToTimeHint": "1:23:45, 83:10, 90 or 50%",
   "decoderTooltip": "Decoding: hardware, hardware with copy, or software",
   "loadAudioFile": "Load audio file",
-  "libraryForget": "Remove from history"
+  "libraryForget": "Remove from history",
+  "subtitleLines": "Subtitle lines",
+  "subtitleLinesUnavailable": "Lines can be listed for subtitle files. Load one, or pick a file track.",
+  "copy": "Copy",
+  "quickCommands": "Quick commands",
+  "quickCommandsEmpty": "No quick commands yet. Add them in Settings › Advanced."
 }

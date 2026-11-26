@@ -277,5 +277,10 @@
   "jumpToTimeHint": "‎1:23:45 أو 83:10 أو 90 أو ‎50%",
   "decoderTooltip": "فك الترميز: بالعتاد، بالعتاد مع النسخ، أو بالبرمجيات",
   "loadAudioFile": "تحميل ملف صوتي",
-  "libraryForget": "إزالة من السجل"
+  "libraryForget": "إزالة من السجل",
+  "subtitleLines": "أسطر الترجمة",
+  "subtitleLinesUnavailable": "تُعرض الأسطر لملفات الترجمة. حمّل ملفًا أو اختر مسارًا من ملف.",
+  "copy": "نسخ",
+  "quickCommands": "أوامر سريعة",
+  "quickCommandsEmpty": "لا أوامر سريعة بعد. أضفها من الإعدادات › متقدم."
 }

@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/features/playback/widgets/seek_bar.dart';
 import 'package:kyndrel/features/playback/widgets/transport_controls.dart';
 import 'package:kyndrel/features/playback/widgets/volume_control.dart';
@@ -59,39 +63,41 @@ class BottomControls extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           if (compact)
-            SizedBox(
-              height: 60,
-              child: Row(
-                children: [
-                  Expanded(
-                    // Small phones: the buttons shrink to fit rather than
-                    // overflow (320 dp leaves about 60 px a side).
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: leftActions,
+            _SwipeForNext(
+              child: SizedBox(
+                height: 60,
+                child: Row(
+                  children: [
+                    Expanded(
+                      // Small phones: the buttons shrink to fit rather than
+                      // overflow (320 dp leaves about 60 px a side).
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: leftActions,
+                        ),
                       ),
                     ),
-                  ),
-                  const Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: TransportControls(),
-                  ),
-                  Expanded(
-                    // Small phones: the buttons shrink to fit rather than
-                    // overflow (320 dp leaves about 60 px a side).
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: rightActions,
+                    const Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: TransportControls(),
+                    ),
+                    Expanded(
+                      // Small phones: the buttons shrink to fit rather than
+                      // overflow (320 dp leaves about 60 px a side).
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: rightActions,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           else
@@ -131,4 +137,29 @@ class BottomControls extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Phones: a quick sideways fling on the button row plays the next or the
+/// previous file, like MX Player (task 8.8).
+class _SwipeForNext extends ConsumerWidget {
+  const new({required this.child});
+
+  final Widget child;
+
+  /// Least fling speed, logical pixels a second.
+  static const minVelocity = 800.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
+    key: const Key('swipe-next'),
+    behavior: HitTestBehavior.translucent,
+    onHorizontalDragEnd: (d) {
+      final v = d.primaryVelocity ?? 0;
+      if (v.abs() < minVelocity) return;
+      final playlist = ref.read(playlistProvider.notifier);
+      // Left (towards the start of a left-to-right line) goes forward.
+      unawaited(v < 0 ? playlist.next() : playlist.previous());
+    },
+    child: child,
+  );
 }

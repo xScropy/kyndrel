@@ -6,11 +6,13 @@ import 'package:kyndrel/core/platform/brightness_service.dart';
 import 'package:kyndrel/core/platform/system_volume.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/video_view_settings.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
+import 'package:kyndrel/features/playback/screenshot_actions.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -361,6 +363,41 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
     VideoGestureLayer.seekPreview.value = null;
   }
 
+  // ------------------------------------------------------------ mouse
+
+  /// Middle, back and forward mouse buttons (task 8.8), as set in
+  /// Settings › Shortcuts.
+  void _mouseButton(int buttons) {
+    // Tests without settings: the defaults.
+    final s = _settings ?? const AppSettings();
+    final service = ref.read(playerServiceProvider);
+    final osd = ref.read(osdProvider.notifier);
+    if (buttons & kMiddleMouseButton != 0) {
+      switch (s.mouseMiddle) {
+        case 'playPause':
+          unawaited(service.playOrPause());
+        case 'mute':
+          unawaited(VolumeActions.toggleMute(ref));
+        case 'fullscreen':
+          unawaited(FullscreenActions.toggle(ref));
+        case 'screenshot':
+          unawaited(ScreenshotActions.take(ref));
+      }
+      return;
+    }
+    final back = buttons & kBackMouseButton != 0;
+    final forward = buttons & kForwardMouseButton != 0;
+    if (!back && !forward) return;
+    if (s.mouseSide == 'seek') {
+      final skip = Duration(seconds: s.skipSeconds);
+      unawaited(service.seekBy(back ? -skip : skip));
+      osd.show('${back ? '−' : '+'}${skip.inSeconds} s');
+    } else if (s.mouseSide == 'playlist') {
+      final playlist = ref.read(playlistProvider.notifier);
+      unawaited(back ? playlist.previous() : playlist.next());
+    }
+  }
+
   // ------------------------------------------------------------ build
 
   @override
@@ -369,6 +406,7 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
       onPointerDown: (e) {
         _lastKind = e.kind;
         _pointerDownAt = e.localPosition;
+        if (e.kind == PointerDeviceKind.mouse) _mouseButton(e.buttons);
       },
       onPointerSignal: (e) {
         if (e is PointerScrollEvent && e.scrollDelta.dy != 0) {

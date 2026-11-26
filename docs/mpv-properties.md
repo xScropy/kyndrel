@@ -65,6 +65,7 @@ uses them.
 | `vid` (`no`, then the saved track) | property | read/write | No picture decoding while a phone plays in the background | 6.7 |
 | `demuxer-max-bytes`, `demuxer-max-back-bytes` | option | write | Set on each open: 32/8 MiB for local files, 150/50 MiB (mpv's defaults) for streams, unless set in Advanced | 8.1 |
 | `video-bitrate`, `audio-bitrate`, `audio-codec`, `demuxer-cache-duration` | property | read | Statistics overlay (Shift+I) | 8.8 |
+| any command from Settings › Advanced › Quick commands | command | write | The user's own commands (Ctrl+K) | 8.8 |
 | `audio-add <path> select` | command | write | Load an external audio track | 8.8 |
 | `brightness`, `contrast`, `saturation`, `gamma`, `hue` | property | write | Picture adjustments, −100…100 | 8.8 |
 | `audio-spdif` | option | write | Passthrough of AC-3, E-AC-3, DTS, DTS-HD and TrueHD (empty: off) | 8.8 |

@@ -278,3 +278,72 @@ class DecoderButton extends ConsumerWidget {
     );
   }
 }
+
+// ---------------------------------------------------------- quick commands
+
+/// One of the user's quick commands (task 8.8, like mpvKt's custom buttons).
+typedef QuickCommand = ({String label, List<String> args});
+
+/// `Label | mpv command args`, one per line; arguments split on spaces
+/// except inside double quotes. Lines that don't parse are skipped.
+List<QuickCommand> parseQuickCommands(Iterable<String> lines) {
+  final out = <QuickCommand>[];
+  for (final line in lines) {
+    final bar = line.indexOf('|');
+    if (bar <= 0) continue;
+    final label = line.substring(0, bar).trim();
+    final args = <String>[];
+    final b = StringBuffer();
+    var quoted = false;
+    for (final ch in line.substring(bar + 1).trim().split('')) {
+      if (ch == '"') {
+        quoted = !quoted;
+      } else if (ch == ' ' && !quoted) {
+        if (b.isNotEmpty) args.add(b.toString());
+        b.clear();
+      } else {
+        b.write(ch);
+      }
+    }
+    if (b.isNotEmpty) args.add(b.toString());
+    if (label.isNotEmpty && args.isNotEmpty) {
+      out.add((label: label, args: args));
+    }
+  }
+  return out;
+}
+
+/// Lists the quick commands; a tap runs one.
+Future<void> showQuickCommands(BuildContext context, WidgetRef ref) {
+  final l = context.l10n;
+  final commands = parseQuickCommands(
+    ref.read(settingsProvider).customCommands,
+  );
+  return showDialog<void>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      key: const Key('quick-commands'),
+      title: Text(l.quickCommands),
+      children: [
+        if (commands.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              l.quickCommandsEmpty,
+              style: const TextStyle(color: KyndrelColors.textSecondary),
+            ),
+          ),
+        for (final c in commands)
+          SimpleDialogOption(
+            key: Key('quick-${c.label}'),
+            onPressed: () {
+              Navigator.pop(context);
+              unawaited(ref.read(playerServiceProvider).runUserCommand(c.args));
+              ref.read(osdProvider.notifier).show(c.label);
+            },
+            child: Text(c.label),
+          ),
+      ],
+    ),
+  );
+}
