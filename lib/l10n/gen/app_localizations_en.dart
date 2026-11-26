@@ -673,4 +673,161 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reduceMotionHelp =>
       'The record stays still and the waves move gently.';
+
+  @override
+  String get libraryViewRecent => 'Recently added';
+
+  @override
+  String get libraryViewPlaylists => 'Playlists';
+
+  @override
+  String get libraryContinue => 'Continue watching';
+
+  @override
+  String librarySelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected',
+      one: '1 selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get librarySelectAll => 'Select all';
+
+  @override
+  String get libraryAddToPlaylist => 'Add to playlist';
+
+  @override
+  String get libraryNewPlaylist => 'New playlist';
+
+  @override
+  String get libraryPlaylistName => 'Playlist name';
+
+  @override
+  String get libraryRename => 'Rename';
+
+  @override
+  String get libraryDelete => 'Delete';
+
+  @override
+  String libraryDeleteConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Move $count files to the trash?',
+      one: 'Move this file to the trash?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryMove => 'Move to…';
+
+  @override
+  String get libraryShare => 'Share';
+
+  @override
+  String get libraryMarkWatched => 'Mark as watched';
+
+  @override
+  String get libraryMarkUnwatched => 'Mark as unwatched';
+
+  @override
+  String get libraryPin => 'Pin to top';
+
+  @override
+  String get libraryUnpin => 'Unpin';
+
+  @override
+  String get libraryHide => 'Hide folder';
+
+  @override
+  String get libraryUnhide => 'Show folder';
+
+  @override
+  String get libraryShowHidden => 'Show hidden folders';
+
+  @override
+  String get libraryMakePrivate => 'Make private';
+
+  @override
+  String get libraryMakePublic => 'Remove from private';
+
+  @override
+  String get libraryPrivate => 'Private folders';
+
+  @override
+  String get libraryLock => 'Lock private folders';
+
+  @override
+  String get libraryPinTitle => 'Enter your PIN';
+
+  @override
+  String get librarySetPin => 'Choose a PIN (4–8 digits)';
+
+  @override
+  String get libraryWrongPin => 'Wrong PIN';
+
+  @override
+  String get libraryPlayAll => 'Play all';
+
+  @override
+  String get libraryShuffle => 'Shuffle';
+
+  @override
+  String get libraryDescending => 'Newest / largest first';
+
+  @override
+  String get layoutCompact => 'Compact';
+
+  @override
+  String get libraryGridSmall => 'Small grid';
+
+  @override
+  String get libraryGridLarge => 'Large grid';
+
+  @override
+  String get libraryFilterUnwatched => 'Unwatched only';
+
+  @override
+  String get libraryFilterHd => 'HD and above';
+
+  @override
+  String get libraryFilterSubtitles => 'With subtitles';
+
+  @override
+  String get libraryLastPlayed => 'Last played';
+
+  @override
+  String get libraryPlaylistEmpty =>
+      'No playlists yet. Select videos and add them to one.';
+
+  @override
+  String get librarySmartUnwatched => 'Unwatched videos';
+
+  @override
+  String get librarySmartRecent => 'Added this month';
+
+  @override
+  String libraryActionFailed(String name) {
+    return 'Couldn\'t do that: $name';
+  }
+
+  @override
+  String get playlistRename => 'Rename playlist';
+
+  @override
+  String get playlistDelete => 'Delete playlist';
+
+  @override
+  String get playlistRemove => 'Remove from playlist';
+
+  @override
+  String get libraryFilters => 'Filters';
+
+  @override
+  String get libraryFolderActions => 'Folder';
 }

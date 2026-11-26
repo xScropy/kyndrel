@@ -679,4 +679,169 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reduceMotionHelp => 'تبقى الأسطوانة ثابتة وتتحرك الموجات بهدوء.';
+
+  @override
+  String get libraryViewRecent => 'أضيفت مؤخرًا';
+
+  @override
+  String get libraryViewPlaylists => 'قوائم التشغيل';
+
+  @override
+  String get libraryContinue => 'تابع المشاهدة';
+
+  @override
+  String librarySelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عنصر محدد',
+      many: '$count عنصرًا محددًا',
+      few: '$count عناصر محددة',
+      two: 'عنصران محددان',
+      one: 'عنصر محدد',
+      zero: 'لا شيء محدد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get librarySelectAll => 'تحديد الكل';
+
+  @override
+  String get libraryAddToPlaylist => 'أضف إلى قائمة تشغيل';
+
+  @override
+  String get libraryNewPlaylist => 'قائمة تشغيل جديدة';
+
+  @override
+  String get libraryPlaylistName => 'اسم قائمة التشغيل';
+
+  @override
+  String get libraryRename => 'إعادة تسمية';
+
+  @override
+  String get libraryDelete => 'حذف';
+
+  @override
+  String libraryDeleteConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'نقل $count ملف إلى سلة المهملات؟',
+      many: 'نقل $count ملفًا إلى سلة المهملات؟',
+      few: 'نقل $count ملفات إلى سلة المهملات؟',
+      two: 'نقل الملفين إلى سلة المهملات؟',
+      one: 'نقل هذا الملف إلى سلة المهملات؟',
+      zero: 'لا ملفات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryMove => 'نقل إلى…';
+
+  @override
+  String get libraryShare => 'مشاركة';
+
+  @override
+  String get libraryMarkWatched => 'تعليم كمُشاهَد';
+
+  @override
+  String get libraryMarkUnwatched => 'تعليم كغير مُشاهَد';
+
+  @override
+  String get libraryPin => 'تثبيت في الأعلى';
+
+  @override
+  String get libraryUnpin => 'إلغاء التثبيت';
+
+  @override
+  String get libraryHide => 'إخفاء المجلد';
+
+  @override
+  String get libraryUnhide => 'إظهار المجلد';
+
+  @override
+  String get libraryShowHidden => 'إظهار المجلدات المخفية';
+
+  @override
+  String get libraryMakePrivate => 'جعله خاصًا';
+
+  @override
+  String get libraryMakePublic => 'إزالة من الخاص';
+
+  @override
+  String get libraryPrivate => 'المجلدات الخاصة';
+
+  @override
+  String get libraryLock => 'قفل المجلدات الخاصة';
+
+  @override
+  String get libraryPinTitle => 'أدخل رمز PIN';
+
+  @override
+  String get librarySetPin => 'اختر رمز PIN (من 4 إلى 8 أرقام)';
+
+  @override
+  String get libraryWrongPin => 'رمز PIN غير صحيح';
+
+  @override
+  String get libraryPlayAll => 'تشغيل الكل';
+
+  @override
+  String get libraryShuffle => 'تشغيل عشوائي';
+
+  @override
+  String get libraryDescending => 'الأحدث أو الأكبر أولًا';
+
+  @override
+  String get layoutCompact => 'مضغوط';
+
+  @override
+  String get libraryGridSmall => 'شبكة صغيرة';
+
+  @override
+  String get libraryGridLarge => 'شبكة كبيرة';
+
+  @override
+  String get libraryFilterUnwatched => 'غير المُشاهَدة فقط';
+
+  @override
+  String get libraryFilterHd => 'دقة عالية فأعلى';
+
+  @override
+  String get libraryFilterSubtitles => 'مع ترجمة';
+
+  @override
+  String get libraryLastPlayed => 'آخر تشغيل';
+
+  @override
+  String get libraryPlaylistEmpty =>
+      'لا توجد قوائم تشغيل بعد. حدد مقاطع وأضفها إلى قائمة.';
+
+  @override
+  String get librarySmartUnwatched => 'مقاطع لم تُشاهَد';
+
+  @override
+  String get librarySmartRecent => 'أضيفت هذا الشهر';
+
+  @override
+  String libraryActionFailed(String name) {
+    return 'تعذّر ذلك: $name';
+  }
+
+  @override
+  String get playlistRename => 'إعادة تسمية قائمة التشغيل';
+
+  @override
+  String get playlistDelete => 'حذف قائمة التشغيل';
+
+  @override
+  String get playlistRemove => 'إزالة من قائمة التشغيل';
+
+  @override
+  String get libraryFilters => 'عوامل التصفية';
+
+  @override
+  String get libraryFolderActions => 'المجلد';
 }

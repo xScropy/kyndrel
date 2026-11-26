@@ -1327,6 +1327,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The record stays still and the waves move gently.'**
   String get reduceMotionHelp;
+
+  /// No description provided for @libraryViewRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently added'**
+  String get libraryViewRecent;
+
+  /// No description provided for @libraryViewPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get libraryViewPlaylists;
+
+  /// No description provided for @libraryContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue watching'**
+  String get libraryContinue;
+
+  /// No description provided for @librarySelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 selected} other{{count} selected}}'**
+  String librarySelected(int count);
+
+  /// No description provided for @librarySelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get librarySelectAll;
+
+  /// No description provided for @libraryAddToPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlist'**
+  String get libraryAddToPlaylist;
+
+  /// No description provided for @libraryNewPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist'**
+  String get libraryNewPlaylist;
+
+  /// No description provided for @libraryPlaylistName.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist name'**
+  String get libraryPlaylistName;
+
+  /// No description provided for @libraryRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get libraryRename;
+
+  /// No description provided for @libraryDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get libraryDelete;
+
+  /// No description provided for @libraryDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Move this file to the trash?} other{Move {count} files to the trash?}}'**
+  String libraryDeleteConfirm(int count);
+
+  /// No description provided for @libraryMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to…'**
+  String get libraryMove;
+
+  /// No description provided for @libraryShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get libraryShare;
+
+  /// No description provided for @libraryMarkWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as watched'**
+  String get libraryMarkWatched;
+
+  /// No description provided for @libraryMarkUnwatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as unwatched'**
+  String get libraryMarkUnwatched;
+
+  /// No description provided for @libraryPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to top'**
+  String get libraryPin;
+
+  /// No description provided for @libraryUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get libraryUnpin;
+
+  /// No description provided for @libraryHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide folder'**
+  String get libraryHide;
+
+  /// No description provided for @libraryUnhide.
+  ///
+  /// In en, this message translates to:
+  /// **'Show folder'**
+  String get libraryUnhide;
+
+  /// No description provided for @libraryShowHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Show hidden folders'**
+  String get libraryShowHidden;
+
+  /// No description provided for @libraryMakePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Make private'**
+  String get libraryMakePrivate;
+
+  /// No description provided for @libraryMakePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from private'**
+  String get libraryMakePublic;
+
+  /// No description provided for @libraryPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private folders'**
+  String get libraryPrivate;
+
+  /// No description provided for @libraryLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock private folders'**
+  String get libraryLock;
+
+  /// No description provided for @libraryPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN'**
+  String get libraryPinTitle;
+
+  /// No description provided for @librarySetPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PIN (4–8 digits)'**
+  String get librarySetPin;
+
+  /// No description provided for @libraryWrongPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN'**
+  String get libraryWrongPin;
+
+  /// No description provided for @libraryPlayAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all'**
+  String get libraryPlayAll;
+
+  /// No description provided for @libraryShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get libraryShuffle;
+
+  /// No description provided for @libraryDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest / largest first'**
+  String get libraryDescending;
+
+  /// No description provided for @layoutCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get layoutCompact;
+
+  /// No description provided for @libraryGridSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small grid'**
+  String get libraryGridSmall;
+
+  /// No description provided for @libraryGridLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large grid'**
+  String get libraryGridLarge;
+
+  /// No description provided for @libraryFilterUnwatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Unwatched only'**
+  String get libraryFilterUnwatched;
+
+  /// No description provided for @libraryFilterHd.
+  ///
+  /// In en, this message translates to:
+  /// **'HD and above'**
+  String get libraryFilterHd;
+
+  /// No description provided for @libraryFilterSubtitles.
+  ///
+  /// In en, this message translates to:
+  /// **'With subtitles'**
+  String get libraryFilterSubtitles;
+
+  /// No description provided for @libraryLastPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last played'**
+  String get libraryLastPlayed;
+
+  /// No description provided for @libraryPlaylistEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists yet. Select videos and add them to one.'**
+  String get libraryPlaylistEmpty;
+
+  /// No description provided for @librarySmartUnwatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Unwatched videos'**
+  String get librarySmartUnwatched;
+
+  /// No description provided for @librarySmartRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Added this month'**
+  String get librarySmartRecent;
+
+  /// No description provided for @libraryActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t do that: {name}'**
+  String libraryActionFailed(String name);
+
+  /// No description provided for @playlistRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename playlist'**
+  String get playlistRename;
+
+  /// No description provided for @playlistDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete playlist'**
+  String get playlistDelete;
+
+  /// No description provided for @playlistRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get playlistRemove;
+
+  /// No description provided for @libraryFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get libraryFilters;
+
+  /// No description provided for @libraryFolderActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get libraryFolderActions;
 }
 
 class _AppLocalizationsDelegate

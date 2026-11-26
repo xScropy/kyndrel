@@ -8,10 +8,13 @@ import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
+import 'package:kyndrel/core/storage/library_repository.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/features/library/history_controller.dart';
 import 'package:kyndrel/features/library/library_home.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/app_harness.dart';
 import '../../support/fake_player_backend.dart';
@@ -97,12 +100,15 @@ void main() {
     late PlayerService service;
     late KyndrelDatabase db;
     late ProviderContainer c;
-    setUp(() {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      final settings = await SettingsRepository.create();
       backend = FakePlayerBackend();
       service = PlayerService(backend);
       db = testDatabase();
       c = ProviderContainer(
         overrides: [
+          settingsRepositoryProvider.overrideWithValue(settings),
           playerServiceProvider.overrideWithValue(service),
           databaseProvider.overrideWithValue(db),
           appCacheDirProvider.overrideWithValue(Directory.systemTemp),
@@ -149,6 +155,34 @@ void main() {
         expect((await recent()).single.finished, isTrue);
       },
     );
+
+    test('incognito and private folders leave no history (8.6, 8.8)', () async {
+      await c
+          .read(settingsProvider.notifier)
+          .update((s) => s.copyWith(incognito: true));
+      await service.open('/v/Secret.mkv');
+      backend
+        ..emitDuration(hour)
+        ..emitPlaying(value: true);
+      expect(await recent(), isEmpty);
+
+      await c
+          .read(settingsProvider.notifier)
+          .update((s) => s.copyWith(incognito: false));
+      await c.read(libraryRepositoryProvider).setFolder('/p', private: true);
+      await pumpEventQueue();
+      await service.open('/p/Private.mkv');
+      backend
+        ..emitDuration(hour)
+        ..emitPlaying(value: true);
+      expect(await recent(), isEmpty);
+
+      await service.open('/v/Public.mkv');
+      backend
+        ..emitDuration(hour)
+        ..emitPlaying(value: true);
+      expect((await recent()).single.source, '/v/Public.mkv');
+    });
   });
 
   test('relativeDate', () {

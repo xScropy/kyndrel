@@ -78,6 +78,7 @@ class AppSettings {
     this.rememberFileSettings = true,
     this.showHeatmap = true,
     this.skipIntro = true,
+    this.privatePin = '',
   });
 
   /// Last volume, 0–400.
@@ -227,6 +228,11 @@ class AppSettings {
   /// Offer "Skip intro" where an episode's opening is known (task 8.9).
   final bool skipIntro;
 
+  /// Hash of the PIN that opens private folders; empty when none is set
+  /// (task 8.6). A privacy curtain, not encryption: the files stay where
+  /// they are.
+  final String privatePin;
+
   static const hideChoices = [2, 3, 5, 10];
 
   static const frameCacheChoices = [200, 500, 1000, 2000];
@@ -291,6 +297,7 @@ class AppSettings {
     bool? rememberFileSettings,
     bool? showHeatmap,
     bool? skipIntro,
+    String? privatePin,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -352,6 +359,7 @@ class AppSettings {
       rememberFileSettings: rememberFileSettings ?? this.rememberFileSettings,
       showHeatmap: showHeatmap ?? this.showHeatmap,
       skipIntro: skipIntro ?? this.skipIntro,
+      privatePin: privatePin ?? this.privatePin,
     );
   }
 }
@@ -479,6 +487,7 @@ class SettingsRepository {
           _prefs.getBool('rememberFileSettings') ?? d.rememberFileSettings,
       showHeatmap: _prefs.getBool('showHeatmap') ?? d.showHeatmap,
       skipIntro: _prefs.getBool('skipIntro') ?? d.skipIntro,
+      privatePin: _prefs.getString('privatePin') ?? d.privatePin,
     );
   }
 
@@ -568,6 +577,7 @@ class SettingsRepository {
     await _prefs.setBool('rememberFileSettings', s.rememberFileSettings);
     await _prefs.setBool('showHeatmap', s.showHeatmap);
     await _prefs.setBool('skipIntro', s.skipIntro);
+    await _prefs.setString('privatePin', s.privatePin);
   }
 }
 

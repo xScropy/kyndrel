@@ -111,7 +111,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('library-search')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('library-all')));
+    await tester.tap(find.byKey(const Key('library-view-all')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('library-menu')));
     await tester.pumpAndSettle();
