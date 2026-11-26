@@ -113,6 +113,9 @@ class LibraryPreviewsController extends Notifier<LibraryPreviewsStatus> {
   Future<void> _run() async {
     if (_running || _disposed) return;
     _running = true;
+    // A fresh list each run: new videos may have come in.
+    _items = null;
+    _cursor = 0;
     try {
       while (!_disposed) {
         if (!await _allowed()) {
@@ -135,6 +138,7 @@ class LibraryPreviewsController extends Notifier<LibraryPreviewsStatus> {
             .render(board, maxLevel: 0);
         if (_disposed) return;
         if (ok) {
+          _ready.add(board.source);
           state = LibraryPreviewsStatus(
             running: true,
             made: state.made + 1,
@@ -150,10 +154,17 @@ class LibraryPreviewsController extends Notifier<LibraryPreviewsStatus> {
     }
   }
 
+  /// This run's library list (read once per run, not per video: a
+  /// 10 000-video library would otherwise be re-read 10 000 times), where
+  /// it has got to, and what is known done this session.
+  List<LibraryItem>? _items;
+  int _cursor = 0;
+  final _ready = <String>{};
+
   /// The newest library video without a coarse storyboard.
   Future<(Storyboard, LibraryItem)?> _next() async {
     final db = ref.read(databaseProvider);
-    final items =
+    final items = _items ??=
         await (db.select(db.libraryItems)
               ..where(
                 (t) =>
@@ -164,25 +175,26 @@ class LibraryPreviewsController extends Notifier<LibraryPreviewsStatus> {
               ..orderBy([(t) => OrderingTerm.desc(t.added)]))
             .get();
     final cache = ref.read(appCacheDirProvider);
-    var waiting = 0;
-    (Storyboard, LibraryItem)? first;
-    for (final item in items) {
-      if (_failed.contains(item.uri)) continue;
+    while (_cursor < items.length) {
+      final item = items[_cursor++];
+      if (_failed.contains(item.uri) || _ready.contains(item.uri)) continue;
       final board = Storyboard.read(
         cache,
         item.uri,
         Duration(milliseconds: item.durationMs!),
       );
-      if (board.levels.first.complete) continue;
-      waiting++;
-      first ??= (board, item);
+      if (board.levels.first.complete) {
+        _ready.add(item.uri);
+        continue;
+      }
+      state = LibraryPreviewsStatus(
+        running: state.running,
+        made: state.made,
+        waiting: items.length - _cursor + 1,
+      );
+      return (board, item);
     }
-    state = LibraryPreviewsStatus(
-      running: state.running,
-      made: state.made,
-      waiting: waiting,
-    );
-    return first;
+    return null;
   }
 }
 

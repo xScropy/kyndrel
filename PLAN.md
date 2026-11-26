@@ -217,7 +217,10 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
 - [x] 8.11 Reliability: cancellation tokens, native-call timeouts, fault-injection tests, parser fuzzing.
   - Timeouts on every Android call that can stick (frames 15 s, a storyboard level 10 min with a cancel, thumbnails 20 s, the MediaStore query 2 min); the storyboard writer keeps packing after a sheet fails to write (it used to stop the whole chain); cancellation tokens in storyboards, library previews and intro detection.
   - `test/reliability`: a sheet that can't be written, corrupt specs and sheets, broken links and missing folders in the scan, a stuck Android frame request, and fuzzing of file-name, time, command-line, FTP, subtitle and spec parsing (found and fixed: a badly encoded URL crashed the title parser).
-- [ ] 8.12 Performance harness (`scripts/measure_perf.sh`) and budget checks in CI; large-library and scrub rebuild tests.
+- [x] 8.12 Performance harness (`scripts/measure_perf.sh`) and budget checks in CI; large-library and scrub rebuild tests.
+  - `scripts/measure_perf.sh linux|android` checks `perf/budget.env` (idle/playing RSS or PSS, idle CPU, start time, janky frames) and a recorded baseline with a 10 % margin. CI's `perf-linux` job builds a release, runs it under Xvfb and reports; it stays `continue-on-error` until a baseline is recorded from those runners. Not measured in this container: the Linux build downloads mimalloc from a host this session's network policy blocks.
+  - `test/perf/large_library_test.dart`: 10 000 videos in a folder build fewer than 30 rows, and the fast-scroller reaches the oldest at once. It exposed two quadratic loops, both fixed: library probing wrote one row at a time (each write re-ran the live library queries) and re-read every unprobed row per file; it now probes 25 at a time and writes them in one batch. Library previews re-read the whole library per video; now once per run.
+  - Earlier rebuild checks stay (30 seek-bar moves, 0 rebuilds, 8.3).
 - [ ] 8.13 Release 1.3.0.
 
 ## 4. Testing strategy

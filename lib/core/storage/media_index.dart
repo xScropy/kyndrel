@@ -170,26 +170,64 @@ class MediaIndex {
     });
   }
 
+  /// Files probed per round, and written to the database together: every
+  /// write re-runs the library's live queries, so one per file made a big
+  /// first scan quadratic (task 8.12).
+  static const probeBatch = 25;
+
+  /// Results are written at least this often within a round.
+  static const probeFlush = Duration(seconds: 2);
+
   Future<void> _probeAll() async {
     if (_probing) return;
     _probing = true;
     try {
       while (!_disposed) {
+        final count = db.libraryItems.uri.count();
+        final left =
+            await (db.selectOnly(db.libraryItems)
+                  ..addColumns([count])
+                  ..where(db.libraryItems.probed.equals(false)))
+                .map((r) => r.read(count) ?? 0)
+                .getSingle();
+        _set(_current.copyWith(toProbe: left));
+        if (left == 0) break;
         final pending =
             await (db.select(db.libraryItems)
                   ..where((t) => t.probed.equals(false))
-                  ..orderBy([(t) => OrderingTerm.desc(t.added)]))
+                  ..orderBy([(t) => OrderingTerm.desc(t.added)])
+                  ..limit(probeBatch))
                 .get();
-        _set(_current.copyWith(toProbe: pending.length));
-        if (pending.isEmpty) break;
-        await _probe(pending.first);
+        final done = <(String, LibraryItemsCompanion)>[];
+        var flushed = _now();
+        for (final item in pending) {
+          if (_disposed) return;
+          done.add((item.uri, await _probe(item)));
+          if (_now().difference(flushed) >= probeFlush) {
+            await _write(done);
+            done.clear();
+            flushed = _now();
+          }
+        }
+        if (_disposed) return;
+        await _write(done);
       }
     } finally {
       _probing = false;
     }
   }
 
-  Future<void> _probe(LibraryItem item) async {
+  Future<void> _write(List<(String, LibraryItemsCompanion)> results) async {
+    if (results.isEmpty) return;
+    await db.batch((b) {
+      for (final (uri, row) in results) {
+        b.update(db.libraryItems, row, where: (t) => t.uri.equals(uri));
+      }
+    });
+  }
+
+  /// What [item]'s probe found, as the row update to write.
+  Future<LibraryItemsCompanion> _probe(LibraryItem item) async {
     final kind = item.kind == MediaKind.audio.name
         ? MediaKind.audio
         : MediaKind.video;
@@ -211,29 +249,24 @@ class MediaIndex {
     } on Object {
       // Unreadable: mark it done anyway, so it isn't retried forever.
     }
-    if (_disposed) return;
-    await (db.update(
-      db.libraryItems,
-    )..where((t) => t.uri.equals(item.uri))).write(
-      LibraryItemsCompanion(
-        probed: const Value(true),
-        thumbnailPath: Value(thumbnail ?? item.thumbnailPath),
-        durationMs: details?.duration == null
-            ? const Value.absent()
-            : Value(details!.duration!.inMilliseconds),
-        width: details?.width == null
-            ? const Value.absent()
-            : Value(details!.width),
-        height: details?.height == null
-            ? const Value.absent()
-            : Value(details!.height),
-        videoCodec: Value(details?.videoCodec ?? item.videoCodec),
-        audioCodec: Value(details?.audioCodec ?? item.audioCodec),
-        title: Value(details?.title ?? item.title),
-        artist: Value(details?.artist ?? item.artist),
-        album: Value(details?.album ?? item.album),
-        trackNo: Value(details?.trackNo ?? item.trackNo),
-      ),
+    return LibraryItemsCompanion(
+      probed: const Value(true),
+      thumbnailPath: Value(thumbnail ?? item.thumbnailPath),
+      durationMs: details?.duration == null
+          ? const Value.absent()
+          : Value(details!.duration!.inMilliseconds),
+      width: details?.width == null
+          ? const Value.absent()
+          : Value(details!.width),
+      height: details?.height == null
+          ? const Value.absent()
+          : Value(details!.height),
+      videoCodec: Value(details?.videoCodec ?? item.videoCodec),
+      audioCodec: Value(details?.audioCodec ?? item.audioCodec),
+      title: Value(details?.title ?? item.title),
+      artist: Value(details?.artist ?? item.artist),
+      album: Value(details?.album ?? item.album),
+      trackNo: Value(details?.trackNo ?? item.trackNo),
     );
   }
 

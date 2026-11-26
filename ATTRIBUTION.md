@@ -37,13 +37,15 @@ is out of date. Do not edit by hand.
 
 ## Dart and Flutter packages (runtime)
 
-131 packages: Apache-2.0 7, BSD-3-Clause 82, MIT 41, MPL-2.0 1.
+134 packages: Apache-2.0 7, BSD-3-Clause 84, MIT 41, MPL-2.0 2.
 
 | Package | Version | Licence |
 |---|---|---|
 | [archive](https://github.com/brendan-duncan/archive) | 4.7.1 | MIT |
 | [args](https://github.com/dart-lang/core/tree/main/pkgs/args) | 2.7.0 | BSD-3-Clause |
 | [async](https://github.com/dart-lang/core/tree/main/pkgs/async) | 2.13.1 | BSD-3-Clause |
+| [battery_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/battery_plus/battery_plus) | 7.1.2 | BSD-3-Clause |
+| [battery_plus_platform_interface](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/) | 2.0.1 | BSD-3-Clause |
 | [boolean_selector](https://github.com/dart-lang/tools/tree/main/pkgs/boolean_selector) | 2.1.2 | BSD-3-Clause |
 | [characters](https://github.com/dart-lang/core/tree/main/pkgs/characters) | 1.4.1 | BSD-3-Clause |
 | [clock](https://github.com/dart-lang/tools/tree/main/pkgs/clock) | 1.1.3 | Apache-2.0 |
@@ -160,6 +162,7 @@ is out of date. Do not edit by hand.
 | [test_api](https://github.com/dart-lang/test/tree/master/pkgs/test_api) | 0.7.14 | BSD-3-Clause |
 | [typed_data](https://github.com/dart-lang/core/tree/main/pkgs/typed_data) | 1.4.0 | BSD-3-Clause |
 | [universal_platform](https://github.com/gskinnerTeam/flutter-universal-platform) | 1.1.0 | MIT |
+| [upower](https://github.com/canonical/upower.dart) | 0.7.0 | MPL-2.0 |
 | [uri_parser](https://github.com/alexmercerind/uri_parser) | 3.0.2 | MIT |
 | [uuid](https://github.com/Daegalus/dart-uuid) | 4.6.0 | MIT |
 | [vector_math](https://github.com/flutter/core-packages/tree/main/packages/vector_math) | 2.4.3 | BSD-3-Clause |
