@@ -209,16 +209,20 @@ class AndroidMediaProber implements MediaProber {
     final path = p.join(cacheDir.path, 'library', '${mediaCacheKey(uri)}.jpg');
     if (File(path).existsSync()) return path;
     try {
-      final ok = await _channel.invokeMethod<bool>('thumbnail', {
-        'uri': uri,
-        'path': path,
-        'size': 320,
-      });
+      final ok = await _channel
+          .invokeMethod<bool>('thumbnail', {
+            'uri': uri,
+            'path': path,
+            'size': 320,
+          })
+          .timeout(const Duration(seconds: 20));
       return (ok ?? false) ? path : null;
     } on PlatformException {
       return null;
     } on MissingPluginException {
       return null;
+    } on TimeoutException {
+      return null; // Task 8.11: one stuck file doesn't stop the library.
     }
   }
 }

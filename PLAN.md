@@ -214,7 +214,9 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
   - "Skip intro" during the opening, "Next episode" (or "Skip credits") during the credits. Sources, in order: chapters named Intro/Opening/Credits/Ending; a mark for this file; one made by hand with Shift+M (start, then end) for the whole season; else, once this episode's storyboard is ready, a comparison with another episode of the season in the same folder: a 64-bit difference hash per storyboard frame, the longest matching run at any shift (flat/black frames never match), 15 s–3 min in the first 40 % for the intro, ≥ 20 s in the last 30 % for credits. Saved for both episodes. Setting in Playback.
 - [x] 8.10 Local "most replayed" heatmap on the seek bar.
   - A jump back of 3 s–10 min counts the part between the new and the old position as replayed (100 parts per file, `Replays` table). While hovering, the seek bar shows a soft orange curve of it, scaled to the most replayed part. Never leaves the device; incognito records nothing; Settings › Playback turns it off.
-- [ ] 8.11 Reliability: cancellation tokens, native-call timeouts, fault-injection tests, parser fuzzing.
+- [x] 8.11 Reliability: cancellation tokens, native-call timeouts, fault-injection tests, parser fuzzing.
+  - Timeouts on every Android call that can stick (frames 15 s, a storyboard level 10 min with a cancel, thumbnails 20 s, the MediaStore query 2 min); the storyboard writer keeps packing after a sheet fails to write (it used to stop the whole chain); cancellation tokens in storyboards, library previews and intro detection.
+  - `test/reliability`: a sheet that can't be written, corrupt specs and sheets, broken links and missing folders in the scan, a stuck Android frame request, and fuzzing of file-name, time, command-line, FTP, subtitle and spec parsing (found and fixed: a badly encoded URL crashed the title parser).
 - [ ] 8.12 Performance harness (`scripts/measure_perf.sh`) and budget checks in CI; large-library and scrub rebuild tests.
 - [ ] 8.13 Release 1.3.0.
 

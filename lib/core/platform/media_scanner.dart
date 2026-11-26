@@ -115,9 +115,11 @@ class AndroidMediaScanner implements MediaScanner {
 
   @override
   Future<List<ScannedFile>> scan() async {
-    final list = await _channel.invokeListMethod<Map<Object?, Object?>>(
-      'library',
-    );
+    // Big phones answer in seconds; a stuck query must not hang the
+    // library forever (task 8.11).
+    final list = await _channel
+        .invokeListMethod<Map<Object?, Object?>>('library')
+        .timeout(const Duration(minutes: 2));
     return [
       for (final m in list ?? const <Map<Object?, Object?>>[])
         ScannedFile.fromMap(m),

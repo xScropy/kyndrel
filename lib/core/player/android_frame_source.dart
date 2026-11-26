@@ -14,11 +14,18 @@ import 'package:path/path.dart' as p;
 /// the hardware decoder and needs no second mpv. Same cache layout as
 /// [PreviewThumbnailer]: `<cache>/previews/<key>/<second>.jpg`.
 class AndroidFrameSource implements PreviewSource {
-  new({required this.cacheDir, MethodChannel? channel})
-    : _channel = channel ?? const MethodChannel('kyndrel/frames');
+  new({
+    required this.cacheDir,
+    MethodChannel? channel,
+    this.frameTimeout = defaultFrameTimeout,
+  }) : _channel = channel ?? const MethodChannel('kyndrel/frames');
 
   /// Bigger than the desktop's: the phone preview is ~40 % of the screen.
   static const width = 480;
+
+  /// The most one frame may take before it is given up (task 8.11).
+  static const defaultFrameTimeout = Duration(seconds: 15);
+  final Duration frameTimeout;
 
   final Directory cacheDir;
   final MethodChannel _channel;
@@ -77,18 +84,24 @@ class AndroidFrameSource implements PreviewSource {
         final r = _queue.removeLast();
         String? result;
         try {
-          final ok = await _channel.invokeMethod<bool>('frame', {
-            'source': r.source,
-            'ms': r.second * 1000,
-            'width': width,
-            'path': r.path,
-            // The exact frame decodes from the keyframe on: slower.
-            'exact': r.exact,
-          });
+          final ok = await _channel
+              .invokeMethod<bool>('frame', {
+                'source': r.source,
+                'ms': r.second * 1000,
+                'width': width,
+                'path': r.path,
+                // The exact frame decodes from the keyframe on: slower.
+                'exact': r.exact,
+              })
+              .timeout(frameTimeout);
           if ((ok ?? false) && File(r.path).existsSync()) result = r.path;
         } on PlatformException {
           result = null;
         } on MissingPluginException {
+          result = null;
+        } on TimeoutException {
+          // A file the retriever chokes on: no picture, the queue goes on
+          // (task 8.11).
           result = null;
         }
         _waiting.remove(r.path)?.complete(result);
@@ -114,6 +127,9 @@ class AndroidStoryboardSource implements StoryboardSource {
 
   /// How often the tiles folder is checked during a level.
   static const progressInterval = Duration(seconds: 1);
+
+  /// The most one level may take (300 frames at a slow 1 s each, and some).
+  static const levelTimeout = Duration(minutes: 10);
 
   @override
   void focus(Duration at) {
@@ -148,16 +164,22 @@ class AndroidStoryboardSource implements StoryboardSource {
       );
       bool? ok;
       try {
-        ok = await _channel.invokeMethod<bool>('storyboard', {
-          'source': board.source,
-          'dir': dir,
-          'stepMs': level.spec.step.inMilliseconds,
-          'count': level.spec.count,
-          'width': level.spec.width,
-        });
+        ok = await _channel
+            .invokeMethod<bool>('storyboard', {
+              'source': board.source,
+              'dir': dir,
+              'stepMs': level.spec.step.inMilliseconds,
+              'count': level.spec.count,
+              'width': level.spec.width,
+            })
+            .timeout(levelTimeout);
       } on PlatformException {
         ok = false;
       } on MissingPluginException {
+        ok = false;
+      } on TimeoutException {
+        // Stuck on a file: stop the native loop and try another time.
+        await cancel();
         ok = false;
       } finally {
         progress.cancel();

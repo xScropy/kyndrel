@@ -131,12 +131,19 @@ class StoryboardWriter {
       return;
     }
     final out = _board.sheetPath(level, sheet);
-    final ok = await packSheet(
-      tiles: tiles,
-      cols: l.spec.cols,
-      rows: l.spec.rows,
-      out: out,
-    );
+    bool ok;
+    try {
+      ok = await packSheet(
+        tiles: tiles,
+        cols: l.spec.cols,
+        rows: l.spec.rows,
+        out: out,
+      );
+    } on Object {
+      // Disk full, folder gone: the tiles stay and still show; packing
+      // goes on with the next sheet (task 8.11).
+      ok = false;
+    }
     final now = _board.levels[level];
     if (!ok) {
       // Keep the tiles: they still show; the next render tries again.
