@@ -19,7 +19,7 @@ class ScrubPreview {
   static const debounce = Duration(milliseconds: 60);
 
   final WidgetRef _ref;
-  final void Function(String path) _onFrame;
+  final void Function(FrameRef frame) _onFrame;
   Timer? _timer;
   int _id = 0;
 
@@ -27,15 +27,18 @@ class ScrubPreview {
     _timer?.cancel();
     final id = ++_id;
     final board = _ref.read(storyboardProvider);
-    final quick = board != null && board.source == source
-        ? board.nearest(at)
-        : null;
+    FrameRef? quick;
+    if (board != null && board.source == source) {
+      quick = board.nearest(at);
+      // Frames near the finger are made next (task 8.2).
+      if (!board.complete) _ref.read(storyboardProvider.notifier).focus(at);
+    }
     if (quick != null) _onFrame(quick);
     _timer = Timer(quick == null ? debounce : rest, () async {
       final path = await _ref
           .read(previewSourceProvider)
           .frameAt(source, at, duration, exact: quick != null);
-      if (id == _id && path != null) _onFrame(path);
+      if (id == _id && path != null) _onFrame(FrameRef(path));
     });
   }
 

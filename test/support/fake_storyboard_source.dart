@@ -2,29 +2,49 @@ import 'dart:io';
 
 import 'package:kyndrel/core/player/storyboard.dart';
 
-/// Writes empty frame files instead of decoding video.
+import 'tiny_jpeg.dart';
+
+/// Writes tiny frame tiles instead of decoding video, level by level.
 class FakeStoryboardSource implements StoryboardSource {
   final rendered = <Storyboard>[];
+  final focused = <Duration>[];
   int cancels = 0;
 
-  /// Frames to write; all of them when null.
+  /// Frames of the fine level (1) to write; all of them when null.
   Set<int>? only;
 
   @override
-  Future<bool> render(Storyboard board) async {
+  Future<bool> render(
+    Storyboard board, {
+    void Function(Storyboard board)? onChange,
+  }) async {
     rendered.add(board);
-    Directory(board.directory).createSync(recursive: true);
-    final failed = <int>{};
-    for (var i = 0; i < board.count; i++) {
-      if (only == null || only!.contains(i)) {
-        File(board.pathOf(i)).writeAsBytesSync(const [0xFF, 0xD8]);
-      } else {
-        failed.add(i);
+    final bytes = tinyJpeg();
+    var b = board;
+    for (final level in board.levels) {
+      final n = level.spec.index;
+      Directory(b.tilesDirectory(n)).createSync(recursive: true);
+      final tiles = <int>{};
+      final failed = <int>{};
+      for (var i = 0; i < level.spec.count; i++) {
+        if (n == 0 || only == null || only!.contains(i)) {
+          File(b.tilePath(n, i)).writeAsBytesSync(bytes);
+          tiles.add(i);
+        } else {
+          failed.add(i);
+        }
       }
+      b = b.withLevel(
+        LevelFrames(level.spec, tiles: tiles, failed: failed, complete: true),
+      );
+      onChange?.call(b);
     }
-    board.writeIndex(failed: failed);
+    b.writeSpec();
     return true;
   }
+
+  @override
+  void focus(Duration at) => focused.add(at);
 
   @override
   Future<void> cancel() async => cancels++;

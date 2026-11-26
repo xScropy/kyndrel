@@ -9,6 +9,7 @@ import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
 import '../../support/fake_player_backend.dart';
+import '../../support/tiny_jpeg.dart';
 
 /// Task 8.1: one hidden mpv for all frame work.
 void main() {
@@ -19,6 +20,8 @@ void main() {
   });
   tearDown(() => tmp.deleteSync(recursive: true));
 
+  final jpeg = tinyJpeg();
+
   /// A fake mpv that writes one picture per loadfile/seek, like `vo=image`.
   FakePlayerBackend imageMpv({Duration delay = Duration.zero}) {
     final b = FakePlayerBackend();
@@ -27,8 +30,7 @@ void main() {
       if (args.first != 'loadfile' && args.first != 'seek') return;
       final out = b.properties['vo-image-outdir']!;
       final name = '${'${++n}'.padLeft(8, '0')}.jpg';
-      void write() =>
-          File(p.join(out, name)).writeAsBytesSync(const [0xFF, 0xD8]);
+      void write() => File(p.join(out, name)).writeAsBytesSync(jpeg);
       if (delay == Duration.zero) {
         write();
       } else {
@@ -155,7 +157,13 @@ void main() {
 
       final done = Storyboard.read(tmp, '/v/film.mkv', board.duration);
       expect(done.complete, isTrue);
-      expect(done.available, hasLength(done.count));
+      for (final l in done.levels) {
+        expect(
+          Iterable<int>.generate(l.spec.count).every(l.has),
+          isTrue,
+          reason: 'every frame of level ${l.spec.index}',
+        );
+      }
       expect(engine.started, 1);
       await engine.dispose();
     },

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/player/storyboard.dart';
+import 'package:kyndrel/core/player/storyboard_writer.dart';
 import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
@@ -98,43 +99,90 @@ class AndroidFrameSource implements PreviewSource {
   }
 }
 
-/// Storyboards on Android (task 7.2): MediaMetadataRetriever walks the
-/// video on its own thread (`storyboard` on `kyndrel/frames`), nearest
-/// keyframe for each step, writing `<i>.jpg` into the storyboard folder.
+/// Storyboards on Android (tasks 7.2, 8.2): MediaMetadataRetriever walks
+/// the video on its own thread (`storyboard` on `kyndrel/frames`), level by
+/// level, nearest keyframe for each step, writing `<i>.jpg` tiles. Dart then
+/// packs them into sheets in a background isolate.
+///
+/// The native loop reports nothing while it runs, so the tiles folder is
+/// listed (asynchronously) once a second to show frames as they appear.
 class AndroidStoryboardSource implements StoryboardSource {
   new({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel('kyndrel/frames');
 
   final MethodChannel _channel;
 
+  /// How often the tiles folder is checked during a level.
+  static const progressInterval = Duration(seconds: 1);
+
   @override
-  Future<bool> render(Storyboard board) async {
-    try {
-      final ok = await _channel.invokeMethod<bool>('storyboard', {
-        'source': board.source,
-        'dir': board.directory,
-        'stepMs': board.step.inMilliseconds,
-        'count': board.count,
-        'width': Storyboard.width,
-      });
-      if (!(ok ?? false)) return false;
-      // Android finishes the loop even when some frames can't be decoded:
-      // record those, or leave the storyboard unfinished if too many failed
-      // (task 8.0).
-      final have = await Storyboard.framesOnDisk(board.directory);
-      final failed = {
-        for (var i = 0; i < board.count; i++)
-          if (!have.contains(i)) i,
-      };
-      if (have.isEmpty || !Storyboard.acceptable(board.count, failed)) {
-        return false;
+  void focus(Duration at) {
+    // The native loop goes in order; the coarse level covers the video.
+  }
+
+  @override
+  Future<bool> render(
+    Storyboard board, {
+    void Function(Storyboard board)? onChange,
+  }) async {
+    // Packing waits for each level's end: the native loop skips frames
+    // whose tiles exist, so they must stay until then.
+    final writer = StoryboardWriter(
+      board,
+      onChange: onChange,
+      packEarly: false,
+    );
+    for (final level in board.levels) {
+      if (level.complete) continue;
+      final n = level.spec.index;
+      final dir = board.tilesDirectory(n);
+      await Directory(dir).create(recursive: true);
+      final progress = Timer.periodic(
+        progressInterval,
+        (_) => unawaited(_report(writer, n, dir)),
+      );
+      bool? ok;
+      try {
+        ok = await _channel.invokeMethod<bool>('storyboard', {
+          'source': board.source,
+          'dir': dir,
+          'stepMs': level.spec.step.inMilliseconds,
+          'count': level.spec.count,
+          'width': level.spec.width,
+        });
+      } on PlatformException {
+        ok = false;
+      } on MissingPluginException {
+        ok = false;
+      } finally {
+        progress.cancel();
       }
-      board.writeIndex(failed: failed);
-      return true;
-    } on PlatformException {
-      return false;
-    } on MissingPluginException {
-      return false;
+      if (!(ok ?? false)) return false;
+      await _report(writer, n, dir);
+      if (writer.board.levels[n].tiles.isEmpty &&
+          writer.board.levels[n].sheets.isEmpty) {
+        return false; // Nothing could be decoded.
+      }
+      await writer.finishLevel(n);
+    }
+    return writer.board.complete;
+  }
+
+  /// Tells [writer] about tiles the native loop wrote.
+  static Future<void> _report(
+    StoryboardWriter writer,
+    int level,
+    String dir,
+  ) async {
+    final count = writer.board.levels[level].spec.count;
+    try {
+      await for (final f in Directory(dir).list()) {
+        if (!f.path.endsWith('.jpg')) continue;
+        final i = int.tryParse(p.basenameWithoutExtension(f.path));
+        if (i != null && i < count) writer.tileWritten(level, i);
+      }
+    } on FileSystemException {
+      // Gone: the render was cancelled.
     }
   }
 

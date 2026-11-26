@@ -15,6 +15,7 @@ import 'package:path/path.dart' as p;
 
 import '../../support/fake_player_backend.dart';
 import '../../support/fake_preview_source.dart';
+import '../../support/tiny_jpeg.dart';
 
 /// Task 8.0: cache keys, the storyboard cancel race, honest completeness,
 /// and the preview queue.
@@ -56,6 +57,7 @@ void main() {
 
   group('desktop storyboard render', () {
     /// A fake mpv that writes one picture per loadfile/seek, like `vo=image`.
+    final jpeg = tinyJpeg();
     FakePlayerBackend imageMpv() {
       final b = FakePlayerBackend();
       var n = 0;
@@ -64,7 +66,7 @@ void main() {
           final out = b.properties['vo-image-outdir']!;
           n++;
           File(p.join(out, '${'$n'.padLeft(8, '0')}.jpg'))
-              .writeAsBytesSync(const [0xFF, 0xD8]);
+              .writeAsBytesSync(jpeg);
         }
       };
       return b;
@@ -86,15 +88,17 @@ void main() {
       expect(await first, isFalse);
       expect(await second, isTrue);
 
-      // The first render stopped before the second loaded the file.
+      // The first render stopped (unloading the file) before the second
+      // loaded it again.
       final names = mpv.commands.map((c) => c.first).toList();
-      final loads = [
-        for (var i = 0; i < names.length; i++)
-          if (names[i] == 'loadfile') i,
-      ];
-      expect(loads, hasLength(2));
-      expect(names.sublist(loads[0], loads[1]), contains('stop'));
-      expect(board().complete, isTrue);
+      final stop = names.indexOf('stop');
+      expect(stop, greaterThan(names.indexOf('loadfile')));
+      expect(names.lastIndexOf('loadfile'), greaterThan(stop));
+      final done = board();
+      expect(done.complete, isTrue);
+      // Packed into sheets: no loose tiles left.
+      expect(done.levels.every((l) => l.tiles.isEmpty), isTrue);
+      expect(File(done.sheetPath(1, 0)).existsSync(), isTrue);
       await source.dispose();
     });
 
@@ -105,7 +109,8 @@ void main() {
       final second = source.render(board());
       expect(await first, isFalse);
       expect(await second, isTrue);
-      expect(mpv.commands.where((c) => c.first == 'loadfile'), hasLength(1));
+      // One load per level.
+      expect(mpv.commands.where((c) => c.first == 'loadfile'), hasLength(2));
       await source.dispose();
     });
   });
@@ -113,6 +118,7 @@ void main() {
   group('Android storyboard', () {
     const channel = MethodChannel('kyndrel/frames.sb-test');
     late Set<int> skip;
+    final jpeg = tinyJpeg();
 
     setUp(() {
       TestWidgetsFlutterBinding.ensureInitialized();
@@ -122,16 +128,18 @@ void main() {
             final args = (call.arguments as Map).cast<String, Object?>();
             final dir = Directory(args['dir']! as String)
               ..createSync(recursive: true);
+            final fine = args['width'] == 160;
             for (var i = 0; i < (args['count']! as int); i++) {
-              if (skip.contains(i)) continue;
-              File(p.join(dir.path, '$i.jpg')).writeAsBytesSync(const [1]);
+              if (fine && skip.contains(i)) continue;
+              File(p.join(dir.path, '$i.jpg')).writeAsBytesSync(jpeg);
             }
             // Android reports success after the loop, even with gaps.
             return true;
           });
     });
 
-    // 300 s → a frame every 2 s → 150 frames; up to 15 may fail.
+    // 300 s: 100 coarse frames, then one every 2 s → 150 fine frames, of
+    // which up to 15 may fail.
     Storyboard board() =>
         Storyboard.read(tmp, '/v/b.mkv', const Duration(seconds: 300));
 
@@ -141,10 +149,15 @@ void main() {
       expect(await source.render(board()), isTrue);
       final done = board();
       expect(done.complete, isTrue);
-      final index = jsonDecode(
-        File(p.join(done.directory, 'index.json')).readAsStringSync(),
+      expect(done.levels[1].failed, {7, 8});
+      // Packed at the end of each level: 1 coarse sheet, 6 fine ones.
+      expect(done.levels.map((l) => l.sheets.length), [1, 6]);
+      expect(done.levels.every((l) => l.tiles.isEmpty), isTrue);
+      final spec = jsonDecode(
+        File(p.join(done.directory, 'spec.json')).readAsStringSync(),
       ) as Map;
-      expect(index['failed'], [7, 8]);
+      final levels = spec['levels'] as Map;
+      expect((levels['1'] as Map)['failed'], [7, 8]);
     });
 
     test('many gaps: left unfinished, to try again later', () async {
@@ -152,7 +165,8 @@ void main() {
       final source = AndroidStoryboardSource(channel: channel);
       expect(await source.render(board()), isFalse);
       expect(board().complete, isFalse);
-      expect(File(p.join(board().directory, 'index.json')).existsSync(), false);
+      expect(board().levels[0].complete, isTrue);
+      expect(board().levels[1].complete, isFalse);
     });
   });
 
@@ -193,17 +207,21 @@ void main() {
 
   group('ScrubPreview timing', () {
     late FakePreviewSource previews;
-    late List<String> shown;
+    late List<FrameRef> shown;
+    late List<Duration> focused;
     late ScrubPreview scrub;
 
     Future<void> setUpScrub(WidgetTester tester, Storyboard? board) async {
       previews = FakePreviewSource('/tmp/exact.jpg');
       shown = [];
+      focused = [];
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             previewSourceProvider.overrideWithValue(previews),
-            storyboardProvider.overrideWith(() => _FixedBoard(board)),
+            storyboardProvider.overrideWith(
+              () => _FixedBoard(board, focused.add),
+            ),
           ],
           child: Consumer(
             builder: (context, ref, _) {
@@ -216,26 +234,33 @@ void main() {
     }
 
     const length = Duration(minutes: 1);
-    const board = Storyboard(
+    // The fine level (a frame every 2 s) has its first six frames so far.
+    final specs = StoryboardLevel.forVideo(length);
+    final board = Storyboard(
       source: '/v/d.mkv',
       duration: length,
-      step: Duration(seconds: 2),
       directory: '/c',
-      available: {0, 1, 2, 3, 4, 5},
+      levels: [
+        LevelFrames(specs[0]),
+        LevelFrames(specs[1], tiles: const {0, 1, 2, 3, 4, 5}),
+      ],
     );
+    const tile2 = FrameRef('/c/L1/tiles/2.jpg');
 
     testWidgets('storyboard frame at once, exact frame after resting', (
       tester,
     ) async {
       await setUpScrub(tester, board);
       scrub.request('/v/d.mkv', const Duration(seconds: 4), length);
-      expect(shown, ['/c/2.jpg']);
+      expect(shown, [tile2]);
       await tester.pump(ScrubPreview.rest - const Duration(milliseconds: 1));
       expect(previews.exactRequests, isEmpty);
       await tester.pump(const Duration(milliseconds: 1));
       await tester.pump();
       expect(previews.exactRequests, [const Duration(seconds: 4)]);
-      expect(shown.last, '/tmp/exact.jpg');
+      expect(shown.last, const FrameRef('/tmp/exact.jpg'));
+      // The storyboard isn't finished: frames near the finger come next.
+      expect(focused, [const Duration(seconds: 4)]);
     });
 
     testWidgets('moving keeps postponing the exact frame', (tester) async {
@@ -268,15 +293,19 @@ void main() {
         ..cancel();
       await tester.pump(const Duration(seconds: 1));
       expect(previews.exactRequests, isEmpty);
-      expect(shown, ['/c/2.jpg']);
+      expect(shown, [tile2]);
     });
   });
 }
 
 class _FixedBoard extends StoryboardController {
-  new(this.board);
+  new(this.board, this.onFocus);
   final Storyboard? board;
+  final void Function(Duration at) onFocus;
 
   @override
   Storyboard? build() => board;
+
+  @override
+  void focus(Duration at) => onFocus(at);
 }

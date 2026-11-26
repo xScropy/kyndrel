@@ -33,20 +33,24 @@ void main() {
     ('clip.mp4', const Duration(seconds: 8)),
     ('The.Test.Film.2019.1080p.mkv', const Duration(seconds: 30)),
   ]) {
-    test('$file: a frame for every step, in one pass', () async {
+    test('$file: every level, packed into sheets', () async {
       final path = p.join(media, file);
       final board = Storyboard.read(cache, path, length);
       final watch = Stopwatch()..start();
       expect(await source.render(board), isTrue);
       final done = Storyboard.read(cache, path, length);
       expect(done.complete, isTrue);
-      // Every step but possibly the very last (the file may end before it).
-      expect(done.available.length, greaterThanOrEqualTo(done.count - 1));
-      expect(done.available, contains(0));
-      final first = File(done.pathOf(0)).readAsBytesSync();
-      expect(first.sublist(0, 2), [0xFF, 0xD8], reason: 'JPEG');
+      for (final l in done.levels) {
+        expect(l.tiles, isEmpty, reason: 'all packed');
+        expect(l.sheets, hasLength(l.spec.sheetCount));
+        // Every frame but possibly the very last (the file may end first).
+        expect(l.failed.length, lessThanOrEqualTo(1));
+        final sheet = File(done.sheetPath(l.spec.index, 0)).readAsBytesSync();
+        expect(sheet.sublist(0, 2), [0xFF, 0xD8], reason: 'JPEG');
+      }
+      final frames = done.levels.fold(0, (n, l) => n + l.ready);
       // ignore: avoid_print, the timing goes in the CI log
-      print('$file: ${done.available.length} frames in ${watch.elapsed}');
+      print('$file: $frames frames in ${watch.elapsed}');
     });
   }
 

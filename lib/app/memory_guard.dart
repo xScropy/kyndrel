@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/frame_engine.dart';
+import 'package:kyndrel/core/ui/frame_view.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Keeps Kyndrel's memory small (task 8.1).
@@ -12,13 +13,16 @@ import 'package:material_ui/material_ui.dart';
 ///   screens of them.
 /// - When the system is short on memory (Android `onTrimMemory`, iOS
 ///   warnings), Flutter clears that cache itself; this also closes the
-///   hidden frame engine.
+///   hidden frame engine and drops decoded storyboard sheets.
 /// - A hidden window closes the frame engine too: nobody is scrubbing.
 final memoryGuardProvider = Provider<void>((ref) {
   PaintingBinding.instance.imageCache
     ..maximumSize = imageCacheEntries
     ..maximumSizeBytes = imageCacheBytes;
-  void release() => unawaited(ref.read(frameEngineProvider).releaseIdle());
+  void release() {
+    unawaited(ref.read(frameEngineProvider).releaseIdle());
+    ref.read(frameImageCacheProvider).clear();
+  }
   final observer = _PressureObserver(release);
   WidgetsBinding.instance.addObserver(observer);
   ref.read(windowServiceProvider).onHidden(() async => release());

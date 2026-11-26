@@ -4,50 +4,232 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Rect;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/frame_engine.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/player/storyboard_writer.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/cache_trim.dart';
 import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
-/// Frames for the whole video, made in advance so the seek bar can show the
-/// scene under the finger at once, like YouTube's storyboards (task 7.2).
+/// A picture to show for a time: a whole image file, or cell [cell] of a
+/// [cols]×[rows] sprite sheet (task 8.2).
+@immutable
+class FrameRef {
+  const new(this.path, {this.cell, this.cols = 1, this.rows = 1});
+
+  final String path;
+  final int? cell;
+  final int cols;
+  final int rows;
+
+  /// The part of an image of [width]×[height] pixels that is this frame.
+  Rect sourceRect(double width, double height) {
+    final c = cell;
+    if (c == null) return Rect.fromLTWH(0, 0, width, height);
+    final w = width / cols;
+    final h = height / rows;
+    return Rect.fromLTWH((c % cols) * w, (c ~/ cols) * h, w, h);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is FrameRef &&
+      other.path == path &&
+      other.cell == cell &&
+      other.cols == cols &&
+      other.rows == rows;
+
+  @override
+  int get hashCode => Object.hash(path, cell, cols, rows);
+
+  @override
+  String toString() =>
+      cell == null ? 'FrameRef($path)' : 'FrameRef($path#$cell)';
+}
+
+/// One level of a storyboard: frames of one size, [step] apart, packed
+/// [cols]×[rows] to a sheet (task 8.2). Like YouTube's storyboards: a
+/// coarse level covers the whole video in one small sheet, finer levels
+/// follow.
+@immutable
+class StoryboardLevel {
+  const new({
+    required this.index,
+    required this.width,
+    required this.step,
+    required this.count,
+    required this.cols,
+    required this.rows,
+  });
+
+  /// 0 is the coarsest.
+  final int index;
+
+  /// Frame width in pixels (height keeps the video's shape).
+  final int width;
+  final Duration step;
+  final int count;
+  final int cols;
+  final int rows;
+
+  int get perSheet => cols * rows;
+  int get sheetCount => (count / perSheet).ceil();
+  int sheetOf(int frame) => frame ~/ perSheet;
+
+  /// The frames of sheet [sheet].
+  Iterable<int> framesOf(int sheet) sync* {
+    final end = math.min(count, (sheet + 1) * perSheet);
+    for (var i = sheet * perSheet; i < end; i++) {
+      yield i;
+    }
+  }
+
+  int indexAt(Duration at) =>
+      (at.inMilliseconds / step.inMilliseconds).round().clamp(0, count - 1);
+
+  Duration timeOf(int frame) => step * frame;
+
+  /// Frames in the coarse level: enough to find a scene in any video.
+  static const coarseFrames = 100;
+
+  /// The levels for a video of [duration]. [sharp] adds 320 px frames for
+  /// phones, where the preview is wide.
+  static List<StoryboardLevel> forVideo(
+    Duration duration, {
+    bool sharp = false,
+  }) {
+    final ms = math.max(1, duration.inMilliseconds);
+    final coarse = math.max(1, math.min(coarseFrames, (ms / 1000).ceil()));
+    final step = Storyboard.stepFor(duration);
+    final fine = math.max(1, (ms / step.inMilliseconds).ceil());
+    return [
+      StoryboardLevel(
+        index: 0,
+        width: 96,
+        step: Duration(milliseconds: (ms / coarse).ceil()),
+        count: coarse,
+        cols: 10,
+        rows: 10,
+      ),
+      StoryboardLevel(
+        index: 1,
+        width: 160,
+        step: step,
+        count: fine,
+        cols: 5,
+        rows: 5,
+      ),
+      if (sharp)
+        StoryboardLevel(
+          index: 2,
+          width: 320,
+          step: step,
+          count: fine,
+          cols: 5,
+          rows: 5,
+        ),
+    ];
+  }
+
+  Map<String, Object> toJson() => {
+    'width': width,
+    'stepMs': step.inMilliseconds,
+    'count': count,
+    'cols': cols,
+    'rows': rows,
+  };
+
+  bool matches(Map<Object?, Object?> json) =>
+      json['width'] == width &&
+      json['stepMs'] == step.inMilliseconds &&
+      json['count'] == count &&
+      json['cols'] == cols &&
+      json['rows'] == rows;
+}
+
+/// What exists of one level: loose frame files ([tiles]), packed [sheets],
+/// frames that couldn't be made ([failed]).
+@immutable
+class LevelFrames {
+  const new(
+    this.spec, {
+    this.tiles = const {},
+    this.sheets = const {},
+    this.failed = const {},
+    this.complete = false,
+  });
+
+  final StoryboardLevel spec;
+  final Set<int> tiles;
+  final Set<int> sheets;
+  final Set<int> failed;
+  final bool complete;
+
+  bool has(int frame) =>
+      tiles.contains(frame) ||
+      (sheets.contains(spec.sheetOf(frame)) && !failed.contains(frame));
+
+  /// Made, or given up on.
+  bool done(int frame) => has(frame) || failed.contains(frame);
+
+  int get ready {
+    var n = tiles.length;
+    for (final s in sheets) {
+      n += spec.framesOf(s).where((i) => !failed.contains(i)).length;
+    }
+    return n;
+  }
+
+  LevelFrames copyWith({
+    Set<int>? tiles,
+    Set<int>? sheets,
+    Set<int>? failed,
+    bool? complete,
+  }) => LevelFrames(
+    spec,
+    tiles: tiles ?? this.tiles,
+    sheets: sheets ?? this.sheets,
+    failed: failed ?? this.failed,
+    complete: complete ?? this.complete,
+  );
+}
+
+/// Frames for the whole video, made in advance so the seek bar shows the
+/// scene under the finger at once, like YouTube's storyboards (tasks 7.2,
+/// 8.2).
 ///
-/// Frame `i` shows the time `i * step`. Frames are small JPEGs in
-/// `<cache>/storyboards/<hash of source>/<i>.jpg`, with `index.json` once
-/// all of them are written.
+/// On disk, under `<cache>/storyboards/<mediaCacheKey>/`:
+/// - `L<n>/s<k>.jpg`: sheet `k` of level `n`;
+/// - `L<n>/tiles/<i>.jpg`: frames not packed into a sheet yet;
+/// - `spec.json`: the levels, their packed sheets and failed frames.
 @immutable
 class Storyboard {
   const new({
     required this.source,
     required this.duration,
-    required this.step,
     required this.directory,
-    this.available = const {},
-    this.complete = false,
+    required this.levels,
   });
 
-  /// Frame width in pixels.
-  static const width = 160;
-
-  /// Most frames per file.
+  /// Most frames in the fine level.
   static const maxFrames = 300;
 
   /// The cache folder's size limit (oldest storyboards go first).
   static const int cacheLimitBytes = 500 * 1024 * 1024;
 
+  /// Format of `spec.json`; other versions are deleted.
+  static const version = 2;
+
   final String source;
   final Duration duration;
-  final Duration step;
   final String directory;
-
-  /// Indexes of the frames written so far.
-  final Set<int> available;
-  final bool complete;
+  final List<LevelFrames> levels;
 
   /// One frame every 2 s up to 10 minutes, then [maxFrames] per file.
   static Duration stepFor(Duration duration) {
@@ -57,37 +239,72 @@ class Storyboard {
     return Duration(milliseconds: (duration.inMilliseconds / maxFrames).ceil());
   }
 
-  int get count =>
-      math.max(1, (duration.inMilliseconds / step.inMilliseconds).ceil());
+  bool get complete => levels.every((l) => l.complete);
 
-  double get progress =>
-      complete ? 1 : (available.length / count).clamp(0.0, 1.0);
+  /// Share of frames ready, all levels together.
+  double get progress {
+    if (complete) return 1;
+    var all = 0;
+    var ready = 0;
+    for (final l in levels) {
+      all += l.spec.count;
+      ready += l.ready + l.failed.length;
+    }
+    return all == 0 ? 0 : (ready / all).clamp(0.0, 1.0);
+  }
 
-  String pathOf(int index) => p.join(directory, '$index.jpg');
+  String levelDirectory(int level) => p.join(directory, 'L$level');
+  String tilesDirectory(int level) => p.join(levelDirectory(level), 'tiles');
+  String tilePath(int level, int frame) =>
+      p.join(tilesDirectory(level), '$frame.jpg');
+  String sheetPath(int level, int sheet) =>
+      p.join(levelDirectory(level), 's$sheet.jpg');
 
-  /// The written frame nearest to [at], or null if there is none yet.
-  String? nearest(Duration at) {
-    if (available.isEmpty) return null;
-    final want = (at.inMilliseconds / step.inMilliseconds).round().clamp(
-      0,
-      count - 1,
-    );
-    if (available.contains(want)) return pathOf(want);
-    // Nearest written frame, searching outward.
-    for (var d = 1; d < count; d++) {
-      if (available.contains(want - d)) return pathOf(want - d);
-      if (available.contains(want + d)) return pathOf(want + d);
+  /// The picture of [frame] in [level], if it exists.
+  FrameRef? frame(int level, int frame) {
+    final l = levels[level];
+    if (l.tiles.contains(frame)) return FrameRef(tilePath(level, frame));
+    final sheet = l.spec.sheetOf(frame);
+    if (l.sheets.contains(sheet) && !l.failed.contains(frame)) {
+      return FrameRef(
+        sheetPath(level, sheet),
+        cell: frame % l.spec.perSheet,
+        cols: l.spec.cols,
+        rows: l.spec.rows,
+      );
     }
     return null;
   }
 
-  Storyboard copyWith({Set<int>? available, bool? complete}) => Storyboard(
+  /// The best picture for [at]: the finest level that has that very frame,
+  /// else the nearest frame of the coarsest level that has any. Null
+  /// before any frame exists. [maxLevel] skips sharper levels.
+  FrameRef? nearest(Duration at, {int? maxLevel}) {
+    final top = math.min(levels.length - 1, maxLevel ?? levels.length - 1);
+    for (var level = top; level >= 0; level--) {
+      final f = frame(level, levels[level].spec.indexAt(at));
+      if (f != null) return f;
+    }
+    for (var level = 0; level <= top; level++) {
+      final l = levels[level];
+      final want = l.spec.indexAt(at);
+      for (var d = 1; d < l.spec.count; d++) {
+        final f = frame(level, want - d) ?? frame(level, want + d);
+        if (f != null) return f;
+        if (want - d < 0 && want + d >= l.spec.count) break;
+      }
+    }
+    return null;
+  }
+
+  Storyboard withLevel(LevelFrames level) => Storyboard(
     source: source,
     duration: duration,
-    step: step,
     directory: directory,
-    available: available ?? this.available,
-    complete: complete ?? this.complete,
+    levels: [
+      for (final l in levels)
+        if (l.spec.index == level.spec.index) level else l,
+    ],
   );
 
   /// The folder for [source] under [cacheDir]. The key includes a local
@@ -95,82 +312,109 @@ class Storyboard {
   static String directoryFor(Directory cacheDir, String source) =>
       p.join(cacheDir.path, 'storyboards', mediaCacheKey(source));
 
-  /// What is on disk for [source]: written frames, and whether the set is
-  /// complete for this length.
-  ///
-  /// Complete means `index.json` matches this spacing and frame count, and
-  /// every frame is either written or recorded as failed.
-  static Storyboard read(Directory cacheDir, String source, Duration duration) {
+  /// What is on disk for [source]. Folders of another format (the 7.2
+  /// one-file-per-frame storyboards) are deleted.
+  static Storyboard read(
+    Directory cacheDir,
+    String source,
+    Duration duration, {
+    bool sharp = false,
+  }) {
     final dir = directoryFor(cacheDir, source);
-    final board = Storyboard(
+    final specs = StoryboardLevel.forVideo(duration, sharp: sharp);
+    var board = Storyboard(
       source: source,
       duration: duration,
-      step: stepFor(duration),
       directory: dir,
+      levels: [for (final s in specs) LevelFrames(s)],
     );
     final folder = Directory(dir);
     if (!folder.existsSync()) return board;
-    final frames = <int>{};
-    for (final f in folder.listSync().whereType<File>()) {
-      final i = _frameIndex(f.path);
-      if (i != null) frames.add(i);
+    Map<Object?, Object?>? json;
+    final spec = File(p.join(dir, 'spec.json'));
+    try {
+      if (spec.existsSync()) {
+        json = jsonDecode(spec.readAsStringSync()) as Map<Object?, Object?>;
+      }
+    } on Object {
+      json = null;
     }
-    var complete = false;
-    final index = File(p.join(dir, 'index.json'));
-    if (index.existsSync()) {
-      try {
-        final json = jsonDecode(index.readAsStringSync()) as Map;
-        final failed = {
-          for (final f in (json['failed'] as List?) ?? const <Object>[])
-            (f as num).toInt(),
-        };
-        complete =
-            json['stepMs'] == board.step.inMilliseconds &&
-            json['count'] == board.count &&
-            Iterable<int>.generate(board.count)
-                .every((i) => frames.contains(i) || failed.contains(i));
-      } on Object {
-        complete = false;
+    if (json == null || json['version'] != version) {
+      // Another format (7.2 wrote `<i>.jpg` and `index.json` here): start
+      // again. No spec yet is a first render still writing tiles.
+      final oldFormat =
+          json != null ||
+          folder.listSync().any(
+            (e) => e is File && p.basename(e.path) != 'spec.json.part',
+          );
+      if (oldFormat) {
+        try {
+          folder.deleteSync(recursive: true);
+        } on FileSystemException {
+          // In use: tried again next time.
+        }
+        return board;
       }
     }
-    return board.copyWith(available: frames, complete: complete);
-  }
-
-  /// `7.jpg` → 7; anything else (`7.part`, `index.json`) → null.
-  static int? _frameIndex(String path) => path.endsWith('.jpg')
-      ? int.tryParse(p.basenameWithoutExtension(path))
-      : null;
-
-  /// The frames written in [directory] (async: for background work).
-  static Future<Set<int>> framesOnDisk(String directory) async {
-    final out = <int>{};
-    final dir = Directory(directory);
-    if (!dir.existsSync()) return out;
-    await for (final f in dir.list()) {
-      final i = f is File ? _frameIndex(f.path) : null;
-      if (i != null) out.add(i);
+    final saved = (json?['levels'] as Map<Object?, Object?>?) ?? const {};
+    for (final s in specs) {
+      final j = saved['${s.index}'] as Map<Object?, Object?>?;
+      Set<int> ints(String key) => {
+        for (final v in (j?[key] as List<Object?>?) ?? const [])
+          (v! as num).toInt(),
+      };
+      final known = j != null && s.matches(j);
+      final tiles = <int>{};
+      final tilesDir = Directory(board.tilesDirectory(s.index));
+      if (tilesDir.existsSync()) {
+        for (final f in tilesDir.listSync()) {
+          final i = f.path.endsWith('.jpg')
+              ? int.tryParse(p.basenameWithoutExtension(f.path))
+              : null;
+          if (i != null && i < s.count) tiles.add(i);
+        }
+      }
+      board = board.withLevel(
+        LevelFrames(
+          s,
+          tiles: tiles,
+          sheets: known ? ints('sheets') : const {},
+          failed: known ? ints('failed') : const {},
+          complete: known && j['complete'] == true,
+        ),
+      );
     }
-    return out;
+    return board;
   }
 
-  /// Whether a finished render with [failed] frames out of [count] is good
-  /// enough to keep. More than 1 in 10 missing is probably a passing
-  /// problem (slow disk, busy decoder): leave it unfinished to retry.
+  /// Saves the levels' sheets, failed frames and completeness.
+  void writeSpec() {
+    Directory(directory).createSync(recursive: true);
+    File(p.join(directory, 'spec.json.part'))
+      ..writeAsStringSync(jsonEncode(_specJson()))
+      ..renameSync(p.join(directory, 'spec.json'));
+  }
+
+  Map<String, Object> _specJson() => {
+    'version': version,
+    'source': source,
+    'durationMs': duration.inMilliseconds,
+    'levels': {
+      for (final l in levels)
+        '${l.spec.index}': {
+          ...l.spec.toJson(),
+          'sheets': (l.sheets.toList()..sort()),
+          'failed': (l.failed.toList()..sort()),
+          'complete': l.complete,
+        },
+    },
+  };
+
+  /// Whether a level with [failed] frames out of [count] is good enough to
+  /// keep. More than 1 in 10 missing is probably a passing problem (slow
+  /// disk, busy decoder): leave it unfinished to retry.
   static bool acceptable(int count, Set<int> failed) =>
       failed.length <= count ~/ 10;
-
-  /// Marks the frames as complete; [failed] frames couldn't be made and
-  /// aren't retried.
-  void writeIndex({Set<int> failed = const {}}) {
-    File(p.join(directory, 'index.json')).writeAsStringSync(
-      jsonEncode({
-        'source': source,
-        'stepMs': step.inMilliseconds,
-        'count': count,
-        'failed': (failed.toList()..sort()),
-      }),
-    );
-  }
 
   /// Deletes the oldest storyboards until the folder is under [limit],
   /// keeping [keep] (the one in use).
@@ -183,6 +427,28 @@ class Storyboard {
     limit: limit,
     keep: {?keep},
   );
+}
+
+/// Frame indexes 0…[count]-1, coarse to fine: 0, then the middle, the
+/// quarters, the eighths… so a partial storyboard already covers the whole
+/// video (task 8.2).
+List<int> coarseToFine(int count) {
+  if (count <= 0) return const [];
+  var stride = 1;
+  while (stride < count) {
+    stride *= 2;
+  }
+  final seen = List<bool>.filled(count, false);
+  final out = <int>[];
+  for (; stride >= 1; stride ~/= 2) {
+    for (var i = 0; i < count; i += stride) {
+      if (!seen[i]) {
+        seen[i] = true;
+        out.add(i);
+      }
+    }
+  }
+  return out;
 }
 
 /// The size limit of `<cache>/previews` (seek-bar and library frames).
@@ -201,19 +467,26 @@ Future<void> trimFrameCaches(Directory cacheDir, {String? keep}) async {
 
 /// Makes the frames of a [Storyboard] into its folder.
 abstract interface class StoryboardSource {
-  /// Writes frames into [board]'s folder (skipping ones already there)
-  /// and completes when done; false if it failed or was cancelled.
-  Future<bool> render(Storyboard board);
+  /// Makes the missing frames of [board]'s levels, coarse level first, and
+  /// completes when done; false if it failed or was cancelled. [onChange]
+  /// gets the board after every frame and sheet.
+  Future<bool> render(
+    Storyboard board, {
+    void Function(Storyboard board)? onChange,
+  });
+
+  /// Frames near [at] are wanted now (the finger is there).
+  void focus(Duration at);
 
   /// Stops [render] early.
   Future<void> cancel();
 }
 
-/// Desktop: the shared [FrameEngine] opens the file once, paused, and
-/// seeks to each step (keyframe seeks: fast). `vo=image` writes one picture
-/// per seek. When a more urgent frame is wanted (the finger rests on the
-/// seek bar), the render hands the engine over and carries on afterwards
-/// from the frame it reached (task 8.1).
+/// Desktop: the shared [FrameEngine] opens the file once per level, paused,
+/// and seeks to each frame (keyframe seeks: fast); `vo=image` writes one
+/// picture per seek. When a more urgent frame is wanted (the finger rests
+/// on the seek bar), the render hands the engine over and carries on
+/// afterwards (tasks 7.2, 8.1, 8.2).
 class MpvStoryboardSource implements StoryboardSource {
   /// [engine] is shared in the app; tests may pass [backendFactory] for an
   /// engine of their own.
@@ -224,13 +497,13 @@ class MpvStoryboardSource implements StoryboardSource {
   /// How long one seek may take before that frame is skipped.
   static const frameTimeout = Duration(seconds: 3);
 
-  /// Options of the storyboard profile.
-  static const options = [
+  /// Options of a level's profile.
+  static List<(String, String)> optionsFor(StoryboardLevel level) => [
     ('vo', 'image'),
     ('vid', 'auto'),
     ('aid', 'no'),
-    ('vo-image-jpeg-quality', '70'),
-    ('vf', 'scale=w=${Storyboard.width}:h=-2'),
+    ('vo-image-jpeg-quality', '80'),
+    ('vf', 'scale=w=${level.width}:h=-2'),
     ('hr-seek', 'no'),
   ];
 
@@ -244,9 +517,16 @@ class MpvStoryboardSource implements StoryboardSource {
 
   /// Renders run one after another.
   Future<void> _last = Future.value();
+  StoryboardWriter? _writer;
 
   @override
-  Future<bool> render(Storyboard board) async {
+  void focus(Duration at) => _writer?.focus = at;
+
+  @override
+  Future<bool> render(
+    Storyboard board, {
+    void Function(Storyboard board)? onChange,
+  }) async {
     final token = ++_generation;
     final previous = _last;
     final done = Completer<void>();
@@ -254,7 +534,8 @@ class MpvStoryboardSource implements StoryboardSource {
     try {
       await previous;
       if (token != _generation) return false;
-      return await _render(board, () => token != _generation);
+      final writer = _writer = StoryboardWriter(board, onChange: onChange);
+      return await _render(writer, () => token != _generation);
     } on FrameEngineClosed {
       return false;
     } finally {
@@ -262,104 +543,105 @@ class MpvStoryboardSource implements StoryboardSource {
     }
   }
 
-  Future<bool> _render(Storyboard board, bool Function() stale) async {
-    await Directory(board.directory).create(recursive: true);
-    final have = await Storyboard.framesOnDisk(board.directory);
-    final failed = <int>{};
-    var next = 0;
-    while (next < board.count) {
-      final reached = await _engine.run(
-        FrameJob.storyboard,
-        (s) => _chunk(s, board, next, have, failed, stale),
-      );
-      if (reached == null || stale()) return false;
-      next = reached;
+  Future<bool> _render(StoryboardWriter writer, bool Function() stale) async {
+    for (final level in writer.board.levels) {
+      if (level.complete) continue;
+      final n = level.spec.index;
+      await Directory(writer.board.tilesDirectory(n)).create(recursive: true);
+      while (true) {
+        if (stale()) return false;
+        final r = await _engine.run(
+          FrameJob.storyboard,
+          (s) => _chunk(s, writer, n, stale),
+        );
+        if (r == _Chunk.unreadable) return false;
+        if (r == _Chunk.levelDone) break;
+      }
+      await writer.finishLevel(n);
     }
-    if (have.isEmpty || !Storyboard.acceptable(board.count, failed)) {
-      return false;
-    }
-    board.writeIndex(failed: failed);
-    return true;
+    await writer.flush();
+    return !stale() && writer.board.complete;
   }
 
-  /// Renders frames from [from] on, until the end, a cancel, or a more
-  /// urgent job; returns the frame to continue from, or null when the file
-  /// won't open.
-  Future<int?> _chunk(
+  /// Makes frames of [level] until it is done, cancelled, or a more urgent
+  /// job waits.
+  Future<_Chunk> _chunk(
     FrameSession s,
-    Storyboard board,
-    int from,
-    Set<int> have,
-    Set<int> failed,
+    StoryboardWriter writer,
+    int level,
     bool Function() stale,
   ) async {
     final b = s.backend;
-    var i = from;
-    while (i < board.count && have.contains(i)) {
-      i++;
-    }
-    if (i >= board.count) return board.count;
-    final tag = 'storyboard|${board.source}';
-    var seek = true;
+    final board = writer.board;
+    final spec = board.levels[level].spec;
+    final tag = 'storyboard|L$level|${board.source}';
+    var i = writer.next(level);
+    if (i == null) return _Chunk.levelDone;
+    var loaded = false;
     try {
       if (s.loaded != tag) {
-        await s.configure('storyboard', options);
+        await s.configure('storyboard-L$level', optionsFor(spec));
         await s.clearScratch();
-        await b.setProperty('start', _seconds(board.step * i));
+        await b.setProperty('start', _seconds(spec.timeOf(i)));
         await b.command(['loadfile', board.source, 'replace']);
         s.loaded = tag;
-        seek = false; // The first picture is frame i.
+        loaded = true; // The first picture is frame i.
       }
       String? lastPos;
-      for (; i < board.count; i++) {
+      String? lastTile;
+      while (i != null) {
         if (stale()) {
           await b.command(['stop']);
           s.loaded = null;
-          return i;
+          return _Chunk.yielded;
         }
-        if (have.contains(i)) {
-          seek = true;
-          continue;
-        }
-        if (s.shouldYield) return i;
-        if (seek) {
+        if (s.shouldYield) return _Chunk.yielded;
+        final frame = i;
+        if (!loaded) {
           await s.clearScratch();
           await b.command([
             'seek',
-            _seconds(board.step * i),
+            _seconds(spec.timeOf(frame)),
             'absolute+keyframes',
           ]);
         }
-        seek = true;
+        final firstAfterLoad = loaded;
+        loaded = false;
         final next = await s.nextPicture(
           timeout: frameTimeout,
           stale: stale,
           lastPos: lastPos,
         );
+        final tile = board.tilePath(level, frame);
         final picture = next.file;
         if (picture != null) {
-          await picture.rename(board.pathOf(i));
-          have.add(i);
+          await picture.rename(tile);
+          lastTile = tile;
           lastPos = await b.getProperty('time-pos');
-        } else if (next.same && have.contains(i - 1)) {
-          // Same keyframe as the step before: the same picture.
-          await File(board.pathOf(i - 1)).copy(board.pathOf(i));
-          have.add(i);
+          writer.tileWritten(level, frame);
+        } else if (next.same && lastTile != null) {
+          // The seek landed on the keyframe already shown: same picture.
+          await File(lastTile).copy(tile);
+          writer.tileWritten(level, frame);
         } else if (stale()) {
           continue; // Stopped, not failed: the top of the loop returns.
-        } else if (i == from && lastPos == null && have.isEmpty) {
+        } else if (firstAfterLoad && _nothingYet(writer.board)) {
           s.loaded = null;
-          return null; // The file didn't open.
+          return _Chunk.unreadable; // The file didn't open.
         } else {
-          failed.add(i);
+          writer.tileFailed(level, frame);
         }
+        i = writer.next(level);
       }
-      return board.count;
-    } on Object {
+      return _Chunk.levelDone;
+    } on FileSystemException {
       s.loaded = null;
-      return null;
+      return _Chunk.unreadable;
     }
   }
+
+  static bool _nothingYet(Storyboard b) =>
+      b.levels.every((l) => l.tiles.isEmpty && l.sheets.isEmpty);
 
   static String _seconds(Duration d) => '${d.inMilliseconds / 1000}';
 
@@ -371,6 +653,8 @@ class MpvStoryboardSource implements StoryboardSource {
     if (_ownsEngine) await _engine.dispose();
   }
 }
+
+enum _Chunk { levelDone, yielded, unreadable }
 
 final storyboardSourceProvider = Provider<StoryboardSource>((ref) {
   final s = MpvStoryboardSource(engine: ref.watch(frameEngineProvider));
@@ -384,10 +668,14 @@ class StoryboardController extends Notifier<Storyboard?> {
   /// How long a file plays before its storyboard starts.
   static const delay = Duration(seconds: 2);
 
+  /// Least time between two screen updates while frames arrive.
+  static const updateInterval = Duration(milliseconds: 250);
+
   String? _for;
   Timer? _start;
-  Timer? _poll;
-  bool _hidden = false;
+  Timer? _update;
+  Storyboard? _pending;
+  Completer<void>? _shown;
   late StoryboardSource _source;
 
   @override
@@ -395,8 +683,11 @@ class StoryboardController extends Notifier<Storyboard?> {
     final service = ref.watch(playerServiceProvider);
     _source = ref.watch(storyboardSourceProvider);
     ref.read(windowServiceProvider)
-      ..onHidden(() async => _hidden = true)
-      ..onShown(() async => _hidden = false);
+      ..onHidden(() async => _shown ??= Completer<void>())
+      ..onShown(() async {
+        _shown?.complete();
+        _shown = null;
+      });
     // A direct subscription: provider listeners are paused while nothing
     // watches this provider.
     final sub = service.states.listen((s) {
@@ -418,13 +709,16 @@ class StoryboardController extends Notifier<Storyboard?> {
     });
     ref.onDispose(() {
       _start?.cancel();
-      _poll?.cancel();
+      _update?.cancel();
       if (_for != null) unawaited(_source.cancel());
       _for = null;
       unawaited(sub.cancel());
     });
     return null;
   }
+
+  /// The user is looking at [at]: frames near it are made first.
+  void focus(Duration at) => _source.focus(at);
 
   static bool _isStream(String source) =>
       source.contains('://') &&
@@ -433,7 +727,9 @@ class StoryboardController extends Notifier<Storyboard?> {
 
   void _stop() {
     _start?.cancel();
-    _poll?.cancel();
+    _update?.cancel();
+    _update = null;
+    _pending = null;
     if (_for != null) unawaited(_source.cancel());
     _for = null;
     state = null;
@@ -441,25 +737,37 @@ class StoryboardController extends Notifier<Storyboard?> {
 
   Future<void> _make(String source, Duration duration) async {
     final cache = ref.read(appCacheDirProvider);
-    var board = Storyboard.read(cache, source, duration);
+    final sharp = ref.read(platformCapabilitiesProvider).isMobile;
+    final board = Storyboard.read(cache, source, duration, sharp: sharp);
     state = board;
     if (board.complete) return;
-    while (_hidden && _for == source) {
-      await Future<void>.delayed(const Duration(seconds: 1));
+    // Nothing is made while the window is hidden.
+    while (_shown != null && _for == source) {
+      await _shown!.future;
     }
     if (_for != source) return;
     // In the background: trimming lists every cached file.
     unawaited(trimFrameCaches(cache, keep: board.directory));
-    // Shows frames as they appear.
-    _poll = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (_for != source) return;
-      board = Storyboard.read(cache, source, duration);
-      state = board;
-    });
-    final ok = await _source.render(board);
-    _poll?.cancel();
+    final ok = await _source.render(
+      board,
+      onChange: (b) {
+        if (_for != source) return;
+        // Frames arrive quickly: the screen updates a few times a second.
+        _pending = b;
+        _update ??= Timer(updateInterval, () {
+          _update = null;
+          final pending = _pending;
+          if (pending != null && _for == source) state = pending;
+        });
+      },
+    );
     if (_for != source) return;
-    state = Storyboard.read(cache, source, duration).copyWith(complete: ok);
+    _update?.cancel();
+    _update = null;
+    final last = _pending ?? state;
+    _pending = null;
+    if (last != null) state = last;
+    if (!ok) return; // Tried again the next time the file opens.
   }
 }
 

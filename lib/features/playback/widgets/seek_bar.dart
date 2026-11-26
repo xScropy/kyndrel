@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -8,7 +7,9 @@ import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/scrub_preview.dart';
+import 'package:kyndrel/core/player/storyboard.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/ui/frame_view.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -89,10 +90,10 @@ class _SeekBarState extends ConsumerState<SeekBar> {
   Timer? _throttle;
   Duration? _pendingSeek;
   PointerDeviceKind? _dragKind;
-  String? _preview;
-  late final _scrub = ScrubPreview(ref, (path) {
-    if (mounted && _hoverX != null && path != _preview) {
-      setState(() => _preview = path);
+  FrameRef? _preview;
+  late final _scrub = ScrubPreview(ref, (frame) {
+    if (mounted && _hoverX != null && frame != _preview) {
+      setState(() => _preview = frame);
     }
   });
 
@@ -311,13 +312,9 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                                       ),
                                     ),
                                     clipBehavior: Clip.antiAlias,
-                                    child: Image.file(
-                                      File(preview),
+                                    child: FrameView(
+                                      frame: preview,
                                       width: frameWidth,
-                                      fit: BoxFit.cover,
-                                      gaplessPlayback: true,
-                                      errorBuilder: (_, _, _) =>
-                                          const SizedBox.shrink(),
                                     ),
                                   ),
                                 _TimeBubble(

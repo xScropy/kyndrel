@@ -185,7 +185,10 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
   - `FrameEngine` (`core/player/frame_engine.dart`): jobs by priority (exact frame > storyboard > library), a storyboard hands over between frames and resumes, mpv closes after 30 s idle, on memory pressure and when the window is hidden. Seek-bar frames seek in the open file instead of reloading it. Library thumbnails no longer get dropped by hover requests.
   - History and resume saving tick only while playing.
   - Deferred imports dropped: on desktop and Android AOT builds all code is in one snapshot, so they save no memory.
-- [ ] 8.2 Storyboard v2: sprite sheets with levels L0/L1/L2 and `spec.json`, bisection order with priority near the drag/playhead, sheet packing in an isolate (desktop) or Kotlin (Android), progress stream instead of polling, benchmark script.
+- [x] 8.2 Storyboard v2: sprite sheets with levels L0/L1/L2 and `spec.json`, bisection order with priority near the drag/playhead, sheet packing in an isolate (desktop) or Kotlin (Android), progress stream instead of polling, benchmark script.
+  - Levels: L0 = 100 frames at 96 px in one 10×10 sheet (the whole video), L1 = a frame every 2 s (≤ 300) at 160 px in 5×5 sheets, L2 = 320 px on phones. Seek bar shows the finest level that has the frame, else the nearest coarse one.
+  - Benchmark (`scripts/bench_storyboard.sh`, 20-minute 1080p H.264, this container): coarse level in 5.7 s, all 400 frames in 19.8 s (~50 ms a frame), 940 KB on disk. The Rust helper is not built: a keyframe decode and scale alone take much of those 50 ms, so it couldn't be 2× faster.
+  - Android keeps its native frame loop (no Kotlin change); Dart packs the sheets at each level's end. The tiles folder is listed once a second while the native loop runs, since it reports nothing until the end.
 - [ ] 8.3 Smooth preview: LRU of decoded sheets, tile painted with `drawImageRect`, no `setState` per pointer move, L0 → L1/L2 → exact frame, chapter title and haptic tick.
 - [ ] 8.4 Library previews made in advance (L0 sheet per video, lowest priority, "only while charging" setting).
 - [ ] 8.5 Library data: folders (hidden, pinned, private, sort), bookmarks, saved playlists, per-file settings; paged SQL queries; live refresh (`Directory.watch`, MediaStore observer); `.nomedia`.
