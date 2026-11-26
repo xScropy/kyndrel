@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clock/clock.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
@@ -418,7 +419,7 @@ class _FolderGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final now = DateTime.now();
+    final now = clock.now();
     return GridView.builder(
       key: const Key('library-folders-grid'),
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
@@ -485,7 +486,7 @@ class _VideoList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final now = DateTime.now();
+    final now = clock.now();
     Widget tile(BuildContext context, int i) {
       final item = items[i];
       final watched = progress[item.uri];
