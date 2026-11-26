@@ -31,9 +31,6 @@ class ResumeController extends Notifier<ResumeOffer?> {
   ResumeOffer? build() {
     final service = ref.watch(playerServiceProvider);
     final sub = service.states.listen(_onState);
-    _timer = Timer.periodic(saveInterval, (_) {
-      if (_last.isPlaying) unawaited(saveNow());
-    });
     ref.onDispose(() {
       unawaited(sub.cancel());
       _timer?.cancel();
@@ -42,6 +39,15 @@ class ResumeController extends Notifier<ResumeOffer?> {
   }
 
   void _onState(PlaybackState s) {
+    // Ticks only while playing: an idle app does no work (task 8.1).
+    if (s.isPlaying && _timer == null) {
+      _timer = Timer.periodic(saveInterval, (_) {
+        if (_last.isPlaying) unawaited(saveNow());
+      });
+    } else if (!s.isPlaying) {
+      _timer?.cancel();
+      _timer = null;
+    }
     final previous = _last;
     _last = s;
 

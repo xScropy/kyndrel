@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show StreamProviderFamily;
 import 'package:kyndrel/core/platform/media_scanner.dart';
+import 'package:kyndrel/core/player/frame_engine.dart';
 import 'package:kyndrel/core/player/media_prober.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
@@ -243,7 +244,10 @@ final mediaProberProvider = Provider<MediaProber>((ref) {
   if (Platform.isAndroid) {
     return AndroidMediaProber(cacheDir: ref.watch(appCacheDirProvider));
   }
-  final prober = MpvMediaProber(previews: ref.watch(previewSourceProvider));
+  final prober = MpvMediaProber(
+    previews: ref.watch(previewSourceProvider),
+    engine: ref.watch(frameEngineProvider),
+  );
   ref.onDispose(prober.dispose);
   return prober;
 });

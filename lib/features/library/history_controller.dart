@@ -32,9 +32,6 @@ class HistoryController extends Notifier<void> {
   @override
   void build() {
     final sub = ref.watch(playerServiceProvider).states.listen(_onState);
-    _timer = Timer.periodic(saveInterval, (_) {
-      if (_last.isPlaying) unawaited(_save(_last, thumbnail: _thumbnailDue()));
-    });
     ref.onDispose(() {
       unawaited(sub.cancel());
       _timer?.cancel();
@@ -47,6 +44,17 @@ class HistoryController extends Notifier<void> {
   }
 
   void _onState(PlaybackState s) {
+    // Ticks only while playing: an idle app does no work (task 8.1).
+    if (s.isPlaying && _timer == null) {
+      _timer = Timer.periodic(saveInterval, (_) {
+        if (_last.isPlaying) {
+          unawaited(_save(_last, thumbnail: _thumbnailDue()));
+        }
+      });
+    } else if (!s.isPlaying) {
+      _timer?.cancel();
+      _timer = null;
+    }
     final previous = _last;
     _last = s;
     if (previous.source != null && previous.source != s.source) {

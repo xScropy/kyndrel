@@ -45,6 +45,7 @@ class AndroidFrameSource implements PreviewSource {
     Duration at,
     Duration duration, {
     bool exact = false,
+    bool background = false,
   }) {
     // Network streams: decoding a second copy costs data and time.
     if (source.startsWith('http://') || source.startsWith('https://')) {

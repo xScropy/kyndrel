@@ -39,6 +39,23 @@ void main() {
     expect(backend.calls, ['open(a.mp4, play: false)']);
   });
 
+  test('small demuxer buffers for local files, mpv defaults for streams '
+      '(8.1)', () async {
+    String ahead() => backend.properties['demuxer-max-bytes']!;
+    String behind() => backend.properties['demuxer-max-back-bytes']!;
+    await service.open('/v/film.mkv');
+    expect((ahead(), behind()), ('32MiB', '8MiB'));
+    await service.open('content://media/external/video/media/7');
+    expect(ahead(), '32MiB');
+    await service.open('https://x.example/live.m3u8');
+    expect((ahead(), behind()), ('150MiB', '50MiB'));
+
+    // The user's own mpv.conf value wins.
+    await service.applyOptions({'demuxer-max-bytes': '64MiB'});
+    await service.open('/v/film.mkv');
+    expect((ahead(), behind()), ('64MiB', '8MiB'));
+  });
+
   test('open rejects an empty source', () {
     expect(() => service.open('   '), throwsArgumentError);
     expect(backend.calls, isEmpty);

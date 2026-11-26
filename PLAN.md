@@ -181,7 +181,10 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
 - [x] 8.0 Preview bugs: cache keys ignore file size/mtime, `previews/` cache has no limit, storyboard cancel race, Android marks partial storyboards complete, sync file IO on the UI isolate.
   - Also fixed: the desktop storyboard counted files in a scratch folder it emptied, so every frame after the first waited out the 3 s timeout. Frames are now found by name.
   - Folder listings in render loops and cache trims are async. The 500 ms storyboard poll stays until 8.2 replaces it with a progress stream.
-- [ ] 8.1 Lean engine: one shared, lazily started, auto-disposed frame engine for storyboard, exact frames and probing (≤ 2 libmpv instances); lean decode options; smaller demuxer cache for local files; image-cache cap and memory-pressure handling; no idle timers; deferred feature imports.
+- [x] 8.1 Lean engine: one shared, lazily started, auto-disposed frame engine for storyboard, exact frames and probing (≤ 2 libmpv instances); lean decode options; smaller demuxer cache for local files; image-cache cap and memory-pressure handling; no idle timers; deferred feature imports.
+  - `FrameEngine` (`core/player/frame_engine.dart`): jobs by priority (exact frame > storyboard > library), a storyboard hands over between frames and resumes, mpv closes after 30 s idle, on memory pressure and when the window is hidden. Seek-bar frames seek in the open file instead of reloading it. Library thumbnails no longer get dropped by hover requests.
+  - History and resume saving tick only while playing.
+  - Deferred imports dropped: on desktop and Android AOT builds all code is in one snapshot, so they save no memory.
 - [ ] 8.2 Storyboard v2: sprite sheets with levels L0/L1/L2 and `spec.json`, bisection order with priority near the drag/playhead, sheet packing in an isolate (desktop) or Kotlin (Android), progress stream instead of polling, benchmark script.
 - [ ] 8.3 Smooth preview: LRU of decoded sheets, tile painted with `drawImageRect`, no `setState` per pointer move, L0 → L1/L2 → exact frame, chapter title and haptic tick.
 - [ ] 8.4 Library previews made in advance (L0 sheet per video, lowest priority, "only while charging" setting).

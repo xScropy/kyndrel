@@ -8,6 +8,7 @@ import 'package:kyndrel/app/engine_sync.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/log_sync.dart';
 import 'package:kyndrel/app/media_session_sync.dart';
+import 'package:kyndrel/app/memory_guard.dart';
 import 'package:kyndrel/app/perf_log.dart';
 import 'package:kyndrel/app/player_shortcuts.dart';
 import 'package:kyndrel/app/settings_page.dart';
@@ -87,6 +88,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.initState();
     ref
       ..read(engineSyncProvider)
+      // Image-cache cap, and closing the frame engine when memory is short.
+      ..read(memoryGuardProvider)
       ..read(mediaSessionSyncProvider)
       ..read(scriptManagerProvider)
       ..read(logSyncProvider)

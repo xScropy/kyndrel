@@ -213,8 +213,39 @@ class PlayerService {
       'http-header-fields',
       (_headers[trimmed] ?? const []).join(','),
     );
+    await _setDemuxerCache(trimmed);
     await backend.open(trimmed, play: play);
   }
+
+  /// mpv reads up to 150 MB ahead and keeps 50 MB behind by default. A local
+  /// file is read as fast as it plays, so small buffers do (task 8.1);
+  /// streams keep mpv's defaults to ride out a slow network. Options the
+  /// user set in Advanced win.
+  static const ({String ahead, String behind}) localDemuxerCache = (
+    ahead: '32MiB',
+    behind: '8MiB',
+  );
+  static const ({String ahead, String behind}) streamDemuxerCache = (
+    ahead: '150MiB',
+    behind: '50MiB',
+  );
+
+  Future<void> _setDemuxerCache(String source) async {
+    final local =
+        !source.contains('://') ||
+        source.startsWith('file://') ||
+        source.startsWith('content://');
+    final size = local ? localDemuxerCache : streamDemuxerCache;
+    if (!_userOptions.contains('demuxer-max-bytes')) {
+      await backend.setProperty('demuxer-max-bytes', size.ahead);
+    }
+    if (!_userOptions.contains('demuxer-max-back-bytes')) {
+      await backend.setProperty('demuxer-max-back-bytes', size.behind);
+    }
+  }
+
+  /// Options set through [applyOptions] (Advanced › mpv.conf).
+  final _userOptions = <String>{};
 
   /// Stops playback and returns to idle.
   Future<void> close() async {
@@ -566,6 +597,9 @@ class PlayerService {
   /// Applies `mpv.conf`-style options (advanced settings, task 5.1).
   /// Returns the options mpv rejected.
   Future<List<String>> applyOptions(Map<String, String> options) async {
+    _userOptions
+      ..clear()
+      ..addAll(options.keys);
     final rejected = <String>[];
     for (final e in options.entries) {
       try {

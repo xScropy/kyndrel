@@ -6,7 +6,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
-import 'package:kyndrel/core/player/media_kit_backend.dart';
+import 'package:kyndrel/core/player/frame_engine.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
@@ -209,26 +209,40 @@ abstract interface class StoryboardSource {
   Future<void> cancel();
 }
 
-/// Desktop: a hidden second mpv opens the file once, paused, and seeks to
-/// each step (keyframe seeks: fast). `vo=image` writes one picture per
-/// seek, so each file's index is known. Much faster than one `loadfile`
-/// per frame (3.7).
+/// Desktop: the shared [FrameEngine] opens the file once, paused, and
+/// seeks to each step (keyframe seeks: fast). `vo=image` writes one picture
+/// per seek. When a more urgent frame is wanted (the finger rests on the
+/// seek bar), the render hands the engine over and carries on afterwards
+/// from the frame it reached (task 8.1).
 class MpvStoryboardSource implements StoryboardSource {
-  new({PlayerBackend Function()? backendFactory})
-    : _factory = backendFactory ?? (() => MediaKitBackend(withVideo: false));
+  /// [engine] is shared in the app; tests may pass [backendFactory] for an
+  /// engine of their own.
+  new({FrameEngine? engine, PlayerBackend Function()? backendFactory})
+    : _engine = engine ?? FrameEngine(backendFactory: backendFactory),
+      _ownsEngine = engine == null;
 
   /// How long one seek may take before that frame is skipped.
   static const frameTimeout = Duration(seconds: 3);
 
-  final PlayerBackend Function() _factory;
-  PlayerBackend? _backend;
+  /// Options of the storyboard profile.
+  static const options = [
+    ('vo', 'image'),
+    ('vid', 'auto'),
+    ('aid', 'no'),
+    ('vo-image-jpeg-quality', '70'),
+    ('vf', 'scale=w=${Storyboard.width}:h=-2'),
+    ('hr-seek', 'no'),
+  ];
+
+  final FrameEngine _engine;
+  final bool _ownsEngine;
 
   /// Each render gets a number; [cancel] and newer renders bump it, so an
-  /// old render still waiting on mpv stops instead of sharing the backend
-  /// with the new one (task 8.0).
+  /// old render still waiting stops instead of sharing the engine with the
+  /// new one (task 8.0).
   int _generation = 0;
 
-  /// Renders run one after another on the single backend.
+  /// Renders run one after another.
   Future<void> _last = Future.value();
 
   @override
@@ -241,133 +255,125 @@ class MpvStoryboardSource implements StoryboardSource {
       await previous;
       if (token != _generation) return false;
       return await _render(board, () => token != _generation);
+    } on FrameEngineClosed {
+      return false;
     } finally {
       done.complete();
     }
   }
 
   Future<bool> _render(Storyboard board, bool Function() stale) async {
-    final scratch = Directory('${board.directory}.part');
+    await Directory(board.directory).create(recursive: true);
+    final have = await Storyboard.framesOnDisk(board.directory);
+    final failed = <int>{};
+    var next = 0;
+    while (next < board.count) {
+      final reached = await _engine.run(
+        FrameJob.storyboard,
+        (s) => _chunk(s, board, next, have, failed, stale),
+      );
+      if (reached == null || stale()) return false;
+      next = reached;
+    }
+    if (have.isEmpty || !Storyboard.acceptable(board.count, failed)) {
+      return false;
+    }
+    board.writeIndex(failed: failed);
+    return true;
+  }
+
+  /// Renders frames from [from] on, until the end, a cancel, or a more
+  /// urgent job; returns the frame to continue from, or null when the file
+  /// won't open.
+  Future<int?> _chunk(
+    FrameSession s,
+    Storyboard board,
+    int from,
+    Set<int> have,
+    Set<int> failed,
+    bool Function() stale,
+  ) async {
+    final b = s.backend;
+    var i = from;
+    while (i < board.count && have.contains(i)) {
+      i++;
+    }
+    if (i >= board.count) return board.count;
+    final tag = 'storyboard|${board.source}';
+    var seek = true;
     try {
-      if (scratch.existsSync()) await scratch.delete(recursive: true);
-      await scratch.create(recursive: true);
-      await Directory(board.directory).create(recursive: true);
-      final b = _backend ??= _factory();
-      for (final (k, v) in [
-        ('ao', 'null'),
-        ('aid', 'no'),
-        ('sid', 'no'),
-        ('vid', 'auto'),
-        ('hwdec', 'no'),
-        ('vo', 'image'),
-        ('vo-image-format', 'jpg'),
-        ('vo-image-jpeg-quality', '70'),
-        ('vo-image-outdir', scratch.path),
-        ('vf', 'scale=w=${Storyboard.width}:h=-2'),
-        ('hr-seek', 'no'),
-        ('keep-open', 'always'),
-        ('pause', 'yes'),
-        ('start', '0'),
-      ]) {
-        await b.setProperty(k, v);
+      if (s.loaded != tag) {
+        await s.configure('storyboard', options);
+        await s.clearScratch();
+        await b.setProperty('start', _seconds(board.step * i));
+        await b.command(['loadfile', board.source, 'replace']);
+        s.loaded = tag;
+        seek = false; // The first picture is frame i.
       }
-      await b.command(['loadfile', board.source, 'replace']);
-      // The first picture (time 0) arrives once the file has opened. mpv
-      // numbers its pictures (00000001.jpg, …) and each is moved out as
-      // soon as it is seen, so a new picture is one with a later name.
-      var newest = '';
       String? lastPos;
-
-      /// The picture this seek produced; `null` with [same] when it landed
-      /// on the keyframe already shown (mpv draws nothing new then).
-      Future<({File? frame, bool same})> nextFrame() async {
-        final end = DateTime.now().add(frameTimeout);
-        while (DateTime.now().isBefore(end) && !stale()) {
-          await Future<void>.delayed(const Duration(milliseconds: 15));
-          final files = (await _frames(scratch))
-              .where((f) => p.basename(f.path).compareTo(newest) > 0)
-              .toList();
-          if (files.isNotEmpty) {
-            newest = p.basename(files.last.path);
-            // Let mpv finish writing it.
-            await Future<void>.delayed(const Duration(milliseconds: 10));
-            lastPos = await b.getProperty('time-pos');
-            return (frame: files.last, same: false);
-          }
-          if (lastPos != null && await b.getProperty('seeking') == 'no') {
-            final pos = await b.getProperty('time-pos');
-            if (pos == lastPos) return (frame: null, same: true);
-          }
-        }
-        return (frame: null, same: false);
-      }
-
-      final have = await Storyboard.framesOnDisk(board.directory);
-      final failed = <int>{};
-      for (var i = 0; i < board.count; i++) {
+      for (; i < board.count; i++) {
         if (stale()) {
           await b.command(['stop']);
-          return false;
+          s.loaded = null;
+          return i;
         }
-        if (i > 0) {
-          if (have.contains(i)) continue;
-          final at = (board.step * i).inMilliseconds / 1000;
-          await b.command(['seek', '$at', 'absolute+keyframes']);
+        if (have.contains(i)) {
+          seek = true;
+          continue;
         }
-        final out = board.pathOf(i);
-        final next = await nextFrame();
-        final frame = next.frame;
-        if (frame != null) {
-          if (have.contains(i)) {
-            await frame.delete();
-          } else {
-            await frame.rename(out);
-          }
+        if (s.shouldYield) return i;
+        if (seek) {
+          await s.clearScratch();
+          await b.command([
+            'seek',
+            _seconds(board.step * i),
+            'absolute+keyframes',
+          ]);
+        }
+        seek = true;
+        final next = await s.nextPicture(
+          timeout: frameTimeout,
+          stale: stale,
+          lastPos: lastPos,
+        );
+        final picture = next.file;
+        if (picture != null) {
+          await picture.rename(board.pathOf(i));
           have.add(i);
+          lastPos = await b.getProperty('time-pos');
         } else if (next.same && have.contains(i - 1)) {
           // Same keyframe as the step before: the same picture.
-          await File(board.pathOf(i - 1)).copy(out);
+          await File(board.pathOf(i - 1)).copy(board.pathOf(i));
           have.add(i);
-        } else if (i == 0 && !have.contains(0)) {
-          return false; // The file didn't open.
-        } else if (!have.contains(i)) {
-          if (stale()) continue; // Stopped, not failed: the loop returns.
+        } else if (stale()) {
+          continue; // Stopped, not failed: the top of the loop returns.
+        } else if (i == from && lastPos == null && have.isEmpty) {
+          s.loaded = null;
+          return null; // The file didn't open.
+        } else {
           failed.add(i);
         }
       }
-      await b.command(['stop']);
-      if (have.isEmpty || !Storyboard.acceptable(board.count, failed)) {
-        return false;
-      }
-      board.writeIndex(failed: failed);
-      return true;
+      return board.count;
     } on Object {
-      return false;
-    } finally {
-      if (scratch.existsSync()) await scratch.delete(recursive: true);
+      s.loaded = null;
+      return null;
     }
   }
 
-  /// mpv's pictures so far (00000001.jpg, …), oldest first.
-  static Future<List<File>> _frames(Directory scratch) async {
-    final files = <File>[];
-    await for (final f in scratch.list()) {
-      if (f is File && f.path.endsWith('.jpg')) files.add(f);
-    }
-    return files..sort((a, b) => a.path.compareTo(b.path));
-  }
+  static String _seconds(Duration d) => '${d.inMilliseconds / 1000}';
 
   @override
   Future<void> cancel() async => _generation++;
 
   Future<void> dispose() async {
     _generation++;
-    await _backend?.dispose();
+    if (_ownsEngine) await _engine.dispose();
   }
 }
 
 final storyboardSourceProvider = Provider<StoryboardSource>((ref) {
-  final s = MpvStoryboardSource();
+  final s = MpvStoryboardSource(engine: ref.watch(frameEngineProvider));
   ref.onDispose(s.dispose);
   return s;
 });

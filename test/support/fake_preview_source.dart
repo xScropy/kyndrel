@@ -17,6 +17,7 @@ class FakePreviewSource implements PreviewSource {
     Duration at,
     Duration duration, {
     bool exact = false,
+    bool background = false,
   }) async {
     (exact ? exactRequests : requests).add(at);
     return path;
