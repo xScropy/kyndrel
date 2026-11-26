@@ -3,6 +3,76 @@
 All notable changes to Kyndrel. The release workflow copies a version's
 section into its GitHub release.
 
+## [1.3.0] - 2026-11-26
+
+Lighter and smoother: scrubbing like YouTube, a library like MX Player, a
+Browse section for folders and network servers, and many player extras.
+
+### Scrubbing
+- Storyboards now come in levels like YouTube's: a small sheet covering
+  the whole video first, then finer frames, made coarse to fine so every
+  part of the timeline has a frame within seconds; frames near your finger
+  come first.
+- Library videos get their coarse storyboard while Kyndrel is idle
+  (Settings > Library: always, only while charging, or off), so a video
+  opened from the library scrubs at once.
+- The seek bar only repaints while you drag (no rebuilds), sheets around
+  your finger are decoded ahead, and the exact frame fades in when you
+  rest.
+
+### Library
+- Folders, All videos, Recently added and Playlists; a continue-watching
+  row; list, grid (three sizes) or compact; filters (unwatched, HD,
+  subtitles); ascending/descending; each folder remembers its order and
+  layout.
+- A fast-scroller with a letter, month or size bubble; thumbnails flip
+  through the video's scenes when you hover or slide a finger across them.
+- Long-press to select: play, queue, add to a playlist, mark watched or
+  unwatched; on computers also rename, move, and move to the trash.
+- Folders can be pinned, hidden, or made private behind a PIN.
+- Saved playlists, plus "Unwatched" and "Added this month".
+- The library updates itself when files are added or removed (computers),
+  or when you come back to the app after a while.
+
+### Browse
+- A new section: your device's folders and drives, and network servers
+  (WebDAV, FTP, media servers found on the network; SMB and SFTP open by
+  address).
+
+### Player
+- Bookmarks (B, Ctrl+B), jump to time (Ctrl+G), playback statistics
+  (Shift+I), HW / HW+ / SW decoding (H, or the badge at the top).
+- Each file remembers its audio and subtitle tracks, speed, delays, fit
+  and zoom. Incognito leaves no history, resume points or file settings.
+- "Skip intro" and "Next episode": from chapters, from a mark you set with
+  Shift+M, or found by comparing episodes of a season.
+- A "most replayed" curve over the seek bar from what you rewatch (kept
+  on your device).
+- Picture adjustments, audio passthrough, external audio tracks, ZIP
+  subtitles, a list of subtitle lines (Ctrl+T), your own quick commands
+  (Ctrl+K), mouse buttons, saving the A-B loop as a clip or GIF (with
+  ffmpeg), hold-for-2x with a slide to change speed, a swipe for the next
+  file on phones, and a pure black theme.
+
+### Lighter
+- One hidden player for storyboards, previews and the library instead of
+  three, started only when needed and closed after 30 s idle.
+- Smaller read-ahead buffers for local files; a cap on decoded images;
+  nothing ticks while idle.
+- A big library's first scan no longer slows down as it goes.
+
+### Fixes
+- The desktop storyboard waited 3 s for every frame after the first.
+- A file replaced under the same name showed the old one's thumbnails.
+- Storyboards with missing frames were marked finished on Android.
+- A file watched in incognito could be added to history when the next
+  one opened.
+
+### Known limitations
+- Rename, move, delete and share are not available for Android's media
+  files yet.
+- Display frame-rate matching is not done.
+
 ## [1.2.0] - 2026-11-20
 
 A library and a music player, and a seek bar that shows the scene under
