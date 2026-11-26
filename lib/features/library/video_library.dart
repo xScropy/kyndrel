@@ -13,6 +13,7 @@ import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
+import 'package:kyndrel/core/storage/library_watcher.dart';
 import 'package:kyndrel/core/storage/media_index.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/settings_widgets.dart';
@@ -150,9 +151,11 @@ Future<void> playFromList(
   for (final i in list) i.uri,
 ], start: list.indexOf(item));
 
-/// Scans once per session, the first time a library tab is shown.
+/// Scans once per session, the first time a library tab is shown, then
+/// keeps the library up to date (folder watching, task 8.5).
 final libraryAutoScanProvider = Provider<void>((ref) {
   unawaited(ref.read(mediaIndexProvider).refresh(ask: true));
+  ref.watch(libraryWatcherProvider);
 });
 
 /// The Videos tab: folders, then the videos in a folder, like a phone

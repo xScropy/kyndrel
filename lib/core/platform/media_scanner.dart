@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +27,7 @@ class ScannedFile {
     this.artist,
     this.album,
     this.trackNo,
+    this.hasSubtitles = false,
   });
 
   factory fromMap(Map<Object?, Object?> m) {
@@ -57,8 +59,12 @@ class ScannedFile {
       artist: text(m['artist']),
       album: text(m['album']),
       trackNo: positive(m['trackNo']),
+      hasSubtitles: m['hasSubtitles'] == true,
     );
   }
+
+  /// A subtitle file with the same name sits next to it (task 8.5).
+  final bool hasSubtitles;
 
   final String uri;
   final String name;
@@ -144,17 +150,49 @@ class FolderMediaScanner implements MediaScanner {
   @override
   Future<bool> requestAccess() async => true;
 
+  /// Subtitle files that count as "has subtitles" for a video beside them.
+  static const subtitleExtensions = {'srt', 'ass', 'ssa', 'vtt', 'sub', 'sup'};
+
+  /// Walks the folders in a background isolate, so a big library never
+  /// blocks the UI (task 8.5).
   @override
-  Future<List<ScannedFile>> scan() async {
+  Future<List<ScannedFile>> scan() {
+    final roots = folders;
+    return Isolate.run(() => scanSync(roots));
+  }
+
+  /// [scan]'s work. Skips hidden folders, unreadable ones and folders with a
+  /// `.nomedia` file (task 8.5), like Android does.
+  static List<ScannedFile> scanSync(List<String> roots) {
     final out = <ScannedFile>[];
     final seen = <String>{};
-    for (final root in folders) {
-      final dir = Directory(root);
-      if (!dir.existsSync()) continue;
-      await for (final e in _walk(dir)) {
-        if (!seen.add(e.path)) continue;
+    void walk(Directory dir) {
+      List<FileSystemEntity> entries;
+      try {
+        entries = dir.listSync(followLinks: false);
+      } on FileSystemException {
+        return;
+      }
+      if (entries.any((e) => p.basename(e.path) == '.nomedia')) return;
+      // "Film.srt", "Film.en.srt": subtitles for "Film.mkv".
+      final subtitleNames = <String>[
+        for (final e in entries)
+          if (e is File &&
+              subtitleExtensions.contains(
+                p.extension(e.path).toLowerCase().replaceFirst('.', ''),
+              ))
+            p.basenameWithoutExtension(e.path).toLowerCase(),
+      ];
+      for (final e in entries) {
+        if (p.basename(e.path).startsWith('.')) continue;
+        if (e is Directory) {
+          walk(e);
+          continue;
+        }
+        if (e is! File || !seen.add(e.path)) continue;
         final kind = kindOf(e.path);
         if (kind == null) continue;
+        final base = p.basenameWithoutExtension(e.path).toLowerCase();
         try {
           final stat = e.statSync();
           out.add(
@@ -165,6 +203,9 @@ class FolderMediaScanner implements MediaScanner {
               kind: kind,
               size: stat.size,
               modified: stat.modified,
+              hasSubtitles:
+                  kind == MediaKind.video &&
+                  subtitleNames.any((n) => n == base || n.startsWith('$base.')),
             ),
           );
         } on FileSystemException {
@@ -172,25 +213,12 @@ class FolderMediaScanner implements MediaScanner {
         }
       }
     }
-    return out;
-  }
 
-  /// Files under [dir], skipping hidden folders and unreadable ones.
-  static Stream<File> _walk(Directory dir) async* {
-    List<FileSystemEntity> entries;
-    try {
-      entries = dir.listSync(followLinks: false);
-    } on FileSystemException {
-      return;
+    for (final root in roots) {
+      final dir = Directory(root);
+      if (dir.existsSync()) walk(dir);
     }
-    for (final e in entries) {
-      if (p.basename(e.path).startsWith('.')) continue;
-      if (e is File) {
-        yield e;
-      } else if (e is Directory) {
-        yield* _walk(e);
-      }
-    }
+    return out;
   }
 
   /// The user's Videos (Movies on macOS) and Music folders.

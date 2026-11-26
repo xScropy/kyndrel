@@ -101,7 +101,11 @@ void main() {
     expect(source.levelsAsked, [0, 0], reason: 'only the coarse level');
     expect(c.read(libraryPreviewsProvider).made, 2);
     expect(c.read(libraryPreviewsProvider).waiting, 0);
-    final board = Storyboard.read(cache, '/m/new.mkv', const Duration(minutes: 10));
+    final board = Storyboard.read(
+      cache,
+      '/m/new.mkv',
+      const Duration(minutes: 10),
+    );
     expect(board.levels[0].complete, isTrue);
 
     // Done ones aren't made again.

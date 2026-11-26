@@ -128,7 +128,17 @@ class MediaIndex {
             old.size != f.size ||
             old.modified.millisecondsSinceEpoch !=
                 f.modified.millisecondsSinceEpoch;
-        if (!changed) continue;
+        if (!changed) {
+          // A subtitle file appeared or went: only that changes.
+          if (old.hasSubtitles != f.hasSubtitles) {
+            b.update(
+              db.libraryItems,
+              LibraryItemsCompanion(hasSubtitles: Value(f.hasSubtitles)),
+              where: (t) => t.uri.equals(f.uri),
+            );
+          }
+          continue;
+        }
         b.insert(
           db.libraryItems,
           LibraryItemsCompanion.insert(
@@ -147,6 +157,8 @@ class MediaIndex {
             artist: Value(f.artist),
             album: Value(f.album),
             trackNo: Value(f.trackNo),
+            hasSubtitles: Value(f.hasSubtitles),
+            watched: Value(old?.watched ?? false),
           ),
           mode: InsertMode.insertOrReplace,
         );
