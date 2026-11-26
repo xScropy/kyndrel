@@ -14,12 +14,15 @@ class FakeStoryboardSource implements StoryboardSource {
   Future<bool> render(Storyboard board) async {
     rendered.add(board);
     Directory(board.directory).createSync(recursive: true);
+    final failed = <int>{};
     for (var i = 0; i < board.count; i++) {
       if (only == null || only!.contains(i)) {
         File(board.pathOf(i)).writeAsBytesSync(const [0xFF, 0xD8]);
+      } else {
+        failed.add(i);
       }
     }
-    board.writeIndex();
+    board.writeIndex(failed: failed);
     return true;
   }
 

@@ -10,7 +10,8 @@ import 'package:kyndrel/core/player/media_kit_backend.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
-import 'package:kyndrel/core/utils/hashing.dart';
+import 'package:kyndrel/core/storage/cache_trim.dart';
+import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
 /// Frames for the whole video, made in advance so the seek bar can show the
@@ -89,12 +90,16 @@ class Storyboard {
     complete: complete ?? this.complete,
   );
 
-  /// The folder for [source] under [cacheDir].
+  /// The folder for [source] under [cacheDir]. The key includes a local
+  /// file's size and modified time (task 8.0).
   static String directoryFor(Directory cacheDir, String source) =>
-      p.join(cacheDir.path, 'storyboards', fnv1a64(source));
+      p.join(cacheDir.path, 'storyboards', mediaCacheKey(source));
 
   /// What is on disk for [source]: written frames, and whether the set is
   /// complete for this length.
+  ///
+  /// Complete means `index.json` matches this spacing and frame count, and
+  /// every frame is either written or recorded as failed.
   static Storyboard read(Directory cacheDir, String source, Duration duration) {
     final dir = directoryFor(cacheDir, source);
     final board = Storyboard(
@@ -107,16 +112,23 @@ class Storyboard {
     if (!folder.existsSync()) return board;
     final frames = <int>{};
     for (final f in folder.listSync().whereType<File>()) {
-      final name = p.basenameWithoutExtension(f.path);
-      final i = int.tryParse(name);
-      if (i != null && f.path.endsWith('.jpg')) frames.add(i);
+      final i = _frameIndex(f.path);
+      if (i != null) frames.add(i);
     }
     var complete = false;
     final index = File(p.join(dir, 'index.json'));
     if (index.existsSync()) {
       try {
         final json = jsonDecode(index.readAsStringSync()) as Map;
-        complete = json['stepMs'] == board.step.inMilliseconds;
+        final failed = {
+          for (final f in (json['failed'] as List?) ?? const <Object>[])
+            (f as num).toInt(),
+        };
+        complete =
+            json['stepMs'] == board.step.inMilliseconds &&
+            json['count'] == board.count &&
+            Iterable<int>.generate(board.count)
+                .every((i) => frames.contains(i) || failed.contains(i));
       } on Object {
         complete = false;
       }
@@ -124,47 +136,67 @@ class Storyboard {
     return board.copyWith(available: frames, complete: complete);
   }
 
-  /// Marks the frames as complete.
-  void writeIndex() {
+  /// `7.jpg` → 7; anything else (`7.part`, `index.json`) → null.
+  static int? _frameIndex(String path) => path.endsWith('.jpg')
+      ? int.tryParse(p.basenameWithoutExtension(path))
+      : null;
+
+  /// The frames written in [directory] (async: for background work).
+  static Future<Set<int>> framesOnDisk(String directory) async {
+    final out = <int>{};
+    final dir = Directory(directory);
+    if (!dir.existsSync()) return out;
+    await for (final f in dir.list()) {
+      final i = f is File ? _frameIndex(f.path) : null;
+      if (i != null) out.add(i);
+    }
+    return out;
+  }
+
+  /// Whether a finished render with [failed] frames out of [count] is good
+  /// enough to keep. More than 1 in 10 missing is probably a passing
+  /// problem (slow disk, busy decoder): leave it unfinished to retry.
+  static bool acceptable(int count, Set<int> failed) =>
+      failed.length <= count ~/ 10;
+
+  /// Marks the frames as complete; [failed] frames couldn't be made and
+  /// aren't retried.
+  void writeIndex({Set<int> failed = const {}}) {
     File(p.join(directory, 'index.json')).writeAsStringSync(
       jsonEncode({
         'source': source,
         'stepMs': step.inMilliseconds,
         'count': count,
+        'failed': (failed.toList()..sort()),
       }),
     );
   }
 
   /// Deletes the oldest storyboards until the folder is under [limit],
   /// keeping [keep] (the one in use).
-  static void trimCache(
+  static Future<void> trimCache(
     Directory cacheDir, {
     int limit = cacheLimitBytes,
     String? keep,
-  }) {
-    final root = Directory(p.join(cacheDir.path, 'storyboards'));
-    if (!root.existsSync()) return;
-    final boards = <(Directory, int, DateTime)>[];
-    var total = 0;
-    for (final d in root.listSync().whereType<Directory>()) {
-      var size = 0;
-      var newest = DateTime.fromMillisecondsSinceEpoch(0);
-      for (final f in d.listSync().whereType<File>()) {
-        final stat = f.statSync();
-        size += stat.size;
-        if (stat.modified.isAfter(newest)) newest = stat.modified;
-      }
-      total += size;
-      boards.add((d, size, newest));
-    }
-    boards.sort((a, b) => a.$3.compareTo(b.$3));
-    for (final (dir, size, _) in boards) {
-      if (total <= limit) break;
-      if (dir.path == keep) continue;
-      dir.deleteSync(recursive: true);
-      total -= size;
-    }
-  }
+  }) => trimCacheFolder(
+    Directory(p.join(cacheDir.path, 'storyboards')),
+    limit: limit,
+    keep: {?keep},
+  );
+}
+
+/// The size limit of `<cache>/previews` (seek-bar and library frames).
+const int previewCacheLimitBytes = 200 * 1024 * 1024;
+
+/// Trims the storyboard and preview caches (task 8.0), keeping [keep].
+Future<void> trimFrameCaches(Directory cacheDir, {String? keep}) async {
+  await Storyboard.trimCache(cacheDir, keep: keep);
+  final previews = p.join(cacheDir.path, 'previews');
+  await trimCacheFolder(
+    Directory(previews),
+    limit: previewCacheLimitBytes,
+    keep: {p.join(previews, 'scratch')},
+  );
 }
 
 /// Makes the frames of a [Storyboard] into its folder.
@@ -190,16 +222,36 @@ class MpvStoryboardSource implements StoryboardSource {
 
   final PlayerBackend Function() _factory;
   PlayerBackend? _backend;
-  bool _cancelled = false;
+
+  /// Each render gets a number; [cancel] and newer renders bump it, so an
+  /// old render still waiting on mpv stops instead of sharing the backend
+  /// with the new one (task 8.0).
+  int _generation = 0;
+
+  /// Renders run one after another on the single backend.
+  Future<void> _last = Future.value();
 
   @override
   Future<bool> render(Storyboard board) async {
-    _cancelled = false;
+    final token = ++_generation;
+    final previous = _last;
+    final done = Completer<void>();
+    _last = done.future;
+    try {
+      await previous;
+      if (token != _generation) return false;
+      return await _render(board, () => token != _generation);
+    } finally {
+      done.complete();
+    }
+  }
+
+  Future<bool> _render(Storyboard board, bool Function() stale) async {
     final scratch = Directory('${board.directory}.part');
     try {
-      if (scratch.existsSync()) scratch.deleteSync(recursive: true);
-      scratch.createSync(recursive: true);
-      Directory(board.directory).createSync(recursive: true);
+      if (scratch.existsSync()) await scratch.delete(recursive: true);
+      await scratch.create(recursive: true);
+      await Directory(board.directory).create(recursive: true);
       final b = _backend ??= _factory();
       for (final (k, v) in [
         ('ao', 'null'),
@@ -220,19 +272,23 @@ class MpvStoryboardSource implements StoryboardSource {
         await b.setProperty(k, v);
       }
       await b.command(['loadfile', board.source, 'replace']);
-      // The first picture (time 0) arrives once the file has opened.
-      var seen = 0;
+      // The first picture (time 0) arrives once the file has opened. mpv
+      // numbers its pictures (00000001.jpg, …) and each is moved out as
+      // soon as it is seen, so a new picture is one with a later name.
+      var newest = '';
       String? lastPos;
 
       /// The picture this seek produced; `null` with [same] when it landed
       /// on the keyframe already shown (mpv draws nothing new then).
       Future<({File? frame, bool same})> nextFrame() async {
         final end = DateTime.now().add(frameTimeout);
-        while (DateTime.now().isBefore(end) && !_cancelled) {
+        while (DateTime.now().isBefore(end) && !stale()) {
           await Future<void>.delayed(const Duration(milliseconds: 15));
-          final files = _frames(scratch);
-          if (files.length > seen) {
-            seen = files.length;
+          final files = (await _frames(scratch))
+              .where((f) => p.basename(f.path).compareTo(newest) > 0)
+              .toList();
+          if (files.isNotEmpty) {
+            newest = p.basename(files.last.path);
             // Let mpv finish writing it.
             await Future<void>.delayed(const Duration(milliseconds: 10));
             lastPos = await b.getProperty('time-pos');
@@ -246,63 +302,66 @@ class MpvStoryboardSource implements StoryboardSource {
         return (frame: null, same: false);
       }
 
-      var written = 0;
+      final have = await Storyboard.framesOnDisk(board.directory);
+      final failed = <int>{};
       for (var i = 0; i < board.count; i++) {
-        if (_cancelled) {
+        if (stale()) {
           await b.command(['stop']);
           return false;
         }
-        final out = File(board.pathOf(i));
         if (i > 0) {
-          if (out.existsSync()) continue;
+          if (have.contains(i)) continue;
           final at = (board.step * i).inMilliseconds / 1000;
           await b.command(['seek', '$at', 'absolute+keyframes']);
         }
+        final out = board.pathOf(i);
         final next = await nextFrame();
         final frame = next.frame;
         if (frame != null) {
-          if (out.existsSync()) {
-            frame.deleteSync();
+          if (have.contains(i)) {
+            await frame.delete();
           } else {
-            frame.renameSync(out.path);
+            await frame.rename(out);
           }
-          written++;
-        } else if (next.same && i > 0) {
+          have.add(i);
+        } else if (next.same && have.contains(i - 1)) {
           // Same keyframe as the step before: the same picture.
-          final previous = File(board.pathOf(i - 1));
-          if (previous.existsSync()) {
-            previous.copySync(out.path);
-            written++;
-          }
-        } else if (i == 0) {
+          await File(board.pathOf(i - 1)).copy(out);
+          have.add(i);
+        } else if (i == 0 && !have.contains(0)) {
           return false; // The file didn't open.
+        } else if (!have.contains(i)) {
+          if (stale()) continue; // Stopped, not failed: the loop returns.
+          failed.add(i);
         }
       }
       await b.command(['stop']);
-      if (written == 0) return false;
-      board.writeIndex();
+      if (have.isEmpty || !Storyboard.acceptable(board.count, failed)) {
+        return false;
+      }
+      board.writeIndex(failed: failed);
       return true;
     } on Object {
       return false;
     } finally {
-      if (scratch.existsSync()) scratch.deleteSync(recursive: true);
+      if (scratch.existsSync()) await scratch.delete(recursive: true);
     }
   }
 
   /// mpv's pictures so far (00000001.jpg, …), oldest first.
-  static List<File> _frames(Directory scratch) =>
-      scratch
-          .listSync()
-          .whereType<File>()
-          .where((f) => f.path.endsWith('.jpg'))
-          .toList()
-        ..sort((a, b) => a.path.compareTo(b.path));
+  static Future<List<File>> _frames(Directory scratch) async {
+    final files = <File>[];
+    await for (final f in scratch.list()) {
+      if (f is File && f.path.endsWith('.jpg')) files.add(f);
+    }
+    return files..sort((a, b) => a.path.compareTo(b.path));
+  }
 
   @override
-  Future<void> cancel() async => _cancelled = true;
+  Future<void> cancel() async => _generation++;
 
   Future<void> dispose() async {
-    _cancelled = true;
+    _generation++;
     await _backend?.dispose();
   }
 }
@@ -383,7 +442,8 @@ class StoryboardController extends Notifier<Storyboard?> {
       await Future<void>.delayed(const Duration(seconds: 1));
     }
     if (_for != source) return;
-    Storyboard.trimCache(cache, keep: board.directory);
+    // In the background: trimming lists every cached file.
+    unawaited(trimFrameCaches(cache, keep: board.directory));
     // Shows frames as they appear.
     _poll = Timer.periodic(const Duration(milliseconds: 500), (_) {
       if (_for != source) return;

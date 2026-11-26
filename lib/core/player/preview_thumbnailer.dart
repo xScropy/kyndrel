@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/media_kit_backend.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
-import 'package:kyndrel/core/utils/hashing.dart';
+import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
 /// Seek-bar preview frames (task 3.7).
@@ -28,7 +28,7 @@ abstract interface class PreviewSource {
 
 /// Renders frames with a second, hidden mpv: `vo=image` writes one JPEG per
 /// request (`frames=1`) into a scratch folder; frames are cached under
-/// `<cache>/previews/<hash of source>/<second>.jpg`.
+/// `<cache>/previews/<mediaCacheKey(source)>/<second>.jpg`.
 class PreviewThumbnailer implements PreviewSource {
   new({required this.cacheDir, PlayerBackend Function()? backendFactory})
     : _factory = backendFactory ?? (() => MediaKitBackend(withVideo: false));
@@ -55,7 +55,7 @@ class PreviewThumbnailer implements PreviewSource {
   String _cachePath(String source, int second, {bool exact = false}) => p.join(
     cacheDir.path,
     'previews',
-    fnv1a64(source),
+    mediaCacheKey(source),
     exact ? '${second}x.jpg' : '$second.jpg',
   );
 
@@ -74,7 +74,13 @@ class PreviewThumbnailer implements PreviewSource {
     final second = exact ? at.inSeconds : (at.inSeconds ~/ step) * step;
     final path = _cachePath(source, second, exact: exact);
     if (File(path).existsSync()) return Future.value(path);
-    return _inFlight.putIfAbsent(path, () {
+    return _inFlight.putIfAbsent(path, () => _frame(source, second, path));
+  }
+
+  Future<String?> _frame(String source, int second, String path) async {
+    // Never finishes synchronously (it awaits the render), so the entry is
+    // stored before `finally` removes it.
+    try {
       final request = _Request(source, second, path);
       // Drop stale hover positions: only the latest few matter.
       while (_queue.length >= 3) {
@@ -82,12 +88,10 @@ class PreviewThumbnailer implements PreviewSource {
       }
       _queue.add(request);
       unawaited(_pump());
-      // A block body: returning remove()'s value (this same future) would
-      // make whenComplete wait on itself.
-      return request.completer.future.whenComplete(() {
-        _inFlight.remove(path)?.ignore();
-      });
-    });
+      return await request.completer.future;
+    } finally {
+      _inFlight.remove(path)?.ignore();
+    }
   }
 
   Future<void> _pump() async {
@@ -106,29 +110,30 @@ class PreviewThumbnailer implements PreviewSource {
   Future<String?> _render(_Request r) async {
     final scratch = Directory(p.join(cacheDir.path, 'previews', 'scratch'));
     try {
-      if (scratch.existsSync()) scratch.deleteSync(recursive: true);
-      scratch.createSync(recursive: true);
+      if (scratch.existsSync()) await scratch.delete(recursive: true);
+      await scratch.create(recursive: true);
       final b = _backend ??= await _setUp();
       await b.setProperty('vo-image-outdir', scratch.path);
       await b.setProperty('start', '${r.second}');
       await b.command(['loadfile', r.source, 'replace']);
       // mpv writes the single frame and stops; wait for the file.
       final deadline = DateTime.now().add(const Duration(seconds: 10));
-      var frames = <File>[];
-      while (frames.isEmpty && DateTime.now().isBefore(deadline)) {
+      File? frame;
+      while (frame == null && DateTime.now().isBefore(deadline)) {
         await Future<void>.delayed(const Duration(milliseconds: 40));
-        frames = scratch
-            .listSync()
-            .whereType<File>()
-            .where((f) => f.lengthSync() > 0)
-            .toList();
+        await for (final f in scratch.list()) {
+          if (f is File && f.lengthSync() > 0) {
+            frame = f;
+            break;
+          }
+        }
       }
-      if (frames.isEmpty) return null;
+      if (frame == null) return null;
       // Let mpv finish writing.
       await Future<void>.delayed(const Duration(milliseconds: 30));
-      final out = File(r.path)..parent.createSync(recursive: true);
-      frames.first.renameSync(out.path);
-      return out.path;
+      await File(r.path).parent.create(recursive: true);
+      await frame.rename(r.path);
+      return r.path;
     } on Object {
       return null;
     }

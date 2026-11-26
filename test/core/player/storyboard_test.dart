@@ -46,7 +46,7 @@ void main() {
       expect(board.progress, 0.3);
     });
 
-    test('the cache keeps the newest storyboards under its limit', () {
+    test('the cache keeps the newest storyboards under its limit', () async {
       final cache = Directory.systemTemp.createTempSync('kyndrel_sb');
       addTearDown(() => cache.deleteSync(recursive: true));
       final dirs = <Directory>[];
@@ -59,7 +59,7 @@ void main() {
         dirs.add(d);
       }
       // Room for two: the oldest goes, unless it is the one in use.
-      Storyboard.trimCache(cache, limit: 2000, keep: dirs[0].path);
+      await Storyboard.trimCache(cache, limit: 2000, keep: dirs[0].path);
       expect(dirs.map((d) => d.existsSync()), [true, false, true]);
     });
 
@@ -75,7 +75,11 @@ void main() {
       board = Storyboard.read(cache, '/v/a.mkv', length);
       expect(board.available, {2});
       expect(board.complete, isFalse);
+      // An index alone isn't enough: frames 0, 1, 3, 4 are neither written
+      // nor recorded as failed (task 8.0).
       board.writeIndex();
+      expect(Storyboard.read(cache, '/v/a.mkv', length).complete, isFalse);
+      board.writeIndex(failed: {0, 1, 3, 4});
       expect(Storyboard.read(cache, '/v/a.mkv', length).complete, isTrue);
       // A different length means a different spacing: not complete.
       expect(

@@ -7,7 +7,7 @@ import 'package:kyndrel/core/platform/media_scanner.dart';
 import 'package:kyndrel/core/player/media_kit_backend.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
-import 'package:kyndrel/core/utils/hashing.dart';
+import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
 /// What a probe learns about a file (task 7.3).
@@ -189,7 +189,9 @@ class AndroidMediaProber implements MediaProber {
     Duration? duration,
     bool hasCover = true,
   }) async {
-    final path = p.join(cacheDir.path, 'library', '${fnv1a64(uri)}.jpg');
+    // The key changes when the file does, so a replaced file gets a new
+    // thumbnail (task 8.0).
+    final path = p.join(cacheDir.path, 'library', '${mediaCacheKey(uri)}.jpg');
     if (File(path).existsSync()) return path;
     try {
       final ok = await _channel.invokeMethod<bool>('thumbnail', {
