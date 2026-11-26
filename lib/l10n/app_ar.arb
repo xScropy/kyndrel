@@ -282,5 +282,8 @@
   "subtitleLinesUnavailable": "تُعرض الأسطر لملفات الترجمة. حمّل ملفًا أو اختر مسارًا من ملف.",
   "copy": "نسخ",
   "quickCommands": "أوامر سريعة",
-  "quickCommandsEmpty": "لا أوامر سريعة بعد. أضفها من الإعدادات › متقدم."
+  "quickCommandsEmpty": "لا أوامر سريعة بعد. أضفها من الإعدادات › متقدم.",
+  "skipIntro": "تخطي المقدمة",
+  "skipCredits": "تخطي الشارة",
+  "nextEpisode": "الحلقة التالية"
 }

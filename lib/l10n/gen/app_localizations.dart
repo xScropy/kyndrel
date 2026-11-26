@@ -1795,6 +1795,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No quick commands yet. Add them in Settings › Advanced.'**
   String get quickCommandsEmpty;
+
+  /// No description provided for @skipIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip intro'**
+  String get skipIntro;
+
+  /// No description provided for @skipCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip credits'**
+  String get skipCredits;
+
+  /// No description provided for @nextEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'Next episode'**
+  String get nextEpisode;
 }
 
 class _AppLocalizationsDelegate

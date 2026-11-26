@@ -51,6 +51,7 @@ import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
+import 'package:kyndrel/features/playback/skip_intro.dart';
 import 'package:kyndrel/features/playback/widgets/bottom_controls.dart';
 import 'package:kyndrel/features/playback/widgets/diagnostics_overlay.dart';
 import 'package:kyndrel/features/playback/widgets/fit_menu.dart';
@@ -103,6 +104,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(libraryPreviewsProvider)
       // Each file's tracks, speed, delays and picture (task 8.8).
       ..read(fileSettingsControllerProvider)
+      // Openings and credits to skip (task 8.9).
+      ..read(skipIntroProvider)
       // Music: tags, cover and the level meter (task 7.6).
       ..read(nowPlayingProvider);
     // Phones: immersive full screen and rotation while a video plays.
@@ -424,6 +427,12 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   end: 20,
                   bottom: 130,
                   child: UpNextCard(),
+                ),
+                // "Skip intro" / "Next episode" (task 8.9).
+                const PositionedDirectional(
+                  end: 24,
+                  bottom: 140,
+                  child: SkipIntroButton(),
                 ),
                 if (widget.launch.showDiagnostics ||
                     ref.watch(statsOverlayProvider))

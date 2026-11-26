@@ -163,6 +163,10 @@ enum PlayerAction {
   exportClip(
     'Save the A-B loop as a clip',
     KeyCombo(LogicalKeyboardKey.keyE, ctrl: true, shift: true),
+  ),
+  markIntro(
+    'Mark the intro (start, then end)',
+    KeyCombo(LogicalKeyboardKey.keyM, shift: true),
   );
 
   new(this.label, this.defaultCombo, {this.repeats = false});

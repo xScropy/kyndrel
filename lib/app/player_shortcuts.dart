@@ -16,6 +16,7 @@ import 'package:kyndrel/features/playback/fullscreen_actions.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
+import 'package:kyndrel/features/playback/skip_intro.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_lines.dart';
@@ -190,6 +191,8 @@ class PlayerShortcuts extends ConsumerWidget {
         unawaited(showQuickCommands(context, ref));
       case PlayerAction.exportClip:
         unawaited(_exportClip(context, ref));
+      case PlayerAction.markIntro:
+        unawaited(ref.read(skipIntroProvider.notifier).mark());
     }
   }
 

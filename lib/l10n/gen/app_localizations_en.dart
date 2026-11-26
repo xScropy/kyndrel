@@ -933,4 +933,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get quickCommandsEmpty =>
       'No quick commands yet. Add them in Settings › Advanced.';
+
+  @override
+  String get skipIntro => 'Skip intro';
+
+  @override
+  String get skipCredits => 'Skip credits';
+
+  @override
+  String get nextEpisode => 'Next episode';
 }

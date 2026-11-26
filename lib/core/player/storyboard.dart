@@ -388,6 +388,28 @@ class Storyboard {
     return board;
   }
 
+  /// [source]'s storyboard at the length its spec was made for, without
+  /// knowing that length; null when there is none (task 8.9 compares a
+  /// sibling episode that isn't open).
+  static Storyboard? readSaved(Directory cacheDir, String source) {
+    final spec = File(p.join(directoryFor(cacheDir, source), 'spec.json'));
+    if (!spec.existsSync()) return null;
+    try {
+      final json = jsonDecode(spec.readAsStringSync()) as Map<Object?, Object?>;
+      final ms = (json['durationMs'] as num?)?.toInt();
+      if (ms == null || ms <= 0) return null;
+      final levels = (json['levels'] as Map<Object?, Object?>?) ?? const {};
+      return read(
+        cacheDir,
+        source,
+        Duration(milliseconds: ms),
+        sharp: levels.containsKey('2'),
+      );
+    } on Object {
+      return null;
+    }
+  }
+
   /// Saves the levels' sheets, failed frames and completeness.
   void writeSpec() {
     Directory(directory).createSync(recursive: true);

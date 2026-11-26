@@ -947,4 +947,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get quickCommandsEmpty =>
       'لا أوامر سريعة بعد. أضفها من الإعدادات › متقدم.';
+
+  @override
+  String get skipIntro => 'تخطي المقدمة';
+
+  @override
+  String get skipCredits => 'تخطي الشارة';
+
+  @override
+  String get nextEpisode => 'الحلقة التالية';
 }

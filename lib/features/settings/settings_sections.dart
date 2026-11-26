@@ -35,6 +35,18 @@ class PlaybackSettings extends ConsumerWidget {
               updateSettings(ref, (x) => x.copyWith(rememberFileSettings: v)),
         ),
         SwitchListTile(
+          key: const Key('settings-skip-intro'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Offer to skip intros and credits'),
+          subtitle: const Text(
+            'Found from chapters, by comparing episodes, or marked with '
+            'Shift+M',
+          ),
+          value: s.skipIntro,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(skipIntro: v)),
+        ),
+        SwitchListTile(
           key: const Key('settings-incognito'),
           contentPadding: EdgeInsets.zero,
           title: const Text('Incognito'),
