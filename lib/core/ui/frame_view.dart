@@ -26,6 +26,16 @@ class FrameImageCache {
   int get bytes => _bytes;
   int get length => _images.length;
 
+  /// Whether [path] is decoded or being decoded.
+  bool has(String path) =>
+      _images.containsKey(path) || _loading.containsKey(path);
+
+  /// Starts decoding [path] for later (scrubbing towards it).
+  void prefetch(String path) {
+    if (has(path)) return;
+    unawaited(load(path).then((image) => image?.dispose()));
+  }
+
   /// A handle to the decoded [path] if it is in memory (the caller disposes
   /// it), else null.
   ui.Image? peek(String path) {
@@ -84,6 +94,19 @@ class FrameImageCache {
   }
 }
 
+/// Decodes the sheets around [at] before the finger gets there (task 8.3):
+/// the sheet under it and its neighbours, in every level that has them.
+void prefetchSheets(FrameImageCache cache, Storyboard board, Duration at) {
+  for (final l in board.levels) {
+    final sheet = l.spec.sheetOf(l.spec.indexAt(at));
+    for (final s in [sheet, sheet + 1, sheet - 1]) {
+      if (l.sheets.contains(s)) {
+        cache.prefetch(board.sheetPath(l.spec.index, s));
+      }
+    }
+  }
+}
+
 final frameImageCacheProvider = Provider<FrameImageCache>((ref) {
   final cache = FrameImageCache();
   ref.onDispose(cache.clear);
@@ -92,7 +115,8 @@ final frameImageCacheProvider = Provider<FrameImageCache>((ref) {
 
 /// Shows a [FrameRef]: a whole picture, or one cell of a sprite sheet cut
 /// out on the GPU, covering its box. Keeps the previous picture until the
-/// new one is decoded, so scrubbing never flashes empty.
+/// new one is decoded, so scrubbing never flashes empty. When the exact
+/// frame replaces a storyboard cell (the finger rested), it fades in.
 class FrameView extends ConsumerStatefulWidget {
   const new({
     required this.frame,
@@ -110,9 +134,16 @@ class FrameView extends ConsumerStatefulWidget {
 }
 
 class _FrameViewState extends ConsumerState<FrameView> {
+  /// How long the exact frame takes to fade in over the storyboard cell.
+  static const fade = Duration(milliseconds: 150);
+
   ui.Image? _image;
   FrameRef? _shown;
   int _request = 0;
+
+  /// The storyboard cell the exact frame fades in over.
+  ui.Image? _under;
+  FrameRef? _underFrame;
 
   @override
   void initState() {
@@ -146,14 +177,31 @@ class _FrameViewState extends ConsumerState<FrameView> {
   }
 
   void _set(ui.Image image, FrameRef frame) {
-    _image?.dispose();
+    _clearUnder();
+    final old = _image;
+    final oldFrame = _shown;
+    // A sheet cell giving way to a whole picture: the sharper frame of the
+    // same moment. Fade it in rather than snap.
+    if (old != null && oldFrame?.cell != null && frame.cell == null) {
+      _under = old;
+      _underFrame = oldFrame;
+    } else {
+      old?.dispose();
+    }
     _image = image;
     _shown = frame;
+  }
+
+  void _clearUnder() {
+    _under?.dispose();
+    _under = null;
+    _underFrame = null;
   }
 
   @override
   void dispose() {
     _image?.dispose();
+    _clearUnder();
     super.dispose();
   }
 
@@ -167,20 +215,52 @@ class _FrameViewState extends ConsumerState<FrameView> {
         aspectRatio: widget.aspectRatio,
         child: image == null || shown == null
             ? const ColoredBox(color: KyndrelColors.surface)
-            : CustomPaint(painter: _FramePainter(image, shown)),
+            : _under == null
+            ? CustomPaint(painter: _FramePainter(image, shown))
+            : TweenAnimationBuilder<double>(
+                key: ValueKey(shown),
+                tween: Tween(begin: 0, end: 1),
+                duration: fade,
+                onEnd: () => setState(_clearUnder),
+                builder: (context, t, _) => CustomPaint(
+                  painter: _FramePainter(
+                    image,
+                    shown,
+                    under: _under,
+                    underFrame: _underFrame,
+                    opacity: t,
+                  ),
+                ),
+              ),
       ),
     );
   }
 }
 
 class _FramePainter extends CustomPainter {
-  new(this.image, this.frame);
+  new(this.image, this.frame, {this.under, this.underFrame, this.opacity = 1});
 
   final ui.Image image;
   final FrameRef frame;
+  final ui.Image? under;
+  final FrameRef? underFrame;
+  final double opacity;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final u = under;
+    final uf = underFrame;
+    if (u != null && uf != null && opacity < 1) _draw(canvas, size, u, uf, 1);
+    _draw(canvas, size, image, frame, opacity);
+  }
+
+  static void _draw(
+    Canvas canvas,
+    Size size,
+    ui.Image image,
+    FrameRef frame,
+    double opacity,
+  ) {
     var src = frame.sourceRect(image.width.toDouble(), image.height.toDouble());
     // Cover: crop the frame to the box's shape.
     final want = size.width / size.height;
@@ -206,11 +286,16 @@ class _FramePainter extends CustomPainter {
       image,
       src,
       Offset.zero & size,
-      Paint()..filterQuality = FilterQuality.medium,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..color = Color.fromRGBO(0, 0, 0, opacity),
     );
   }
 
   @override
   bool shouldRepaint(_FramePainter old) =>
-      old.image != image || old.frame != frame;
+      old.image != image ||
+      old.frame != frame ||
+      old.opacity != opacity ||
+      old.under != under;
 }

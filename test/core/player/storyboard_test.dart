@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/core/player/storyboard.dart';
 import 'package:kyndrel/core/ui/frame_view.dart';
+import 'package:kyndrel/features/playback/widgets/seek_bar.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 
@@ -203,6 +204,33 @@ void main() {
     await tester.pump();
     expect(h.previews.exactRequests, hasLength(1));
     expect(frame(), const FrameRef('/tmp/exact.jpg'));
+  });
+
+  testWidgets('moving over the bar repaints it, never rebuilds it (8.3)', (
+    tester,
+  ) async {
+    final h = await AppHarness.create();
+    await h.pump(tester, launch: const LaunchOptions(source: '/v/film.mkv'));
+    h.load();
+    await tester.pump();
+    await tester.pump(StoryboardController.delay);
+    await tester.pump();
+    final bar = tester.getRect(find.byKey(const Key('seek-bar')));
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: bar.centerLeft);
+    await mouse.moveTo(bar.centerLeft + const Offset(4, 0));
+    await tester.pump();
+    final before = SeekBar.debugBuilds;
+    for (var i = 1; i <= 30; i++) {
+      await mouse.moveTo(bar.centerLeft + Offset(i * bar.width / 32, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(SeekBar.debugBuilds - before, 0);
+    expect(find.byKey(const Key('seek-preview')), findsOneWidget);
+    expect(find.byKey(const Key('seek-hover-time')), findsOneWidget);
+    // Frames near the pointer were asked for first.
+    expect(h.storyboards.focused, isEmpty, reason: 'already complete');
   });
 
   testWidgets('streams get no storyboard', (tester) async {

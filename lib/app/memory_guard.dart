@@ -23,6 +23,7 @@ final memoryGuardProvider = Provider<void>((ref) {
     unawaited(ref.read(frameEngineProvider).releaseIdle());
     ref.read(frameImageCacheProvider).clear();
   }
+
   final observer = _PressureObserver(release);
   WidgetsBinding.instance.addObserver(observer);
   ref.read(windowServiceProvider).onHidden(() async => release());

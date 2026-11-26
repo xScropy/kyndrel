@@ -189,7 +189,8 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
   - Levels: L0 = 100 frames at 96 px in one 10×10 sheet (the whole video), L1 = a frame every 2 s (≤ 300) at 160 px in 5×5 sheets, L2 = 320 px on phones. Seek bar shows the finest level that has the frame, else the nearest coarse one.
   - Benchmark (`scripts/bench_storyboard.sh`, 20-minute 1080p H.264, this container): coarse level in 5.7 s, all 400 frames in 19.8 s (~50 ms a frame), 940 KB on disk. The Rust helper is not built: a keyframe decode and scale alone take much of those 50 ms, so it couldn't be 2× faster.
   - Android keeps its native frame loop (no Kotlin change); Dart packs the sheets at each level's end. The tiles folder is listed once a second while the native loop runs, since it reports nothing until the end.
-- [ ] 8.3 Smooth preview: LRU of decoded sheets, tile painted with `drawImageRect`, no `setState` per pointer move, L0 → L1/L2 → exact frame, chapter title and haptic tick.
+- [x] 8.3 Smooth preview: LRU of decoded sheets, tile painted with `drawImageRect`, no `setState` per pointer move, L0 → L1/L2 → exact frame, chapter title and haptic tick.
+  - The seek bar keeps hover, drag and frame in `ValueNotifier`s: a pointer move repaints the bar and bubble only (a test checks 30 moves cause no rebuild). Sheets around the finger are decoded ahead; the exact frame fades in over the cell (150 ms); phones tick on chapter changes.
 - [ ] 8.4 Library previews made in advance (L0 sheet per video, lowest priority, "only while charging" setting).
 - [ ] 8.5 Library data: folders (hidden, pinned, private, sort), bookmarks, saved playlists, per-file settings; paged SQL queries; live refresh (`Directory.watch`, MediaStore observer); `.nomedia`.
 - [ ] 8.6 Library like MX Player: fast-scroller with bubble, hover/slide previews on cards, multi-select with file actions, folder actions, views and filters, badges, kept scroll position, playlists.
