@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
+import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/mpv_options.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
@@ -214,6 +215,54 @@ class LibrarySettings extends ConsumerWidget {
             child: const Text('Change'),
           ),
         ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Prepare scrubbing previews'),
+          subtitle: Text(_previewsStatus(ref.watch(libraryPreviewsProvider))),
+          trailing: DropdownButton<LibraryPreviews>(
+            key: const Key('settings-library-previews'),
+            value: s.libraryPreviews,
+            dropdownColor: KyndrelColors.surface,
+            items: const [
+              DropdownMenuItem(
+                value: LibraryPreviews.auto,
+                child: Text('Automatic'),
+              ),
+              DropdownMenuItem(
+                value: LibraryPreviews.always,
+                child: Text('Always'),
+              ),
+              DropdownMenuItem(
+                value: LibraryPreviews.charging,
+                child: Text('Only while charging'),
+              ),
+              DropdownMenuItem(value: LibraryPreviews.off, child: Text('Off')),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(libraryPreviews: v)),
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Preview cache size'),
+          subtitle: const Text('Storyboards and seek-bar frames'),
+          trailing: DropdownButton<int>(
+            key: const Key('settings-frame-cache'),
+            value: AppSettings.frameCacheChoices.contains(s.frameCacheMb)
+                ? s.frameCacheMb
+                : 500,
+            dropdownColor: KyndrelColors.surface,
+            items: [
+              for (final v in AppSettings.frameCacheChoices)
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(v >= 1000 ? '${v ~/ 1000} GB' : '$v MB'),
+                ),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(frameCacheMb: v)),
+          ),
+        ),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: TextButton(
@@ -226,6 +275,16 @@ class LibrarySettings extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// "12 ready this session, 30 to go" under the library previews choice.
+String _previewsStatus(LibraryPreviewsStatus s) {
+  const what =
+      'Library videos get a small storyboard in the background, so '
+      'scrubbing works at once.';
+  if (s.waiting == 0 && s.made == 0) return what;
+  if (s.waiting == 0) return '$what All ready.';
+  return '$what ${s.waiting} to go.';
 }
 
 class AppearanceSettings extends ConsumerWidget {

@@ -14,6 +14,7 @@ import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/storyboard_writer.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/cache_trim.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
@@ -455,8 +456,13 @@ List<int> coarseToFine(int count) {
 const int previewCacheLimitBytes = 200 * 1024 * 1024;
 
 /// Trims the storyboard and preview caches (task 8.0), keeping [keep].
-Future<void> trimFrameCaches(Directory cacheDir, {String? keep}) async {
-  await Storyboard.trimCache(cacheDir, keep: keep);
+/// [storyboardBytes] is the user's cache size (task 8.4).
+Future<void> trimFrameCaches(
+  Directory cacheDir, {
+  String? keep,
+  int storyboardBytes = Storyboard.cacheLimitBytes,
+}) async {
+  await Storyboard.trimCache(cacheDir, keep: keep, limit: storyboardBytes);
   final previews = p.join(cacheDir.path, 'previews');
   await trimCacheFolder(
     Directory(previews),
@@ -468,11 +474,13 @@ Future<void> trimFrameCaches(Directory cacheDir, {String? keep}) async {
 /// Makes the frames of a [Storyboard] into its folder.
 abstract interface class StoryboardSource {
   /// Makes the missing frames of [board]'s levels, coarse level first, and
-  /// completes when done; false if it failed or was cancelled. [onChange]
-  /// gets the board after every frame and sheet.
+  /// completes when done (levels up to [maxLevel] when given); false if it
+  /// failed or was cancelled. [onChange] gets the board after every frame
+  /// and sheet.
   Future<bool> render(
     Storyboard board, {
     void Function(Storyboard board)? onChange,
+    int? maxLevel,
   });
 
   /// Frames near [at] are wanted now (the finger is there).
@@ -490,9 +498,16 @@ abstract interface class StoryboardSource {
 class MpvStoryboardSource implements StoryboardSource {
   /// [engine] is shared in the app; tests may pass [backendFactory] for an
   /// engine of their own.
-  new({FrameEngine? engine, PlayerBackend Function()? backendFactory})
-    : _engine = engine ?? FrameEngine(backendFactory: backendFactory),
-      _ownsEngine = engine == null;
+  new({
+    FrameEngine? engine,
+    PlayerBackend Function()? backendFactory,
+    this.job = FrameJob.storyboard,
+  }) : _engine = engine ?? FrameEngine(backendFactory: backendFactory),
+       _ownsEngine = engine == null;
+
+  /// The engine priority of this source's work: library previews run as
+  /// [FrameJob.probe], after the playing file's storyboard (task 8.4).
+  final FrameJob job;
 
   /// How long one seek may take before that frame is skipped.
   static const frameTimeout = Duration(seconds: 3);
@@ -526,6 +541,7 @@ class MpvStoryboardSource implements StoryboardSource {
   Future<bool> render(
     Storyboard board, {
     void Function(Storyboard board)? onChange,
+    int? maxLevel,
   }) async {
     final token = ++_generation;
     final previous = _last;
@@ -535,7 +551,7 @@ class MpvStoryboardSource implements StoryboardSource {
       await previous;
       if (token != _generation) return false;
       final writer = _writer = StoryboardWriter(board, onChange: onChange);
-      return await _render(writer, () => token != _generation);
+      return await _render(writer, () => token != _generation, maxLevel);
     } on FrameEngineClosed {
       return false;
     } finally {
@@ -543,25 +559,30 @@ class MpvStoryboardSource implements StoryboardSource {
     }
   }
 
-  Future<bool> _render(StoryboardWriter writer, bool Function() stale) async {
-    for (final level in writer.board.levels) {
+  Future<bool> _render(
+    StoryboardWriter writer,
+    bool Function() stale,
+    int? maxLevel,
+  ) async {
+    final levels = _levels(writer.board, maxLevel);
+    for (final level in levels) {
       if (level.complete) continue;
       final n = level.spec.index;
       await Directory(writer.board.tilesDirectory(n)).create(recursive: true);
       while (true) {
         if (stale()) return false;
-        final r = await _engine.run(
-          FrameJob.storyboard,
-          (s) => _chunk(s, writer, n, stale),
-        );
+        final r = await _engine.run(job, (s) => _chunk(s, writer, n, stale));
         if (r == _Chunk.unreadable) return false;
         if (r == _Chunk.levelDone) break;
       }
       await writer.finishLevel(n);
     }
     await writer.flush();
-    return !stale() && writer.board.complete;
+    return !stale() && _levels(writer.board, maxLevel).every((l) => l.complete);
   }
+
+  static Iterable<LevelFrames> _levels(Storyboard b, int? maxLevel) =>
+      b.levels.where((l) => maxLevel == null || l.spec.index <= maxLevel);
 
   /// Makes frames of [level] until it is done, cancelled, or a more urgent
   /// job waits.
@@ -747,7 +768,14 @@ class StoryboardController extends Notifier<Storyboard?> {
     }
     if (_for != source) return;
     // In the background: trimming lists every cached file.
-    unawaited(trimFrameCaches(cache, keep: board.directory));
+    final mb = ref.read(settingsProvider).frameCacheMb;
+    unawaited(
+      trimFrameCaches(
+        cache,
+        keep: board.directory,
+        storyboardBytes: mb * 1024 * 1024,
+      ),
+    );
     final ok = await _source.render(
       board,
       onChange: (b) {

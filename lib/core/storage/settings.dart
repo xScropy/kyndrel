@@ -9,6 +9,15 @@ import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// When library videos get their coarse storyboard in advance (task 8.4).
+enum LibraryPreviews {
+  /// Always on desktop; only while charging on phones.
+  auto,
+  always,
+  charging,
+  off,
+}
+
 /// User preferences (shared_preferences). Persisted on every change.
 @immutable
 class AppSettings {
@@ -62,6 +71,13 @@ class AppSettings {
     this.mpvOptions = '',
     this.checkForUpdates = true,
     this.offerCrashReports = true,
+    this.libraryPreviews = LibraryPreviews.auto,
+    this.frameCacheMb = 500,
+    this.incognito = false,
+    this.amoledBlack = false,
+    this.rememberFileSettings = true,
+    this.showHeatmap = true,
+    this.skipIntro = true,
   });
 
   /// Last volume, 0–400.
@@ -189,7 +205,31 @@ class AppSettings {
   /// After a crash, offer to open a pre-filled bug report (5.7).
   final bool offerCrashReports;
 
+  /// When library videos get their storyboard in advance (task 8.4).
+  final LibraryPreviews libraryPreviews;
+
+  /// Size limit of the storyboard cache in MB (task 8.4).
+  final int frameCacheMb;
+
+  /// Nothing goes into history, resume points or per-file settings
+  /// (task 8.8).
+  final bool incognito;
+
+  /// Pure black backgrounds for OLED screens (task 8.8).
+  final bool amoledBlack;
+
+  /// Each file keeps its own tracks, speed, zoom and delays (task 8.8).
+  final bool rememberFileSettings;
+
+  /// The "most replayed" shading above the seek bar (task 8.10).
+  final bool showHeatmap;
+
+  /// Offer "Skip intro" where an episode's opening is known (task 8.9).
+  final bool skipIntro;
+
   static const hideChoices = [2, 3, 5, 10];
+
+  static const frameCacheChoices = [200, 500, 1000, 2000];
 
   static const skipChoices = [5, 10, 15, 30, 60];
   static const upNextChoices = [0, 5, 10, 15, 30];
@@ -244,6 +284,13 @@ class AppSettings {
     String? mpvOptions,
     bool? checkForUpdates,
     bool? offerCrashReports,
+    LibraryPreviews? libraryPreviews,
+    int? frameCacheMb,
+    bool? incognito,
+    bool? amoledBlack,
+    bool? rememberFileSettings,
+    bool? showHeatmap,
+    bool? skipIntro,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -298,6 +345,13 @@ class AppSettings {
       mpvOptions: mpvOptions ?? this.mpvOptions,
       checkForUpdates: checkForUpdates ?? this.checkForUpdates,
       offerCrashReports: offerCrashReports ?? this.offerCrashReports,
+      libraryPreviews: libraryPreviews ?? this.libraryPreviews,
+      frameCacheMb: frameCacheMb ?? this.frameCacheMb,
+      incognito: incognito ?? this.incognito,
+      amoledBlack: amoledBlack ?? this.amoledBlack,
+      rememberFileSettings: rememberFileSettings ?? this.rememberFileSettings,
+      showHeatmap: showHeatmap ?? this.showHeatmap,
+      skipIntro: skipIntro ?? this.skipIntro,
     );
   }
 }
@@ -413,6 +467,18 @@ class SettingsRepository {
       checkForUpdates: _prefs.getBool('checkForUpdates') ?? d.checkForUpdates,
       offerCrashReports:
           _prefs.getBool('offerCrashReports') ?? d.offerCrashReports,
+      libraryPreviews: _enum(
+        LibraryPreviews.values,
+        'libraryPreviews',
+        d.libraryPreviews,
+      ),
+      frameCacheMb: _prefs.getInt('frameCacheMb') ?? d.frameCacheMb,
+      incognito: _prefs.getBool('incognito') ?? d.incognito,
+      amoledBlack: _prefs.getBool('amoledBlack') ?? d.amoledBlack,
+      rememberFileSettings:
+          _prefs.getBool('rememberFileSettings') ?? d.rememberFileSettings,
+      showHeatmap: _prefs.getBool('showHeatmap') ?? d.showHeatmap,
+      skipIntro: _prefs.getBool('skipIntro') ?? d.skipIntro,
     );
   }
 
@@ -495,6 +561,13 @@ class SettingsRepository {
     await _prefs.setString('mpvOptions', s.mpvOptions);
     await _prefs.setBool('checkForUpdates', s.checkForUpdates);
     await _prefs.setBool('offerCrashReports', s.offerCrashReports);
+    await _prefs.setString('libraryPreviews', s.libraryPreviews.name);
+    await _prefs.setInt('frameCacheMb', s.frameCacheMb);
+    await _prefs.setBool('incognito', s.incognito);
+    await _prefs.setBool('amoledBlack', s.amoledBlack);
+    await _prefs.setBool('rememberFileSettings', s.rememberFileSettings);
+    await _prefs.setBool('showHeatmap', s.showHeatmap);
+    await _prefs.setBool('skipIntro', s.skipIntro);
   }
 }
 

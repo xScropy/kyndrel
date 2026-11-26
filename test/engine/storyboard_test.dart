@@ -54,6 +54,17 @@ void main() {
     });
   }
 
+  test('library previews: the coarse level only (8.4)', () async {
+    final path = p.join(media, 'The.Test.Film.2019.1080p.mkv');
+    const length = Duration(seconds: 30);
+    final board = Storyboard.read(cache, path, length);
+    expect(await source.render(board, maxLevel: 0), isTrue);
+    final done = Storyboard.read(cache, path, length);
+    expect(done.levels[0].complete, isTrue);
+    expect(done.levels[1].ready, 0);
+    expect(done.complete, isFalse);
+  });
+
   test('cancel stops a render', () async {
     final path = p.join(media, 'The.Test.Film.2019.1080p.mkv');
     final board = Storyboard.read(cache, path, const Duration(seconds: 30));

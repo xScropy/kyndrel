@@ -7,7 +7,9 @@ import 'package:kyndrel/app/app.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/player_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/platform/power_state.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
+import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
@@ -23,6 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_media_library.dart';
 import 'fake_player_backend.dart';
+import 'fake_power_state.dart';
 import 'fake_preview_source.dart';
 import 'fake_storyboard_source.dart';
 import 'fake_window_service.dart';
@@ -44,6 +47,10 @@ class AppHarness {
   final PlayerService service;
   final FakeWindowService window;
   final KyndrelDatabase db;
+
+  /// Library previews (task 8.4).
+  final FakeStoryboardSource libraryStoryboards = FakeStoryboardSource();
+  final FakePowerState power = FakePowerState();
   final SettingsRepository settings;
   final FakePreviewSource previews = FakePreviewSource();
   final FakeStoryboardSource storyboards = FakeStoryboardSource();
@@ -90,6 +97,8 @@ class AppHarness {
     appCacheDirProvider.overrideWithValue(cacheDir),
     previewSourceProvider.overrideWithValue(previews),
     storyboardSourceProvider.overrideWithValue(storyboards),
+    libraryStoryboardSourceProvider.overrideWithValue(libraryStoryboards),
+    powerStateProvider.overrideWithValue(power),
     mediaScannerProvider.overrideWithValue(scanner),
     mediaProberProvider.overrideWithValue(prober),
     ...extraOverrides,

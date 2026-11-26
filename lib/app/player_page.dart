@@ -17,6 +17,7 @@ import 'package:kyndrel/app/window/window_title_bar.dart';
 import 'package:kyndrel/core/platform/native_pip.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
+import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_video_view.dart';
@@ -95,6 +96,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(logSyncProvider)
       // Frames for the whole video, made in the background (task 7.2).
       ..read(storyboardProvider)
+      // Library videos' coarse storyboards, made while idle (task 8.4).
+      ..read(libraryPreviewsProvider)
       // Music: tags, cover and the level meter (task 7.6).
       ..read(nowPlayingProvider);
     // Phones: immersive full screen and rotation while a video plays.

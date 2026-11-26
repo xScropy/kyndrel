@@ -124,6 +124,7 @@ class AndroidStoryboardSource implements StoryboardSource {
   Future<bool> render(
     Storyboard board, {
     void Function(Storyboard board)? onChange,
+    int? maxLevel,
   }) async {
     // Packing waits for each level's end: the native loop skips frames
     // whose tiles exist, so they must stay until then.
@@ -132,7 +133,11 @@ class AndroidStoryboardSource implements StoryboardSource {
       onChange: onChange,
       packEarly: false,
     );
-    for (final level in board.levels) {
+    final levels = [
+      for (final l in board.levels)
+        if (maxLevel == null || l.spec.index <= maxLevel) l,
+    ];
+    for (final level in levels) {
       if (level.complete) continue;
       final n = level.spec.index;
       final dir = board.tilesDirectory(n);
@@ -165,7 +170,7 @@ class AndroidStoryboardSource implements StoryboardSource {
       }
       await writer.finishLevel(n);
     }
-    return writer.board.complete;
+    return levels.every((l) => writer.board.levels[l.spec.index].complete);
   }
 
   /// Tells [writer] about tiles the native loop wrote.
