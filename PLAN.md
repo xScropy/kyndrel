@@ -203,7 +203,10 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
   - Folder sheet: play all, shuffle, pin, hide (and "show hidden"), private behind a PIN (a hash in settings: a privacy curtain, not encryption); private folders and incognito never reach history, decided when the file opens.
   - Saved playlists (create, add, reorder, rename, delete) and two smart ones (unwatched, added this month).
   - Not done: rename/move/delete and share on Android (MediaStore changes need a native confirmation flow); device-auth unlock.
-- [ ] 8.7 Browse mode: file tree with breadcrumbs (storage roots, SD/USB, drives) and network servers (SMB, FTP/SFTP, WebDAV, DLNA).
+- [x] 8.7 Browse mode: file tree with breadcrumbs (storage roots, SD/USB, drives) and network servers (SMB, FTP/SFTP, WebDAV, DLNA).
+  - A Browse section (the app passes it to the library shell, so features stay apart): storage roots (home, library folders, drives, `/Volumes`, `/media`, `/mnt`, Android storage), folders and playable files, breadcrumbs, search in the folder, play all, shuffle; a file plays on through its folder.
+  - Network: WebDAV (client moved to `core/net`), FTP (a small passive-mode client, tested against a socket server; mpv plays `ftp://`), DLNA/UPnP media servers found by SSDP and browsed with ContentDirectory. Servers are saved without passwords; a password is asked once per session and kept in memory.
+  - SMB and SFTP are saved and opened by address only: listing them would need protocol libraries Kyndrel doesn't have.
 - [ ] 8.8 Player extras from MX/mpvKt/Next Player/VLC/IINA/Haruna/SMPlayer/Just Player: bookmarks, per-file settings, quick decoder switch, long-press speed slide, custom buttons and gestures, video adjustments, stats overlay, subtitle list, passthrough, frame-rate matching, clip export, jump to time, incognito, AMOLED theme.
 - [ ] 8.9 Skip intro/credits from shared storyboard hashes across episodes, chapters, or a saved mark.
 - [ ] 8.10 Local "most replayed" heatmap on the seek bar.

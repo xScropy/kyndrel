@@ -1603,6 +1603,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Folder'**
   String get libraryFolderActions;
+
+  /// No description provided for @libraryBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get libraryBrowse;
+
+  /// No description provided for @browseDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get browseDevice;
+
+  /// No description provided for @browseNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get browseNetwork;
+
+  /// No description provided for @browseHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home folder'**
+  String get browseHome;
+
+  /// No description provided for @browseRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole disk'**
+  String get browseRoot;
+
+  /// No description provided for @browseAddServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add server'**
+  String get browseAddServer;
+
+  /// No description provided for @browseServerKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get browseServerKind;
+
+  /// No description provided for @browseServerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get browseServerName;
+
+  /// No description provided for @browseServerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get browseServerAddress;
+
+  /// No description provided for @browseUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User name (optional)'**
+  String get browseUser;
+
+  /// No description provided for @browsePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get browsePassword;
+
+  /// No description provided for @browseSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get browseSave;
+
+  /// No description provided for @browseRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove server'**
+  String get browseRemove;
+
+  /// No description provided for @browseSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for media servers…'**
+  String get browseSearching;
+
+  /// No description provided for @browseNoServers.
+  ///
+  /// In en, this message translates to:
+  /// **'No media servers found on this network.'**
+  String get browseNoServers;
+
+  /// No description provided for @browseEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No folders or playable files here.'**
+  String get browseEmpty;
+
+  /// No description provided for @browseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open this folder: {reason}'**
+  String browseFailed(String reason);
+
+  /// No description provided for @browseOpenOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of server can\'t be listed: its files open by address.'**
+  String get browseOpenOnly;
+
+  /// No description provided for @browseFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in this folder'**
+  String get browseFind;
 }
 
 class _AppLocalizationsDelegate

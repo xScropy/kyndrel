@@ -379,5 +379,31 @@
   "playlistDelete": "Delete playlist",
   "playlistRemove": "Remove from playlist",
   "libraryFilters": "Filters",
-  "libraryFolderActions": "Folder"
+  "libraryFolderActions": "Folder",
+  "libraryBrowse": "Browse",
+  "browseDevice": "This device",
+  "browseNetwork": "Network",
+  "browseHome": "Home folder",
+  "browseRoot": "Whole disk",
+  "browseAddServer": "Add server",
+  "browseServerKind": "Type",
+  "browseServerName": "Name",
+  "browseServerAddress": "Address",
+  "browseUser": "User name (optional)",
+  "browsePassword": "Password",
+  "browseSave": "Save",
+  "browseRemove": "Remove server",
+  "browseSearching": "Looking for media servers…",
+  "browseNoServers": "No media servers found on this network.",
+  "browseEmpty": "No folders or playable files here.",
+  "browseFailed": "Couldn't open this folder: {reason}",
+  "@browseFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "browseOpenOnly": "This kind of server can't be listed: its files open by address.",
+  "browseFind": "Find in this folder"
 }

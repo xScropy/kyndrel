@@ -79,6 +79,7 @@ class AppSettings {
     this.showHeatmap = true,
     this.skipIntro = true,
     this.privatePin = '',
+    this.browseServers = const [],
   });
 
   /// Last volume, 0–400.
@@ -233,6 +234,10 @@ class AppSettings {
   /// they are.
   final String privatePin;
 
+  /// Saved network servers for Browse, as JSON (task 8.7). Passwords are
+  /// not saved: they are asked for once per session.
+  final List<String> browseServers;
+
   static const hideChoices = [2, 3, 5, 10];
 
   static const frameCacheChoices = [200, 500, 1000, 2000];
@@ -298,6 +303,7 @@ class AppSettings {
     bool? showHeatmap,
     bool? skipIntro,
     String? privatePin,
+    List<String>? browseServers,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -360,6 +366,7 @@ class AppSettings {
       showHeatmap: showHeatmap ?? this.showHeatmap,
       skipIntro: skipIntro ?? this.skipIntro,
       privatePin: privatePin ?? this.privatePin,
+      browseServers: browseServers ?? this.browseServers,
     );
   }
 }
@@ -488,6 +495,7 @@ class SettingsRepository {
       showHeatmap: _prefs.getBool('showHeatmap') ?? d.showHeatmap,
       skipIntro: _prefs.getBool('skipIntro') ?? d.skipIntro,
       privatePin: _prefs.getString('privatePin') ?? d.privatePin,
+      browseServers: _prefs.getStringList('browseServers') ?? d.browseServers,
     );
   }
 
@@ -578,6 +586,7 @@ class SettingsRepository {
     await _prefs.setBool('showHeatmap', s.showHeatmap);
     await _prefs.setBool('skipIntro', s.skipIntro);
     await _prefs.setString('privatePin', s.privatePin);
+    await _prefs.setStringList('browseServers', s.browseServers);
   }
 }
 

@@ -830,4 +830,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryFolderActions => 'Folder';
+
+  @override
+  String get libraryBrowse => 'Browse';
+
+  @override
+  String get browseDevice => 'This device';
+
+  @override
+  String get browseNetwork => 'Network';
+
+  @override
+  String get browseHome => 'Home folder';
+
+  @override
+  String get browseRoot => 'Whole disk';
+
+  @override
+  String get browseAddServer => 'Add server';
+
+  @override
+  String get browseServerKind => 'Type';
+
+  @override
+  String get browseServerName => 'Name';
+
+  @override
+  String get browseServerAddress => 'Address';
+
+  @override
+  String get browseUser => 'User name (optional)';
+
+  @override
+  String get browsePassword => 'Password';
+
+  @override
+  String get browseSave => 'Save';
+
+  @override
+  String get browseRemove => 'Remove server';
+
+  @override
+  String get browseSearching => 'Looking for media servers…';
+
+  @override
+  String get browseNoServers => 'No media servers found on this network.';
+
+  @override
+  String get browseEmpty => 'No folders or playable files here.';
+
+  @override
+  String browseFailed(String reason) {
+    return 'Couldn\'t open this folder: $reason';
+  }
+
+  @override
+  String get browseOpenOnly =>
+      'This kind of server can\'t be listed: its files open by address.';
+
+  @override
+  String get browseFind => 'Find in this folder';
 }

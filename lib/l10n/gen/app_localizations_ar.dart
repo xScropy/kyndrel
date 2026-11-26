@@ -844,4 +844,64 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get libraryFolderActions => 'المجلد';
+
+  @override
+  String get libraryBrowse => 'تصفح';
+
+  @override
+  String get browseDevice => 'هذا الجهاز';
+
+  @override
+  String get browseNetwork => 'الشبكة';
+
+  @override
+  String get browseHome => 'المجلد الرئيسي';
+
+  @override
+  String get browseRoot => 'القرص كاملًا';
+
+  @override
+  String get browseAddServer => 'إضافة خادم';
+
+  @override
+  String get browseServerKind => 'النوع';
+
+  @override
+  String get browseServerName => 'الاسم';
+
+  @override
+  String get browseServerAddress => 'العنوان';
+
+  @override
+  String get browseUser => 'اسم المستخدم (اختياري)';
+
+  @override
+  String get browsePassword => 'كلمة المرور';
+
+  @override
+  String get browseSave => 'حفظ';
+
+  @override
+  String get browseRemove => 'إزالة الخادم';
+
+  @override
+  String get browseSearching => 'جارٍ البحث عن خوادم الوسائط…';
+
+  @override
+  String get browseNoServers => 'لم يُعثر على خوادم وسائط في هذه الشبكة.';
+
+  @override
+  String get browseEmpty => 'لا مجلدات أو ملفات قابلة للتشغيل هنا.';
+
+  @override
+  String browseFailed(String reason) {
+    return 'تعذّر فتح هذا المجلد: $reason';
+  }
+
+  @override
+  String get browseOpenOnly =>
+      'لا يمكن عرض محتوى هذا النوع من الخوادم: تُفتح ملفاته بالعنوان.';
+
+  @override
+  String get browseFind => 'بحث في هذا المجلد';
 }

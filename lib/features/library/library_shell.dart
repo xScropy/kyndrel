@@ -6,7 +6,7 @@ import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The start screen's sections (task 7.4).
-enum LibrarySection { home, videos, music }
+enum LibrarySection { home, videos, music, browse }
 
 class LibrarySectionController extends Notifier<LibrarySection> {
   @override
@@ -27,6 +27,7 @@ final librarySectionProvider =
 class LibraryShell extends ConsumerWidget {
   const new({
     required this.home,
+    this.browse,
     this.bottom,
     this.topInset = topBar,
     super.key,
@@ -34,6 +35,10 @@ class LibraryShell extends ConsumerWidget {
 
   /// The Home section (`LibraryHome`).
   final Widget home;
+
+  /// The Browse section (folders and network servers, task 8.7); passed
+  /// in by the app, which composes features.
+  final Widget? browse;
 
   /// Along the bottom, above the section bar: the mini player (7.6).
   final Widget? bottom;
@@ -63,6 +68,10 @@ class LibraryShell extends ConsumerWidget {
         padding: EdgeInsets.only(top: top),
         child: const MusicLibrary(),
       ),
+      LibrarySection.browse => Padding(
+        padding: EdgeInsets.only(top: top),
+        child: browse ?? const SizedBox.shrink(),
+      ),
     };
     final destinations = [
       (LibrarySection.home, Icons.home_outlined, Icons.home, l.libraryHome),
@@ -78,6 +87,13 @@ class LibraryShell extends ConsumerWidget {
         Icons.library_music,
         l.libraryMusic,
       ),
+      if (browse != null)
+        (
+          LibrarySection.browse,
+          Icons.folder_open_outlined,
+          Icons.folder_open,
+          l.libraryBrowse,
+        ),
     ];
 
     if (wide) {

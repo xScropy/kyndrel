@@ -26,6 +26,7 @@ import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
+import 'package:kyndrel/features/browse/browse_view.dart';
 import 'package:kyndrel/features/cast/cast_button.dart';
 import 'package:kyndrel/features/download/download_button.dart';
 import 'package:kyndrel/features/effects/effects_dialog.dart';
@@ -306,6 +307,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
             bottom: false,
             child: LibraryShell(
               topInset: 0,
+              browse: const BrowseView(),
               home: _home(
                 OpenSourcePrompt(
                   onOpen: ref.read(playlistProvider.notifier).open,
@@ -391,7 +393,11 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 StatusLayer(
                   onPickFile: _pickFile,
                   // Home and the device's library (task 7.4).
-                  idle: (prompt) => LibraryShell(home: _home(prompt)),
+                  idle: (prompt) => LibraryShell(
+                    home: _home(prompt),
+                    // Folders and network servers (task 8.7).
+                    browse: const BrowseView(),
+                  ),
                 ),
                 const Center(child: CastingBanner()),
                 const Positioned(

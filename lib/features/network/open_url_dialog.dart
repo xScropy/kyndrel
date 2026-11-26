@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/net/webdav.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
-import 'package:kyndrel/features/network/webdav.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Opens a network stream: HLS, DASH, RTSP, HTTP(S), SMB, or a WebDAV
