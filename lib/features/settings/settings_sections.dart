@@ -47,6 +47,18 @@ class PlaybackSettings extends ConsumerWidget {
               updateSettings(ref, (x) => x.copyWith(skipIntro: v)),
         ),
         SwitchListTile(
+          key: const Key('settings-heatmap'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Show what you watch again'),
+          subtitle: const Text(
+            'A soft curve over the seek bar where you replay most. '
+            'Kept on this device only.',
+          ),
+          value: s.showHeatmap,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(showHeatmap: v)),
+        ),
+        SwitchListTile(
           key: const Key('settings-incognito'),
           contentPadding: EdgeInsets.zero,
           title: const Text('Incognito'),

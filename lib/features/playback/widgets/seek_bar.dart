@@ -12,6 +12,7 @@ import 'package:kyndrel/core/player/scrub_preview.dart';
 import 'package:kyndrel/core/player/storyboard.dart';
 import 'package:kyndrel/core/storage/bookmark_repository.dart';
 import 'package:kyndrel/core/storage/database.dart';
+import 'package:kyndrel/core/storage/replay_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/frame_view.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
@@ -193,6 +194,11 @@ class _SeekBarState extends ConsumerState<SeekBar> {
     final bookmarks = source == null
         ? const <Bookmark>[]
         : ref.watch(bookmarksProvider(source)).value ?? const <Bookmark>[];
+    final heat =
+        source == null ||
+            !ref.watch(settingsProvider.select((s) => s.showHeatmap))
+        ? const <double>[]
+        : ref.watch(heatmapProvider(source)).value ?? const <double>[];
 
     double fractionOf(Duration d) => enabled
         ? (d.inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0)
@@ -312,6 +318,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                                   if (c.start > Duration.zero)
                                     fractionOf(c.start),
                               ],
+                              heat: heat,
                               bookmarks: [
                                 for (final b in bookmarks)
                                   fractionOf(
@@ -444,9 +451,14 @@ class SeekBarPainter extends CustomPainter {
     required this.hovering,
     this.marks = const [],
     this.bookmarks = const [],
+    this.heat = const [],
     this.loopA,
     this.loopB,
   });
+
+  /// "Most replayed": 0–1 heights along the bar (task 8.10), drawn while
+  /// hovering.
+  final List<double> heat;
 
   /// Bookmarks as 0–1 fractions (task 8.8): small orange ticks above.
   final List<double> bookmarks;
@@ -470,6 +482,23 @@ class SeekBarPainter extends CustomPainter {
     RRect bar(double to) =>
         RRect.fromLTRBR(0, y - track / 2, to, y + track / 2, r);
 
+    // Most replayed: a soft curve above the bar while hovering.
+    if (hovering && heat.length > 1) {
+      final top = y - track / 2 - 2;
+      const tall = 14.0;
+      final path = Path()..moveTo(0, top);
+      for (var i = 0; i < heat.length; i++) {
+        final x = size.width * (i + 0.5) / heat.length;
+        path.lineTo(x, top - tall * heat[i]);
+      }
+      path
+        ..lineTo(size.width, top)
+        ..close();
+      canvas.drawPath(
+        path,
+        Paint()..color = KyndrelColors.accent.withValues(alpha: 0.35),
+      );
+    }
     canvas
       ..drawRRect(bar(size.width), Paint()..color = KyndrelColors.track)
       ..drawRRect(
@@ -548,6 +577,7 @@ class SeekBarPainter extends CustomPainter {
       old.hovering != hovering ||
       !listEquals(old.marks, marks) ||
       !listEquals(old.bookmarks, bookmarks) ||
+      !listEquals(old.heat, heat) ||
       old.loopA != loopA ||
       old.loopB != loopB;
 }

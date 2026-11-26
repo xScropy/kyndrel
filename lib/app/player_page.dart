@@ -45,6 +45,7 @@ import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
 import 'package:kyndrel/features/playback/file_settings_controller.dart';
 import 'package:kyndrel/features/playback/gesture_lock.dart';
+import 'package:kyndrel/features/playback/heatmap.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/phone_playback.dart';
 import 'package:kyndrel/features/playback/player_tools.dart';
@@ -106,6 +107,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(fileSettingsControllerProvider)
       // Openings and credits to skip (task 8.9).
       ..read(skipIntroProvider)
+      // What gets watched again, for the seek bar's heatmap (task 8.10).
+      ..read(replayRecorderProvider)
       // Music: tags, cover and the level meter (task 7.6).
       ..read(nowPlayingProvider);
     // Phones: immersive full screen and rotation while a video plays.

@@ -212,7 +212,8 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
   - Not done: display frame-rate matching (needs Android display-mode code), an accent colour picker (the accent is a constant across the app; changing it would mean threading it through every widget). Night mode already existed as the "Dynamic" normalization.
 - [x] 8.9 Skip intro/credits from shared storyboard hashes across episodes, chapters, or a saved mark.
   - "Skip intro" during the opening, "Next episode" (or "Skip credits") during the credits. Sources, in order: chapters named Intro/Opening/Credits/Ending; a mark for this file; one made by hand with Shift+M (start, then end) for the whole season; else, once this episode's storyboard is ready, a comparison with another episode of the season in the same folder: a 64-bit difference hash per storyboard frame, the longest matching run at any shift (flat/black frames never match), 15 s–3 min in the first 40 % for the intro, ≥ 20 s in the last 30 % for credits. Saved for both episodes. Setting in Playback.
-- [ ] 8.10 Local "most replayed" heatmap on the seek bar.
+- [x] 8.10 Local "most replayed" heatmap on the seek bar.
+  - A jump back of 3 s–10 min counts the part between the new and the old position as replayed (100 parts per file, `Replays` table). While hovering, the seek bar shows a soft orange curve of it, scaled to the most replayed part. Never leaves the device; incognito records nothing; Settings › Playback turns it off.
 - [ ] 8.11 Reliability: cancellation tokens, native-call timeouts, fault-injection tests, parser fuzzing.
 - [ ] 8.12 Performance harness (`scripts/measure_perf.sh`) and budget checks in CI; large-library and scrub rebuild tests.
 - [ ] 8.13 Release 1.3.0.
