@@ -169,6 +169,30 @@ preview frame while dragging; releases are signed APKs on GitHub.
 - [x] 7.6 Music player: spinning disc with the cover art, tags, live orange waves following the loudness (mpv astats), less-motion setting.
 - [x] 7.7 Release 1.2.0.
 
+### Phase 8: Light and smooth: YouTube-style scrubbing, MX-style library and browser (1.3)
+Decisions: keep Flutter + libmpv; cut RAM/CPU by sharing one hidden mpv for all
+frame work, smaller demuxer caches for local files, no sync IO or polling on the
+UI isolate, and repaint-only scrubbing. Storyboards become YouTube-style sprite
+sheets in levels (L0 whole video, tiny; L1/L2 denser), made coarse-to-fine and
+prepared in advance for library videos. A Rust FFmpeg frame helper is built only
+if the storyboard benchmark shows mpv is >2× slower or >40 MB heavier.
+Budget: Android idle library ≤ 110 MB PSS and 0 % CPU, 1080p playback ≤ 220 MB,
+desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
+- [ ] 8.0 Preview bugs: cache keys ignore file size/mtime, `previews/` cache has no limit, storyboard cancel race, Android marks partial storyboards complete, sync file IO on the UI isolate.
+- [ ] 8.1 Lean engine: one shared, lazily started, auto-disposed frame engine for storyboard, exact frames and probing (≤ 2 libmpv instances); lean decode options; smaller demuxer cache for local files; image-cache cap and memory-pressure handling; no idle timers; deferred feature imports.
+- [ ] 8.2 Storyboard v2: sprite sheets with levels L0/L1/L2 and `spec.json`, bisection order with priority near the drag/playhead, sheet packing in an isolate (desktop) or Kotlin (Android), progress stream instead of polling, benchmark script.
+- [ ] 8.3 Smooth preview: LRU of decoded sheets, tile painted with `drawImageRect`, no `setState` per pointer move, L0 → L1/L2 → exact frame, chapter title and haptic tick.
+- [ ] 8.4 Library previews made in advance (L0 sheet per video, lowest priority, "only while charging" setting).
+- [ ] 8.5 Library data: folders (hidden, pinned, private, sort), bookmarks, saved playlists, per-file settings; paged SQL queries; live refresh (`Directory.watch`, MediaStore observer); `.nomedia`.
+- [ ] 8.6 Library like MX Player: fast-scroller with bubble, hover/slide previews on cards, multi-select with file actions, folder actions, views and filters, badges, kept scroll position, playlists.
+- [ ] 8.7 Browse mode: file tree with breadcrumbs (storage roots, SD/USB, drives) and network servers (SMB, FTP/SFTP, WebDAV, DLNA).
+- [ ] 8.8 Player extras from MX/mpvKt/Next Player/VLC/IINA/Haruna/SMPlayer/Just Player: bookmarks, per-file settings, quick decoder switch, long-press speed slide, custom buttons and gestures, video adjustments, stats overlay, subtitle list, passthrough, frame-rate matching, clip export, jump to time, incognito, AMOLED theme.
+- [ ] 8.9 Skip intro/credits from shared storyboard hashes across episodes, chapters, or a saved mark.
+- [ ] 8.10 Local "most replayed" heatmap on the seek bar.
+- [ ] 8.11 Reliability: cancellation tokens, native-call timeouts, fault-injection tests, parser fuzzing.
+- [ ] 8.12 Performance harness (`scripts/measure_perf.sh`) and budget checks in CI; large-library and scrub rebuild tests.
+- [ ] 8.13 Release 1.3.0.
+
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.
 - **Widget and golden:** seek bar, volume slider, speed popover, subtitle panel.
