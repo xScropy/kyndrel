@@ -46,6 +46,7 @@ import 'package:kyndrel/features/pip/pip_view.dart';
 import 'package:kyndrel/features/playback/gesture_lock.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/phone_playback.dart';
+import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
@@ -421,7 +422,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   bottom: 130,
                   child: UpNextCard(),
                 ),
-                if (widget.launch.showDiagnostics)
+                if (widget.launch.showDiagnostics ||
+                    ref.watch(statsOverlayProvider))
                   const PositionedDirectional(
                     top: 56,
                     end: 12,

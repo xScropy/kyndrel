@@ -1717,6 +1717,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Find in this folder'**
   String get browseFind;
+
+  /// No description provided for @bookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarks'**
+  String get bookmarks;
+
+  /// No description provided for @bookmarksEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookmarks yet. Press B to add one where you are.'**
+  String get bookmarksEmpty;
+
+  /// No description provided for @bookmarkAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark here'**
+  String get bookmarkAdd;
+
+  /// No description provided for @jumpToTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to time'**
+  String get jumpToTime;
+
+  /// No description provided for @jumpToTimeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'1:23:45, 83:10, 90 or 50%'**
+  String get jumpToTimeHint;
+
+  /// No description provided for @decoderTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoding: hardware, hardware with copy, or software'**
+  String get decoderTooltip;
 }
 
 class _AppLocalizationsDelegate

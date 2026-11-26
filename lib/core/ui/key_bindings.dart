@@ -145,7 +145,13 @@ enum PlayerAction {
   ),
   mediaInfo('Media info', KeyCombo(LogicalKeyboardKey.keyI, ctrl: true)),
   screenshot('Screenshot', KeyCombo(LogicalKeyboardKey.keyS, ctrl: true)),
-  settings('Settings', KeyCombo(LogicalKeyboardKey.comma, ctrl: true));
+  settings('Settings', KeyCombo(LogicalKeyboardKey.comma, ctrl: true)),
+  // Task 8.8.
+  bookmark('Add a bookmark here', KeyCombo(LogicalKeyboardKey.keyB)),
+  bookmarks('Bookmarks', KeyCombo(LogicalKeyboardKey.keyB, ctrl: true)),
+  jumpToTime('Jump to time', KeyCombo(LogicalKeyboardKey.keyG, ctrl: true)),
+  decoder('Hardware / software decoding', KeyCombo(LogicalKeyboardKey.keyH)),
+  stats('Playback statistics', KeyCombo(LogicalKeyboardKey.keyI, shift: true));
 
   new(this.label, this.defaultCombo, {this.repeats = false});
 

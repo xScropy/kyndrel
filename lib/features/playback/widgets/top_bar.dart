@@ -4,6 +4,7 @@ import 'package:kyndrel/core/metadata/metadata_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/utils/media_title.dart';
+import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -24,6 +25,9 @@ class TopBarContent extends ConsumerWidget {
     );
     if (source == null) return const SizedBox.shrink();
 
+    final audioOnly = ref.watch(
+      trackStateProvider.select((t) => t.value?.isAudioOnly ?? false),
+    );
     final parsed = parseMediaTitle(source);
     final details = ref.watch(mediaDetailsProvider(source)).value;
     final quality = qualityLabel(width, height);
@@ -82,6 +86,11 @@ class TopBarContent extends ConsumerWidget {
         if (quality != null) ...[
           const SizedBox(width: 12),
           IgnorePointer(child: QualityBadge(label: quality)),
+        ],
+        // Decoding matters for pictures, not songs.
+        if (!audioOnly) ...[
+          const SizedBox(width: 8),
+          const DecoderButton(),
         ],
         const SizedBox(width: 4),
         ControlButton(

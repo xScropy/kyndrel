@@ -904,4 +904,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get browseFind => 'بحث في هذا المجلد';
+
+  @override
+  String get bookmarks => 'العلامات المرجعية';
+
+  @override
+  String get bookmarksEmpty =>
+      'لا توجد علامات بعد. اضغط B لإضافة علامة عند الموضع الحالي.';
+
+  @override
+  String get bookmarkAdd => 'أضف علامة هنا';
+
+  @override
+  String get jumpToTime => 'الانتقال إلى وقت';
+
+  @override
+  String get jumpToTimeHint => '‎1:23:45 أو 83:10 أو 90 أو ‎50%';
+
+  @override
+  String get decoderTooltip =>
+      'فك الترميز: بالعتاد، بالعتاد مع النسخ، أو بالبرمجيات';
 }

@@ -64,6 +64,8 @@ uses them.
 | `hwdec=mediacodec-copy` | option | write | "Automatic" decoding on Android | 6.7 |
 | `vid` (`no`, then the saved track) | property | read/write | No picture decoding while a phone plays in the background | 6.7 |
 | `demuxer-max-bytes`, `demuxer-max-back-bytes` | option | write | Set on each open: 32/8 MiB for local files, 150/50 MiB (mpv's defaults) for streams, unless set in Advanced | 8.1 |
+| `video-bitrate`, `audio-bitrate`, `audio-codec`, `demuxer-cache-duration` | property | read | Statistics overlay (Shift+I) | 8.8 |
+| `hwdec=auto-copy` | option | write | "HW+" in the decoder switch (H): hardware decoding copied back, so every filter works | 8.8 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |
 | `filename`, `path`, `file-format`, `file-size`, `duration`, `chapters`, `audio-params/hr-channels`, `video-params/{w,h,pixelformat,colormatrix,primaries,gamma}`, `video-bitrate`, `audio-codec`, `audio-params/{channel-count,samplerate}`, `audio-bitrate` | property | read | Media info dialog | 1.3 |
 

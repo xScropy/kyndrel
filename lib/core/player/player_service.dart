@@ -669,6 +669,11 @@ class PlayerService {
     'container-fps',
     'estimated-vf-fps',
     'frame-drop-count',
+    // The statistics overlay (task 8.8).
+    'video-bitrate',
+    'audio-bitrate',
+    'audio-codec',
+    'demuxer-cache-duration',
   ];
 
   /// Current values of [diagnosticProperties]; unavailable ones are omitted.

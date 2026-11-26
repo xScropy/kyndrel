@@ -10,6 +10,8 @@ import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/scrub_preview.dart';
 import 'package:kyndrel/core/player/storyboard.dart';
+import 'package:kyndrel/core/storage/bookmark_repository.dart';
+import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/frame_view.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
@@ -187,6 +189,10 @@ class _SeekBarState extends ConsumerState<SeekBar> {
     final (loopA, loopB) = ref.watch(
       trackStateProvider.select((t) => (t.value?.loopA, t.value?.loopB)),
     );
+    final source = state?.source;
+    final bookmarks = source == null
+        ? const <Bookmark>[]
+        : ref.watch(bookmarksProvider(source)).value ?? const <Bookmark>[];
 
     double fractionOf(Duration d) => enabled
         ? (d.inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0)
@@ -305,6 +311,12 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                                 for (final c in chapters)
                                   if (c.start > Duration.zero)
                                     fractionOf(c.start),
+                              ],
+                              bookmarks: [
+                                for (final b in bookmarks)
+                                  fractionOf(
+                                    Duration(milliseconds: b.positionMs),
+                                  ),
                               ],
                               loopA: loopA == null ? null : fractionOf(loopA),
                               loopB: loopB == null ? null : fractionOf(loopB),
@@ -431,9 +443,13 @@ class SeekBarPainter extends CustomPainter {
     required this.buffered,
     required this.hovering,
     this.marks = const [],
+    this.bookmarks = const [],
     this.loopA,
     this.loopB,
   });
+
+  /// Bookmarks as 0–1 fractions (task 8.8): small orange ticks above.
+  final List<double> bookmarks;
 
   final double progress;
   final double buffered;
@@ -476,6 +492,21 @@ class SeekBarPainter extends CustomPainter {
         gap,
       );
     }
+    // Bookmarks: orange ticks over the bar.
+    final tick = Paint()..color = KyndrelColors.accent;
+    for (final b in bookmarks) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(size.width * b, y - track / 2 - 4),
+            width: 3,
+            height: 7,
+          ),
+          const Radius.circular(1.5),
+        ),
+        tick,
+      );
+    }
     // A-B loop range.
     final a = loopA;
     if (a != null) {
@@ -516,6 +547,7 @@ class SeekBarPainter extends CustomPainter {
       old.buffered != buffered ||
       old.hovering != hovering ||
       !listEquals(old.marks, marks) ||
+      !listEquals(old.bookmarks, bookmarks) ||
       old.loopA != loopA ||
       old.loopB != loopB;
 }

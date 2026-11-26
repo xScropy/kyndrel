@@ -70,13 +70,14 @@ void main() {
   ) async {
     await _loaded(tester);
     final order = <String?>[];
-    for (var i = 0; i < 16; i++) {
+    for (var i = 0; i < 17; i++) {
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
       order.add(_focusedKey());
     }
     expect(order, [
       'top-back',
+      'decoder-button',
       'top-info',
       'seek-total',
       'mute',

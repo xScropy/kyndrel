@@ -405,5 +405,11 @@
     }
   },
   "browseOpenOnly": "This kind of server can't be listed: its files open by address.",
-  "browseFind": "Find in this folder"
+  "browseFind": "Find in this folder",
+  "bookmarks": "Bookmarks",
+  "bookmarksEmpty": "No bookmarks yet. Press B to add one where you are.",
+  "bookmarkAdd": "Bookmark here",
+  "jumpToTime": "Jump to time",
+  "jumpToTimeHint": "1:23:45, 83:10, 90 or 50%",
+  "decoderTooltip": "Decoding: hardware, hardware with copy, or software"
 }

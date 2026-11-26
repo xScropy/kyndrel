@@ -890,4 +890,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get browseFind => 'Find in this folder';
+
+  @override
+  String get bookmarks => 'Bookmarks';
+
+  @override
+  String get bookmarksEmpty =>
+      'No bookmarks yet. Press B to add one where you are.';
+
+  @override
+  String get bookmarkAdd => 'Bookmark here';
+
+  @override
+  String get jumpToTime => 'Jump to time';
+
+  @override
+  String get jumpToTimeHint => '1:23:45, 83:10, 90 or 50%';
+
+  @override
+  String get decoderTooltip =>
+      'Decoding: hardware, hardware with copy, or software';
 }
