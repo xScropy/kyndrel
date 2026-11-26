@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
@@ -207,6 +208,17 @@ class _TrackColumn extends ConsumerWidget {
               track: t,
               selected: tracks.audioId == t.id,
               onTap: () => unawaited(service.selectAudioTrack(t.id)),
+            ),
+          // Another language or a commentary in its own file (8.8).
+          if (!ref.read(platformCapabilitiesProvider).isMobile)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const Key('load-audio'),
+                onPressed: () => unawaited(SubtitleFileActions.loadAudio(ref)),
+                icon: const Icon(Icons.audio_file_outlined, size: 18),
+                label: Text(context.l10n.loadAudioFile),
+              ),
             ),
         ],
       ],

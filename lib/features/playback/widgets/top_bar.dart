@@ -88,10 +88,7 @@ class TopBarContent extends ConsumerWidget {
           IgnorePointer(child: QualityBadge(label: quality)),
         ],
         // Decoding matters for pictures, not songs.
-        if (!audioOnly) ...[
-          const SizedBox(width: 8),
-          const DecoderButton(),
-        ],
+        if (!audioOnly) ...[const SizedBox(width: 8), const DecoderButton()],
         const SizedBox(width: 4),
         ControlButton(
           key: const Key('top-info'),

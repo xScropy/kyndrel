@@ -56,6 +56,11 @@ class LibraryShell extends ConsumerWidget {
     final l = context.l10n;
     final wide = MediaQuery.sizeOf(context).width >= 600;
     final top = MediaQuery.paddingOf(context).top + topInset;
+    // "Pure black" changes the theme's backgrounds (task 8.8).
+    final background = Theme.of(context).scaffoldBackgroundColor;
+    final bar = background == KyndrelColors.black
+        ? KyndrelColors.black
+        : KyndrelColors.surface;
 
     final content = switch (section) {
       LibrarySection.home => home,
@@ -103,7 +108,7 @@ class LibraryShell extends ConsumerWidget {
             padding: EdgeInsets.only(top: top),
             child: NavigationRail(
               key: const Key('library-rail'),
-              backgroundColor: KyndrelColors.background,
+              backgroundColor: background,
               selectedIndex: section.index,
               onDestinationSelected: (i) =>
                   controller.show(LibrarySection.values[i]),
@@ -147,7 +152,7 @@ class LibraryShell extends ConsumerWidget {
         NavigationBar(
           key: const Key('library-bar'),
           height: 64,
-          backgroundColor: KyndrelColors.surface,
+          backgroundColor: bar,
           indicatorColor: KyndrelColors.rowActive,
           selectedIndex: section.index,
           onDestinationSelected: (i) =>

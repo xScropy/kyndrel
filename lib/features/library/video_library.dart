@@ -851,6 +851,18 @@ Future<void> showVideoDetails(
                   icon: const Icon(Icons.queue),
                   label: Text(l.libraryEnqueue),
                 ),
+                if (watched != null)
+                  OutlinedButton.icon(
+                    key: const Key('details-forget'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      unawaited(
+                        ref.read(historyRepositoryProvider).remove(item.uri),
+                      );
+                    },
+                    icon: const Icon(Icons.history_toggle_off),
+                    label: Text(l.libraryForget),
+                  ),
                 if (ref.read(platformCapabilitiesProvider).isDesktop)
                   OutlinedButton.icon(
                     onPressed: () => unawaited(openWithSystem(item.folderPath)),

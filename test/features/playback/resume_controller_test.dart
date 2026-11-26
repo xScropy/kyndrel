@@ -4,7 +4,9 @@ import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fake_player_backend.dart';
 import '../../support/test_database.dart';
@@ -15,12 +17,15 @@ void main() {
   late KyndrelDatabase db;
   late ProviderContainer container;
 
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    final settings = await SettingsRepository.create();
     backend = FakePlayerBackend();
     service = PlayerService(backend);
     db = testDatabase();
     container = ProviderContainer(
       overrides: [
+        settingsRepositoryProvider.overrideWithValue(settings),
         playerServiceProvider.overrideWithValue(service),
         databaseProvider.overrideWithValue(db),
       ],

@@ -8,6 +8,9 @@ abstract final class KyndrelColors {
   /// Near-black app and video background.
   static const Color background = Color(0xFF0B0B0D);
 
+  /// Background of the "Pure black" setting, for OLED screens (task 8.8).
+  static const Color black = Color(0xFF000000);
+
   /// Base colour for raised surfaces (dialogs, menus).
   static const Color surface = Color(0xFF16161A);
 

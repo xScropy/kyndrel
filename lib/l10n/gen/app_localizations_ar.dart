@@ -924,4 +924,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get decoderTooltip =>
       'فك الترميز: بالعتاد، بالعتاد مع النسخ، أو بالبرمجيات';
+
+  @override
+  String get loadAudioFile => 'تحميل ملف صوتي';
+
+  @override
+  String get libraryForget => 'إزالة من السجل';
 }

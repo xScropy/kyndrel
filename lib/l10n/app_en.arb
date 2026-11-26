@@ -411,5 +411,7 @@
   "bookmarkAdd": "Bookmark here",
   "jumpToTime": "Jump to time",
   "jumpToTimeHint": "1:23:45, 83:10, 90 or 50%",
-  "decoderTooltip": "Decoding: hardware, hardware with copy, or software"
+  "decoderTooltip": "Decoding: hardware, hardware with copy, or software",
+  "loadAudioFile": "Load audio file",
+  "libraryForget": "Remove from history"
 }

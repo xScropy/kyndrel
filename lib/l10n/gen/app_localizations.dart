@@ -1753,6 +1753,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decoding: hardware, hardware with copy, or software'**
   String get decoderTooltip;
+
+  /// No description provided for @loadAudioFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Load audio file'**
+  String get loadAudioFile;
+
+  /// No description provided for @libraryForget.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from history'**
+  String get libraryForget;
 }
 
 class _AppLocalizationsDelegate

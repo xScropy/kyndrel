@@ -80,6 +80,7 @@ class AppSettings {
     this.skipIntro = true,
     this.privatePin = '',
     this.browseServers = const [],
+    this.audioPassthrough = false,
   });
 
   /// Last volume, 0–400.
@@ -238,6 +239,9 @@ class AppSettings {
   /// not saved: they are asked for once per session.
   final List<String> browseServers;
 
+  /// AC-3/DTS/TrueHD go untouched to an AV receiver (task 8.8).
+  final bool audioPassthrough;
+
   static const hideChoices = [2, 3, 5, 10];
 
   static const frameCacheChoices = [200, 500, 1000, 2000];
@@ -304,6 +308,7 @@ class AppSettings {
     bool? skipIntro,
     String? privatePin,
     List<String>? browseServers,
+    bool? audioPassthrough,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -367,6 +372,7 @@ class AppSettings {
       skipIntro: skipIntro ?? this.skipIntro,
       privatePin: privatePin ?? this.privatePin,
       browseServers: browseServers ?? this.browseServers,
+      audioPassthrough: audioPassthrough ?? this.audioPassthrough,
     );
   }
 }
@@ -496,6 +502,8 @@ class SettingsRepository {
       skipIntro: _prefs.getBool('skipIntro') ?? d.skipIntro,
       privatePin: _prefs.getString('privatePin') ?? d.privatePin,
       browseServers: _prefs.getStringList('browseServers') ?? d.browseServers,
+      audioPassthrough:
+          _prefs.getBool('audioPassthrough') ?? d.audioPassthrough,
     );
   }
 
@@ -587,6 +595,7 @@ class SettingsRepository {
     await _prefs.setBool('skipIntro', s.skipIntro);
     await _prefs.setString('privatePin', s.privatePin);
     await _prefs.setStringList('browseServers', s.browseServers);
+    await _prefs.setBool('audioPassthrough', s.audioPassthrough);
   }
 }
 

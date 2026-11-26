@@ -54,6 +54,9 @@ class VideoGestureLayer extends ConsumerStatefulWidget {
   /// Speed while long-pressing.
   static const holdRate = 2.0;
 
+  /// Sideways distance for one 0.25× step while holding (task 8.8).
+  static const holdSlideStep = 40.0;
+
   /// Where a swipe-seek would land; the scene preview (6.4) follows it.
   static final seekPreview = ValueNotifier<Duration?>(null);
 
@@ -155,6 +158,22 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
     unawaited(service.setRate(VideoGestureLayer.holdRate));
     ref.read(osdProvider.notifier).show('2× ▶▶');
   }
+
+  /// While holding: sliding sideways changes the speed in 0.25 steps,
+  /// 1× to 4× (mpvKt).
+  void _onLongPressMove(LongPressMoveUpdateDetails d) {
+    if (_rateBeforeHold == null) return;
+    final steps = (d.offsetFromOrigin.dx / VideoGestureLayer.holdSlideStep)
+        .round();
+    final rate = (VideoGestureLayer.holdRate + steps * 0.25).clamp(1.0, 4.0);
+    final service = ref.read(playerServiceProvider);
+    if (rate == service.state.rate) return;
+    unawaited(service.setRate(rate));
+    ref.read(osdProvider.notifier).show('${_rateLabel(rate)}× ▶▶');
+  }
+
+  static String _rateLabel(double r) =>
+      r == r.roundToDouble() ? '${r.round()}' : '$r';
 
   void _onLongPressEnd([Object? _]) {
     final rate = _rateBeforeHold;
@@ -380,6 +399,7 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
               PointerDeviceKind.stylus,
             },
             onLongPressStart: _onLongPressStart,
+            onLongPressMoveUpdate: _onLongPressMove,
             onLongPressEnd: _onLongPressEnd,
             onLongPressCancel: _onLongPressEnd,
             onScaleStart: _onScaleStart,

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 
 @immutable
 class ResumeOffer {
@@ -93,6 +94,8 @@ class ResumeController extends Notifier<ResumeOffer?> {
   Future<void> _save(PlaybackState s) async {
     final source = s.source;
     if (source == null || !s.isLoaded) return;
+    // Incognito leaves no trace (task 8.8).
+    if (ref.read(settingsProvider).incognito) return;
     await _repo.save(source, s.position, s.duration);
   }
 

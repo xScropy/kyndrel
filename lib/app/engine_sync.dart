@@ -46,6 +46,9 @@ final engineSyncProvider = Provider<void>((ref) {
     await applyVideo(initial);
     await service.setEqualizer(initial.equalizer);
     await service.setNormalization(initial.normalization);
+    if (initial.audioPassthrough) {
+      await service.setAudioPassthrough(enabled: true);
+    }
     // Last, so the user's own options win.
     await service.applyOptions(parseMpvOptions(initial.mpvOptions).options);
   }());
@@ -77,6 +80,9 @@ final engineSyncProvider = Provider<void>((ref) {
     })
     ..listen(settingsProvider.select((s) => s.normalization), (_, v) {
       unawaited(service.setNormalization(v));
+    })
+    ..listen(settingsProvider.select((s) => s.audioPassthrough), (_, v) {
+      unawaited(service.setAudioPassthrough(enabled: v));
     })
     ..listen(settingsProvider.select((s) => s.mpvOptions), (_, v) {
       unawaited(service.applyOptions(parseMpvOptions(v).options));

@@ -910,4 +910,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get decoderTooltip =>
       'Decoding: hardware, hardware with copy, or software';
+
+  @override
+  String get loadAudioFile => 'Load audio file';
+
+  @override
+  String get libraryForget => 'Remove from history';
 }

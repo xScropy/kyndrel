@@ -413,6 +413,30 @@ class PlayerService {
   Future<void> setSubtitleDelay(Duration delay) =>
       backend.setProperty('sub-delay', _formatSeconds(delay));
 
+  /// Adds an external audio file (another language, a commentary) and
+  /// selects it (task 8.8).
+  Future<void> addAudioTrack(String path) =>
+      backend.command(['audio-add', path, 'select']);
+
+  /// Picture adjustments, −100…100 each (task 8.8).
+  static const pictureAdjustments = [
+    'brightness',
+    'contrast',
+    'saturation',
+    'gamma',
+    'hue',
+  ];
+
+  Future<void> setPictureAdjustment(String name, int value) {
+    assert(pictureAdjustments.contains(name), name);
+    return backend.setProperty(name, '${value.clamp(-100, 100)}');
+  }
+
+  /// Sends AC-3, E-AC-3, DTS and TrueHD untouched to an AV receiver over
+  /// HDMI/S/PDIF (task 8.8).
+  Future<void> setAudioPassthrough({required bool enabled}) => backend
+      .setProperty('audio-spdif', enabled ? 'ac3,eac3,dts,dts-hd,truehd' : '');
+
   Future<void> applySubtitleStyle(SubtitleStyle style) async {
     for (final e in style.toMpvOptions().entries) {
       await backend.setProperty(e.key, e.value);

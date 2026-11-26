@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/player/effects.dart';
+import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -65,6 +67,8 @@ class VideoEffectsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const PictureAdjustments(),
+        const SizedBox(height: 16),
         const Text('QUALITY', style: KyndrelTheme.sectionLabel),
         const SizedBox(height: 8),
         Wrap(
@@ -226,4 +230,91 @@ class AudioEffectsSection extends ConsumerWidget {
   }
 
   static String _hz(int f) => f >= 1000 ? '${f ~/ 1000}k' : '$f';
+}
+
+/// Brightness, contrast, saturation, gamma and hue, −100…100 (task 8.8).
+/// For this session, like VLC's adjustments; reset puts them back.
+class PictureAdjustmentsController extends Notifier<Map<String, int>> {
+  @override
+  Map<String, int> build() => const {};
+
+  Future<void> set(String name, int value) async {
+    state = {...state, name: value};
+    await ref.read(playerServiceProvider).setPictureAdjustment(name, value);
+  }
+
+  Future<void> reset() async {
+    final service = ref.read(playerServiceProvider);
+    for (final n in PlayerService.pictureAdjustments) {
+      await service.setPictureAdjustment(n, 0);
+    }
+    state = const {};
+  }
+}
+
+final pictureAdjustmentsProvider =
+    NotifierProvider<PictureAdjustmentsController, Map<String, int>>(
+      PictureAdjustmentsController.new,
+    );
+
+class PictureAdjustments extends ConsumerWidget {
+  const new({super.key});
+
+  static const _labels = {
+    'brightness': 'Brightness',
+    'contrast': 'Contrast',
+    'saturation': 'Saturation',
+    'gamma': 'Gamma',
+    'hue': 'Hue',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final values = ref.watch(pictureAdjustmentsProvider);
+    final c = ref.read(pictureAdjustmentsProvider.notifier);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text('ADJUSTMENTS', style: KyndrelTheme.sectionLabel),
+            ),
+            TextButton(
+              key: const Key('adjust-reset'),
+              onPressed: values.isEmpty ? null : () => unawaited(c.reset()),
+              child: const Text('Reset'),
+            ),
+          ],
+        ),
+        for (final name in PlayerService.pictureAdjustments)
+          Row(
+            children: [
+              SizedBox(width: 96, child: Text(_labels[name]!)),
+              Expanded(
+                child: Slider(
+                  key: Key('adjust-$name'),
+                  min: -100,
+                  max: 100,
+                  divisions: 40,
+                  value: (values[name] ?? 0).toDouble(),
+                  activeColor: KyndrelColors.accent,
+                  onChanged: (v) => unawaited(c.set(name, v.round())),
+                ),
+              ),
+              SizedBox(
+                width: 40,
+                child: Text(
+                  '${values[name] ?? 0}',
+                  textAlign: TextAlign.end,
+                  style: const TextStyle(
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
 }

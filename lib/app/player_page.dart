@@ -43,6 +43,7 @@ import 'package:kyndrel/features/music/now_playing.dart';
 import 'package:kyndrel/features/network/open_url_dialog.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
+import 'package:kyndrel/features/playback/file_settings_controller.dart';
 import 'package:kyndrel/features/playback/gesture_lock.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/phone_playback.dart';
@@ -100,6 +101,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..read(storyboardProvider)
       // Library videos' coarse storyboards, made while idle (task 8.4).
       ..read(libraryPreviewsProvider)
+      // Each file's tracks, speed, delays and picture (task 8.8).
+      ..read(fileSettingsControllerProvider)
       // Music: tags, cover and the level meter (task 7.6).
       ..read(nowPlayingProvider);
     // Phones: immersive full screen and rotation while a video plays.

@@ -23,6 +23,28 @@ class PlaybackSettings extends ConsumerWidget {
     return SettingsSection(
       title: 'Playback',
       children: [
+        SwitchListTile(
+          key: const Key('settings-remember-file'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text("Remember each file's settings"),
+          subtitle: const Text(
+            'Audio and subtitle track, speed, delays, fit and zoom',
+          ),
+          value: s.rememberFileSettings,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(rememberFileSettings: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-incognito'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Incognito'),
+          subtitle: const Text(
+            'Nothing goes into history, resume points or file settings',
+          ),
+          value: s.incognito,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(incognito: v)),
+        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Skip length'),
@@ -119,6 +141,17 @@ class AudioSettings extends ConsumerWidget {
     return SettingsSection(
       title: 'Volume',
       children: [
+        SwitchListTile(
+          key: const Key('settings-passthrough'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Audio passthrough'),
+          subtitle: const Text(
+            'Dolby and DTS go untouched to an AV receiver (HDMI, S/PDIF)',
+          ),
+          value: s.audioPassthrough,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(audioPassthrough: v)),
+        ),
         SwitchListTile(
           key: const Key('settings-limiter'),
           contentPadding: EdgeInsets.zero,
@@ -296,6 +329,15 @@ class AppearanceSettings extends ConsumerWidget {
     return SettingsSection(
       title: 'Appearance',
       children: [
+        SwitchListTile(
+          key: const Key('settings-amoled'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Pure black'),
+          subtitle: const Text('Saves power on OLED screens'),
+          value: s.amoledBlack,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(amoledBlack: v)),
+        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Hide controls after'),
