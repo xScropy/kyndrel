@@ -182,7 +182,7 @@ class _Places extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final state = ref.watch(browseProvider);
     final c = ref.read(browseProvider.notifier);
-    final roots = localRoots(libraryFolders: settings.libraryFolders);
+    final roots = ref.watch(localRootsProvider);
     final servers = savedServers(settings);
     const label = TextStyle(
       fontSize: 13,
@@ -205,7 +205,18 @@ class _Places extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
           child: Text(l.browseDevice.toUpperCase(), style: label),
         ),
-        for (final r in roots)
+        if (roots.value == null)
+          const ListTile(
+            key: Key('browse-roots-loading'),
+            leading: SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: KyndrelColors.accent,
+              ),
+            ),
+          ),
+        for (final r in roots.value ?? const <LocalLocation>[])
           ListTile(
             key: Key('browse-root-${r.label}'),
             leading: Icon(
@@ -226,7 +237,10 @@ class _Places extends ConsumerWidget {
                 key: const Key('browse-discover'),
                 tooltip: l.libraryRefresh,
                 icon: const Icon(Icons.refresh),
-                onPressed: () => unawaited(c.discover()),
+                onPressed: () {
+                  ref.invalidate(localRootsProvider);
+                  unawaited(c.discover());
+                },
               ),
             ],
           ),

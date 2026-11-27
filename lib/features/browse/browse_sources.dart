@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -340,61 +341,102 @@ T? try_<T>(T Function() f) {
 
 /// Where this device keeps files: home, the library folders, drives and
 /// mounted disks (task 8.7).
-List<LocalLocation> localRoots({
+///
+/// Never on the UI thread, and each check gives up after [rootTimeout]: on
+/// Windows an empty card reader, a DVD drive or a disconnected network
+/// drive can take many seconds to answer, which froze Browse.
+Future<List<LocalLocation>> localRoots({
   List<String> libraryFolders = const [],
   Map<String, String>? environment,
-}) {
+}) async {
   final env = environment ?? Platform.environment;
-  final out = <LocalLocation>[];
-  void add(String path, [String? title]) {
-    if (out.any((l) => l.path == path)) return;
-    if (Directory(path).existsSync()) {
-      out.add(LocalLocation(path, title: title));
+  final wanted = <(String, String?)>[];
+  void want(String path, [String? title]) {
+    if (!wanted.any((w) => w.$1 == path)) wanted.add((path, title));
+  }
+
+  Future<void> wantChildren(String base, {Set<String> skip = const {}}) async {
+    try {
+      final children = await Directory(base)
+          .list(followLinks: false)
+          .where((d) => d is Directory && !skip.contains(p.basename(d.path)))
+          .toList()
+          .timeout(rootTimeout);
+      for (final d in children..sort((a, b) => a.path.compareTo(b.path))) {
+        want(d.path, p.basename(d.path));
+      }
+    } on Object {
+      // Not there, not readable or too slow: skip it.
     }
   }
 
   if (Platform.isAndroid) {
-    add('/storage/emulated/0', 'Internal storage');
-    try {
-      for (final d in Directory('/storage').listSync()) {
-        final n = p.basename(d.path);
-        if (d is Directory && n != 'emulated' && n != 'self') add(d.path, n);
-      }
-    } on FileSystemException {
-      // Not readable: internal storage only.
-    }
-    return out;
-  }
-  final home = env['USERPROFILE'] ?? env['HOME'];
-  if (home != null) add(home, 'Home');
-  (libraryFolders.isEmpty
-          ? FolderMediaScanner.defaultFolders(environment: env)
-          : libraryFolders)
-      .forEach(add);
-  if (Platform.isWindows) {
-    for (final c in 'CDEFGHIJKLMNOPQRSTUVWXYZ'.split('')) {
-      add('$c:\\', '$c:');
-    }
-  } else if (Platform.isMacOS) {
-    try {
-      for (final d in Directory('/Volumes').listSync()) {
-        if (d is Directory) add(d.path, p.basename(d.path));
-      }
-    } on FileSystemException {
-      // None.
-    }
+    want('/storage/emulated/0', 'Internal storage');
+    await wantChildren('/storage', skip: {'emulated', 'self'});
   } else {
-    final user = env['USER'] ?? '';
-    for (final base in ['/media/$user', '/run/media/$user', '/mnt']) {
-      try {
-        for (final d in Directory(base).listSync()) {
-          if (d is Directory) add(d.path, p.basename(d.path));
-        }
-      } on FileSystemException {
-        // Not there.
+    final home = env['USERPROFILE'] ?? env['HOME'];
+    if (home != null) want(home, 'Home');
+    (libraryFolders.isEmpty
+            ? FolderMediaScanner.defaultFolders(environment: env)
+            : libraryFolders)
+        .forEach(want);
+    if (Platform.isWindows) {
+      // Only the letters Windows has; never probe all 24.
+      final mask = windowsDriveMask();
+      for (var i = 2; i < 26; i++) {
+        if (mask != null && mask & (1 << i) == 0) continue;
+        final c = String.fromCharCode(0x41 + i);
+        want('$c:\\', '$c:');
       }
+    } else if (Platform.isMacOS) {
+      await wantChildren('/Volumes');
+    } else {
+      final user = env['USER'] ?? '';
+      for (final base in ['/media/$user', '/run/media/$user', '/mnt']) {
+        await wantChildren(base);
+      }
+      want('/', '/');
     }
-    add('/', '/');
   }
-  return out;
+  final present = await Future.wait([
+    for (final (path, _) in wanted) _exists(path),
+  ]);
+  return [
+    for (var i = 0; i < wanted.length; i++)
+      if (present[i]) LocalLocation(wanted[i].$1, title: wanted[i].$2),
+  ];
 }
+
+/// How long a drive or folder may take to say it exists.
+const rootTimeout = Duration(seconds: 2);
+
+Future<bool> _exists(String path) async {
+  try {
+    // Async on purpose: the sync call blocks the UI on a slow drive.
+    // ignore: avoid_slow_async_io
+    final found = Directory(path).exists();
+    return await found.timeout(rootTimeout, onTimeout: () => false);
+  } on Object {
+    return false;
+  }
+}
+
+/// The drive letters Windows has (bit 0 is A:), or null when unknown.
+int? windowsDriveMask() {
+  if (!Platform.isWindows) return null;
+  try {
+    final getLogicalDrives = DynamicLibrary.open('kernel32.dll')
+        .lookupFunction<Uint32 Function(), int Function()>('GetLogicalDrives');
+    final mask = getLogicalDrives();
+    return mask == 0 ? null : mask;
+  } on Object {
+    return null;
+  }
+}
+
+/// The places Browse shows, found once per change of the library folders.
+final localRootsProvider = FutureProvider<List<LocalLocation>>(
+  (ref) => localRoots(
+    libraryFolders: ref.watch(settingsProvider.select((s) => s.libraryFolders)),
+  ),
+);

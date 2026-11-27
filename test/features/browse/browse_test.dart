@@ -70,6 +70,20 @@ class _FakeBrowse extends BrowseService {
 
 /// Task 8.7: Browse.
 void main() {
+  test('places: only folders that exist, found off the UI thread', () async {
+    final home = Directory.systemTemp.createTempSync('kyndrel_home');
+    addTearDown(() => home.deleteSync(recursive: true));
+    final films = Directory(p.join(home.path, 'Films'))..createSync();
+    final roots = await localRoots(
+      libraryFolders: [films.path, p.join(home.path, 'gone')],
+      environment: {'HOME': home.path, 'USER': 'nobody-here'},
+    );
+    final paths = roots.map((r) => r.path).toList();
+    expect(paths.take(2), [home.path, films.path]);
+    expect(paths, isNot(contains(p.join(home.path, 'gone'))));
+    expect(roots.first.title, 'Home');
+  });
+
   Future<(AppHarness, _FakeBrowse)> browse(
     WidgetTester tester, {
     Map<String, Object> prefs = const {},
@@ -80,7 +94,12 @@ void main() {
         'libraryFolders': ['/disk'],
         ...prefs,
       },
-      overrides: [browseServiceProvider.overrideWithValue(fake)],
+      overrides: [
+        browseServiceProvider.overrideWithValue(fake),
+        localRootsProvider.overrideWith(
+          (ref) async => const [LocalLocation('/disk')],
+        ),
+      ],
     );
     await h.pump(tester);
     h.container
@@ -107,9 +126,19 @@ void main() {
     h.container
         .read(librarySectionProvider.notifier)
         .show(LibrarySection.browse);
-    await tester.pumpAndSettle();
+    // Not pumpAndSettle: the places spinner turns until they're found.
+    await tester.pump();
     expect(find.byKey(const Key('browse-places')), findsOneWidget);
-    await tester.tap(find.byKey(Key('browse-root-${p.basename(disk.path)}')));
+    expect(find.byKey(const Key('browse-roots-loading')), findsOneWidget);
+    // The places are found off the UI thread (real file IO).
+    final rootKey = Key('browse-root-${p.basename(disk.path)}');
+    for (var i = 0; i < 20 && find.byKey(rootKey).evaluate().isEmpty; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+    }
+    await tester.tap(find.byKey(rootKey));
     await tester.pumpAndSettle();
     expect(fake.listed.single, LocalLocation(disk.path));
 
