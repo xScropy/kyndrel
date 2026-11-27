@@ -94,6 +94,8 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.initState();
     ref
       ..read(engineSyncProvider)
+      // "No sound" instead of silence when the device fails.
+      ..read(audioProblemNoticeProvider)
       // Image-cache cap, and closing the frame engine when memory is short.
       ..read(memoryGuardProvider)
       ..read(mediaSessionSyncProvider)

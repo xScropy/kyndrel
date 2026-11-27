@@ -94,6 +94,19 @@ void main() {
     }
   });
 
+  test('output devices; ao-reload keeps playing (no-sound retry)', () async {
+    final devices = await service.audioDevices();
+    expect(devices.first, SoundDevice.automatic);
+    await service.open(p.join(media, 'clip.mp4'));
+    await waitFor((s) => s.duration > Duration.zero && s.isPlaying);
+    await service.backend.command(['ao-reload']);
+    await service.setAudioDevice('auto');
+    expect(await prop('audio-device'), 'auto');
+    final before = service.state.position;
+    await waitFor((s) => s.position > before);
+    expect(service.state.status, PlaybackStatus.playing);
+  });
+
   test('a file that is not media reports an error with log lines', () async {
     await service.open(p.join(media, 'broken.mkv'));
     final s = await waitFor((s) => s.status == PlaybackStatus.error);

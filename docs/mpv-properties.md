@@ -69,6 +69,9 @@ uses them.
 | `audio-add <path> select` | command | write | Load an external audio track | 8.8 |
 | `brightness`, `contrast`, `saturation`, `gamma`, `hue` | property | write | Picture adjustments, −100…100 | 8.8 |
 | `audio-spdif` | option | write | Passthrough of AC-3, E-AC-3, DTS, DTS-HD and TrueHD (empty: off) | 8.8 |
+| `audio-device` | option | write | Sound output device (`auto`: the system default), Settings › Audio | fix |
+| `audio-device-list` | property | read | Devices for the output picker (JSON) | fix |
+| `ao-reload` | command | — | One retry when the sound device failed to open | fix |
 | `hwdec=auto-copy` | option | write | "HW+" in the decoder switch (H): hardware decoding copied back, so every filter works | 8.8 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |
 | `filename`, `path`, `file-format`, `file-size`, `duration`, `chapters`, `audio-params/hr-channels`, `video-params/{w,h,pixelformat,colormatrix,primaries,gamma}`, `video-bitrate`, `audio-codec`, `audio-params/{channel-count,samplerate}`, `audio-bitrate` | property | read | Media info dialog | 1.3 |

@@ -81,6 +81,7 @@ class AppSettings {
     this.privatePin = '',
     this.browseServers = const [],
     this.audioPassthrough = false,
+    this.audioDevice = 'auto',
     this.customCommands = const [],
     this.mouseMiddle = 'playPause',
     this.mouseSide = 'seek',
@@ -245,6 +246,10 @@ class AppSettings {
   /// AC-3/DTS/TrueHD go untouched to an AV receiver (task 8.8).
   final bool audioPassthrough;
 
+  /// mpv's audio output device (`audio-device`); `auto` follows the
+  /// system's default.
+  final String audioDevice;
+
   /// The user's quick commands, `Label | mpv command` each (task 8.8).
   final List<String> customCommands;
 
@@ -323,6 +328,7 @@ class AppSettings {
     String? privatePin,
     List<String>? browseServers,
     bool? audioPassthrough,
+    String? audioDevice,
     List<String>? customCommands,
     String? mouseMiddle,
     String? mouseSide,
@@ -390,6 +396,7 @@ class AppSettings {
       privatePin: privatePin ?? this.privatePin,
       browseServers: browseServers ?? this.browseServers,
       audioPassthrough: audioPassthrough ?? this.audioPassthrough,
+      audioDevice: audioDevice ?? this.audioDevice,
       customCommands: customCommands ?? this.customCommands,
       mouseMiddle: mouseMiddle ?? this.mouseMiddle,
       mouseSide: mouseSide ?? this.mouseSide,
@@ -524,6 +531,7 @@ class SettingsRepository {
       browseServers: _prefs.getStringList('browseServers') ?? d.browseServers,
       audioPassthrough:
           _prefs.getBool('audioPassthrough') ?? d.audioPassthrough,
+      audioDevice: _prefs.getString('audioDevice') ?? d.audioDevice,
       customCommands:
           _prefs.getStringList('customCommands') ?? d.customCommands,
       mouseMiddle: _prefs.getString('mouseMiddle') ?? d.mouseMiddle,
@@ -620,6 +628,7 @@ class SettingsRepository {
     await _prefs.setString('privatePin', s.privatePin);
     await _prefs.setStringList('browseServers', s.browseServers);
     await _prefs.setBool('audioPassthrough', s.audioPassthrough);
+    await _prefs.setString('audioDevice', s.audioDevice);
     await _prefs.setStringList('customCommands', s.customCommands);
     await _prefs.setString('mouseMiddle', s.mouseMiddle);
     await _prefs.setString('mouseSide', s.mouseSide);

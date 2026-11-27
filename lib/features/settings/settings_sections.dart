@@ -7,6 +7,8 @@ import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/mpv_options.dart';
+import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/key_bindings.dart';
@@ -162,15 +164,52 @@ class AudioSettings extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(settingsProvider);
+    final devices =
+        ref.watch(audioDevicesProvider).value ?? const [SoundDevice.automatic];
+    final current = devices.any((d) => d.name == s.audioDevice)
+        ? s.audioDevice
+        : SoundDevice.automatic.name;
     return SettingsSection(
       title: 'Volume',
       children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Output device'),
+          subtitle: const Text(
+            'Automatic follows the system. Pick one when sound goes to the '
+            'wrong place (a monitor over HDMI, headphones).',
+          ),
+          trailing: IconButton(
+            key: const Key('settings-audio-devices-refresh'),
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(audioDevicesProvider),
+          ),
+        ),
+        DropdownButton<String>(
+          key: const Key('settings-audio-device'),
+          isExpanded: true,
+          value: current,
+          items: [
+            for (final d in devices)
+              DropdownMenuItem(
+                value: d.name,
+                child: Text(d.description, overflow: TextOverflow.ellipsis),
+              ),
+          ],
+          onChanged: (v) {
+            if (v != null) {
+              updateSettings(ref, (x) => x.copyWith(audioDevice: v));
+            }
+          },
+        ),
         SwitchListTile(
           key: const Key('settings-passthrough'),
           contentPadding: EdgeInsets.zero,
           title: const Text('Audio passthrough'),
           subtitle: const Text(
-            'Dolby and DTS go untouched to an AV receiver (HDMI, S/PDIF)',
+            'Dolby and DTS go untouched to an AV receiver (HDMI, S/PDIF). '
+            'Leave off for laptop speakers and headphones: they go silent.',
           ),
           value: s.audioPassthrough,
           onChanged: (v) =>
@@ -825,3 +864,9 @@ class _MouseButtons extends ConsumerWidget {
     );
   }
 }
+
+/// The sound devices mpv sees, read when Settings › Audio opens.
+final FutureProvider<List<SoundDevice>> audioDevicesProvider =
+    FutureProvider.autoDispose<List<SoundDevice>>(
+      (ref) => ref.watch(playerServiceProvider).audioDevices(),
+    );

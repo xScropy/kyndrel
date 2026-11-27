@@ -3,6 +3,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+
 import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
@@ -818,6 +820,8 @@ class PlayerService {
     await _trackController.close();
     await _completions.close();
     await _logLines.close();
+    _audioRetry?.cancel();
+    await _audioProblems.close();
     await backend.dispose();
   }
 
@@ -916,8 +920,55 @@ class PlayerService {
   );
 
   void _onError(String message) {
-    if (message.trim().isEmpty || _nonFatal.hasMatch(message)) return;
+    if (message.trim().isEmpty) return;
+    if (_nonFatal.hasMatch(message)) {
+      _onAudioProblem(message);
+      return;
+    }
     _update(_state.copyWith(errorMessage: message));
+  }
+
+  // ---------------------------------------------------------- sound output
+
+  final _audioProblems = StreamController<String>.broadcast();
+
+  /// mpv couldn't open the sound device: the film plays, silently. Each
+  /// file gets one automatic retry ([audioRetryDelay] later, `ao-reload`);
+  /// every problem is reported here so the app can say so instead of
+  /// staying silent.
+  Stream<String> get audioProblems => _audioProblems.stream;
+
+  static const audioRetryDelay = Duration(milliseconds: 500);
+  String? _audioRetried;
+  Timer? _audioRetry;
+
+  void _onAudioProblem(String message) {
+    if (_disposed) return;
+    if (!_audioProblems.isClosed) _audioProblems.add(message.trim());
+    final source = _state.source;
+    if (source == null || _audioRetried == source) return;
+    _audioRetried = source;
+    _audioRetry?.cancel();
+    _audioRetry = Timer(audioRetryDelay, () {
+      if (_disposed) return;
+      unawaited(
+        backend.command(['ao-reload']).catchError((Object _) {
+          // Nothing playing any more.
+        }),
+      );
+    });
+  }
+
+  /// The sound devices mpv can play to; the first is `auto`, the system's
+  /// default.
+  Future<List<SoundDevice>> audioDevices() async =>
+      SoundDevice.parseList(await backend.getProperty('audio-device-list'));
+
+  /// Plays sound on [name] (from [audioDevices]); `auto` follows the
+  /// system's default device.
+  Future<void> setAudioDevice(String name) async {
+    _audioRetried = null;
+    await backend.setProperty('audio-device', name.isEmpty ? 'auto' : name);
   }
 
   void _onLog(PlayerLogLine line) {
@@ -966,4 +1017,42 @@ class PlayerService {
       (d.inMicroseconds / 1e6).toStringAsFixed(3);
 
   static String? _nonEmpty(String? s) => s == null || s.isEmpty ? null : s;
+}
+
+/// A sound device from mpv's `audio-device-list`.
+@immutable
+class SoundDevice {
+  const new(this.name, this.description);
+
+  /// What `audio-device` takes, like `wasapi/{...}` or `pulse/alsa_output...`.
+  final String name;
+  final String description;
+
+  static const automatic = SoundDevice('auto', 'Automatic');
+
+  /// Parses mpv's JSON list; [automatic] always comes first.
+  static List<SoundDevice> parseList(String? json) {
+    final out = [automatic];
+    if (json == null || json.isEmpty) return out;
+    try {
+      final list = jsonDecode(json);
+      if (list is! List) return out;
+      for (final e in list) {
+        if (e is! Map) continue;
+        final name = e['name'];
+        if (name is! String || name.isEmpty || name == 'auto') continue;
+        final d = e['description'];
+        out.add(SoundDevice(name, d is String && d.isNotEmpty ? d : name));
+      }
+    } on FormatException {
+      // Not JSON: automatic only.
+    }
+    return out;
+  }
+
+  @override
+  bool operator ==(Object other) => other is SoundDevice && other.name == name;
+
+  @override
+  int get hashCode => name.hashCode;
 }

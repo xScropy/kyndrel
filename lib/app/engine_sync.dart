@@ -7,6 +7,7 @@ import 'package:kyndrel/core/player/mpv_options.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/ui/osd.dart';
 import 'package:path/path.dart' as p;
 
 /// Copies the bundled shader to a real file mpv can read.
@@ -49,6 +50,9 @@ final engineSyncProvider = Provider<void>((ref) {
     if (initial.audioPassthrough) {
       await service.setAudioPassthrough(enabled: true);
     }
+    if (initial.audioDevice != 'auto') {
+      await service.setAudioDevice(initial.audioDevice);
+    }
     // Last, so the user's own options win.
     await service.applyOptions(parseMpvOptions(initial.mpvOptions).options);
   }());
@@ -84,10 +88,42 @@ final engineSyncProvider = Provider<void>((ref) {
     ..listen(settingsProvider.select((s) => s.audioPassthrough), (_, v) {
       unawaited(service.setAudioPassthrough(enabled: v));
     })
+    ..listen(settingsProvider.select((s) => s.audioDevice), (_, v) {
+      unawaited(service.setAudioDevice(v));
+    })
     ..listen(settingsProvider.select((s) => s.mpvOptions), (_, v) {
       unawaited(service.applyOptions(parseMpvOptions(v).options));
     });
 });
+
+/// Says so when the sound device didn't open, instead of playing silently:
+/// the usual causes are a device that was unplugged or taken by another
+/// app, the wrong output device, or passthrough to laptop speakers.
+final audioProblemNoticeProvider = Provider<void>((ref) {
+  final sub = ref.watch(playerServiceProvider).audioProblems.listen((_) {
+    final s = ref.read(settingsProvider);
+    ref
+        .read(osdProvider.notifier)
+        .show(
+          s.audioPassthrough
+              ? audioProblemPassthroughText
+              : s.audioDevice == 'auto'
+              ? audioProblemText
+              : audioProblemDeviceText,
+        );
+  });
+  ref.onDispose(() => unawaited(sub.cancel()));
+});
+
+const audioProblemText =
+    'No sound: the audio device did not open. Retrying… '
+    'Pick one in Settings › Audio › Output device.';
+const audioProblemDeviceText =
+    'No sound from the chosen output device. Try Automatic in '
+    'Settings › Audio › Output device.';
+const audioProblemPassthroughText =
+    'No sound: audio passthrough needs an AV receiver. Turn it off in '
+    'Settings › Audio for speakers and headphones.';
 
 /// "Automatic" on Android is MediaCodec with a copy back (task 6.7): it is
 /// what works with media_kit's texture output, and mpv still falls back to
