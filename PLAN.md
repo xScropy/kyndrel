@@ -238,7 +238,9 @@ Harbor (HarborCommunity/Harbor, MIT, a Tauri + libmpv Stremio client) is the ref
 - [x] 9.5 Subtitle text: encoding detection (Arabic windows-1256 and others), Arabic quality checks, SDH filter, frame-rate conversion.
   - Harbor's decoder ported (`core/subtitles/subtitle_encoding.dart`): byte-order marks, UTF-8, then Windows-1256, ISO-8859-6 and Windows-1252 scored on printable text, mojibake, control characters, timestamps and how Arabic the words look. Files Kyndrel loads (picked, from ZIPs, downloaded) reach mpv as a UTF-8 copy; the subtitle lines list and translation read any encoding; for files mpv finds next to the video, `sub-codepage` is Windows-1256 when Arabic is wanted.
   - Hide sound descriptions (mpv's SDH filter, Settings › Subtitles) and a subtitle frame rate in the panel's Sync tab (Harbor's presets, reset per file). Harbor's Arabic quality scoring ranks search results, so it comes with 9.6.
-- [ ] 9.6 Subtitle sources without an API key (OpenSubtitles v3, Wyzie, Podnapisi, SubDL with a key) and Harbor's ranking by language and release name.
+- [x] 9.6 Subtitle sources without an API key (OpenSubtitles v3, Wyzie, Podnapisi, SubDL with a key) and Harbor's ranking by language and release name.
+  - The film's IMDb id comes from Stremio's public Cinemeta catalogue (`core/metadata/media_identity.dart`); OpenSubtitles through Stremio's free addon and Wyzie are searched with it (Wyzie also by title), alongside OpenSubtitles with the user's key. Harbor's release matching ported (`core/subtitles/release_match.dart`): ranked by hash, the user's languages, then the fit (episode, group, source, resolution, edition), shown in %. Downloads are unpacked from gzip or ZIP.
+  - Not done: Podnapisi (its API answers XML by movie hash only) and SubDL (needs a key); the two keyless sources cover most films.
 - [ ] 9.7 Automatic subtitle sync to the audio (speech detection and alignment, offset and drift).
 - [ ] 9.8 Skip segments from online databases (AniSkip, TheIntroDB, IntroDB, SkipDB): intro, recap, credits; Harbor's skip pill.
 - [ ] 9.9 Playback rescue: frozen picture, stuck position and stalls are detected and retried.
