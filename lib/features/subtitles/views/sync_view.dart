@@ -58,6 +58,15 @@ class SyncView extends ConsumerWidget {
           'Shown at the top of the picture, for two languages at once.',
           style: TextStyle(fontSize: 11, color: KyndrelColors.textSecondary),
         ),
+        const SizedBox(height: 16),
+        const Text('SUBTITLE FRAME RATE', style: KyndrelTheme.sectionLabel),
+        const SizedBox(height: 6),
+        const SubtitleFpsPicker(),
+        const Text(
+          'For subtitles made for another release: they drift further '
+          'off as the film goes on.',
+          style: TextStyle(fontSize: 11, color: KyndrelColors.textSecondary),
+        ),
       ],
     );
   }
@@ -171,6 +180,51 @@ class _DelayEditorState extends State<DelayEditor> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Harbor's subtitle frame rates (task 9.5): what the subtitle was timed
+/// for, so mpv can re-time it to this video.
+class SubtitleFpsPicker extends ConsumerStatefulWidget {
+  const new({super.key});
+
+  static const presets = <(String, double)>[
+    ('23.976', 24000 / 1001),
+    ('24', 24),
+    ('25', 25),
+    ('29.97', 30000 / 1001),
+    ('30', 30),
+    ('50', 50),
+    ('59.94', 60000 / 1001),
+    ('60', 60),
+  ];
+
+  @override
+  ConsumerState<SubtitleFpsPicker> createState() => _SubtitleFpsPickerState();
+}
+
+class _SubtitleFpsPickerState extends ConsumerState<SubtitleFpsPicker> {
+  @override
+  Widget build(BuildContext context) {
+    // A new file resets it in the service; rebuild with the source.
+    ref.watch(playbackStateProvider.select((s) => s.value?.source));
+    final service = ref.read(playerServiceProvider);
+    final current = service.subtitleFps;
+    return DropdownButton<double?>(
+      key: const Key('sub-fps'),
+      isExpanded: true,
+      value: current,
+      dropdownColor: KyndrelColors.surface,
+      items: [
+        const DropdownMenuItem(child: Text('As the subtitle says')),
+        for (final (label, fps) in SubtitleFpsPicker.presets)
+          DropdownMenuItem(value: fps, child: Text('$label fps')),
+      ],
+      onChanged: (v) async {
+        await service.setSubtitleFps(v);
+        if (mounted) setState(() {});
+      },
     );
   }
 }

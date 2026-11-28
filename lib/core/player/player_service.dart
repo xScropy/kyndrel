@@ -211,6 +211,7 @@ class PlayerService {
       ),
     );
     _updateTracks(TrackState.empty);
+    if (_subtitleFps != null) await setSubtitleFps(null);
     await backend.setProperty(
       'http-header-fields',
       (_headers[trimmed] ?? const []).join(','),
@@ -459,6 +460,30 @@ class PlayerService {
 
   /// Load subtitle files named like the video from the same folder
   /// (mpv `sub-auto=fuzzy`), or turn that off.
+  /// What mpv assumes for subtitle files that aren't UTF-8 (task 9.5):
+  /// `auto` (its detector, when built in) or e.g. `cp1256` for Arabic.
+  Future<void> setSubtitleCodepage(String codepage) =>
+      backend.setProperty('sub-codepage', codepage);
+
+  /// Hides sound descriptions for the hard of hearing ("[door creaks]",
+  /// "JOHN:") in text subtitles (task 9.5, Harbor's SDH filter; mpv's).
+  Future<void> setHideSoundDescriptions({required bool enabled}) =>
+      backend.setProperty('sub-filter-sdh', enabled ? 'yes' : 'no');
+
+  /// Re-times text subtitles made for another frame rate (task 9.5,
+  /// Harbor's subtitle FPS): null keeps their own timing. Reset for each
+  /// file.
+  Future<void> setSubtitleFps(double? fps) async {
+    _subtitleFps = fps;
+    await backend.setProperty(
+      'sub-fps',
+      fps == null ? '0' : fps.toStringAsFixed(3),
+    );
+  }
+
+  double? _subtitleFps;
+  double? get subtitleFps => _subtitleFps;
+
   Future<void> setAutoLoadSubtitles({required bool enabled}) =>
       backend.setProperty('sub-auto', enabled ? 'fuzzy' : 'no');
 

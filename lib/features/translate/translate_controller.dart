@@ -8,6 +8,7 @@ import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/subtitles/subtitle_encoding.dart';
 import 'package:kyndrel/core/subtitles/subtitle_file.dart';
 import 'package:kyndrel/core/utils/hashing.dart';
 import 'package:kyndrel/core/utils/languages.dart';
@@ -46,7 +47,8 @@ class DefaultSubtitleExtractor implements SubtitleExtractor {
       }
       final bytes = await f.readAsBytes();
       return parseSubtitles(
-        utf8.decode(bytes, allowMalformed: true),
+        // Any encoding (task 9.5).
+        SubtitleEncoding.decode(bytes).text,
         extension: p.extension(file),
       );
     }

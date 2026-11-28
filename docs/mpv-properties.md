@@ -73,6 +73,9 @@ uses them.
 | `audio-device-list` | property | read | Devices for the output picker (JSON) | fix |
 | `ao-reload` | command | — | One retry when the sound device failed to open | fix |
 | `audio-channels` | option | write | `stereo` with Downmix to stereo, else `auto-safe` (task 9.4, Harbor) | 9.4 |
+| `sub-codepage` | option | write | `cp1256` when Arabic is wanted, else `auto` (task 9.5) | 9.5 |
+| `sub-filter-sdh` | option | write | Hide sound descriptions (task 9.5) | 9.5 |
+| `sub-fps` | option | write | Subtitle frame rate, reset per file (task 9.5) | 9.5 |
 | `dither`, `dither-depth`, `vd-lavc-fast`, `interpolation`, `linear-downscaling`, `hdr-compute-peak` | option | write | Part of the video presets, as Harbor's Performance/Balanced/Quality (task 9.4) | 9.4 |
 | `hwdec=auto-copy` | option | write | "HW+" in the decoder switch (H): hardware decoding copied back, so every filter works | 8.8 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |

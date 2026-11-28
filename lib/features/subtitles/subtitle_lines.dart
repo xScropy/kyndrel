@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/subtitles/subtitle_file.dart';
+import 'package:kyndrel/core/subtitles/subtitle_prepare.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -25,7 +26,7 @@ Future<void> showSubtitleLines(BuildContext context, WidgetRef ref) {
     try {
       // Subtitle files are small, and this is a click: read at once.
       cues = parseSubtitles(
-        File(path).readAsStringSync(),
+        readSubtitleText(path),
         extension: p.extension(path),
       );
     } on Object {

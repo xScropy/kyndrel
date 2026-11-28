@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/subtitles/subtitle_prepare.dart';
 import 'package:kyndrel/core/utils/languages.dart';
 import 'package:kyndrel/core/utils/media_title.dart';
 import 'package:kyndrel/features/subtitles/opensubtitles/movie_hash.dart';
@@ -166,7 +167,12 @@ class SubtitleSearchController extends Notifier<SubtitleSearchState> {
       await ref
           .read(playerServiceProvider)
           .addSubtitle(
-            file.path,
+            // Old encodings become UTF-8 first (task 9.5).
+            prepareSubtitleFile(
+              file.path,
+              cache: ref.read(appCacheDirProvider),
+              lang: result.language,
+            ),
             title: result.release.isEmpty ? null : result.release,
           );
       state = state.copyWith(

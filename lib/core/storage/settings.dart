@@ -97,6 +97,7 @@ class AppSettings {
     this.audioPassthrough = false,
     this.audioDevice = 'auto',
     this.downmixStereo = false,
+    this.hideSoundDescriptions = false,
     this.customCommands = const [],
     this.mouseMiddle = 'playPause',
     this.mouseSide = 'seek',
@@ -287,6 +288,20 @@ class AppSettings {
   /// centre channel, where the dialogue is, or go silent.
   final bool downmixStereo;
 
+  /// Text subtitles without "[door creaks]" and "JOHN:" (task 9.5).
+  final bool hideSoundDescriptions;
+
+  /// mpv's guess for subtitle files that aren't UTF-8: Windows-1256 when
+  /// Arabic is wanted, else its own detector (task 9.5).
+  String get subtitleCodepage =>
+      language == 'ar' ||
+          subtitleLanguages
+              .split(',')
+              .map((l) => l.trim().toLowerCase())
+              .any((l) => l == 'ar' || l == 'ara')
+      ? 'cp1256'
+      : 'auto';
+
   /// The user's quick commands, `Label | mpv command` each (task 8.8).
   final List<String> customCommands;
 
@@ -375,6 +390,7 @@ class AppSettings {
     bool? audioPassthrough,
     String? audioDevice,
     bool? downmixStereo,
+    bool? hideSoundDescriptions,
     List<String>? customCommands,
     String? mouseMiddle,
     String? mouseSide,
@@ -452,6 +468,8 @@ class AppSettings {
       audioPassthrough: audioPassthrough ?? this.audioPassthrough,
       audioDevice: audioDevice ?? this.audioDevice,
       downmixStereo: downmixStereo ?? this.downmixStereo,
+      hideSoundDescriptions:
+          hideSoundDescriptions ?? this.hideSoundDescriptions,
       customCommands: customCommands ?? this.customCommands,
       mouseMiddle: mouseMiddle ?? this.mouseMiddle,
       mouseSide: mouseSide ?? this.mouseSide,
@@ -602,6 +620,8 @@ class SettingsRepository {
           _prefs.getBool('audioPassthrough') ?? d.audioPassthrough,
       audioDevice: _prefs.getString('audioDevice') ?? d.audioDevice,
       downmixStereo: _prefs.getBool('downmixStereo') ?? d.downmixStereo,
+      hideSoundDescriptions:
+          _prefs.getBool('hideSoundDescriptions') ?? d.hideSoundDescriptions,
       customCommands:
           _prefs.getStringList('customCommands') ?? d.customCommands,
       mouseMiddle: _prefs.getString('mouseMiddle') ?? d.mouseMiddle,
@@ -708,6 +728,7 @@ class SettingsRepository {
     await _prefs.setBool('audioPassthrough', s.audioPassthrough);
     await _prefs.setString('audioDevice', s.audioDevice);
     await _prefs.setBool('downmixStereo', s.downmixStereo);
+    await _prefs.setBool('hideSoundDescriptions', s.hideSoundDescriptions);
     await _prefs.setStringList('customCommands', s.customCommands);
     await _prefs.setString('mouseMiddle', s.mouseMiddle);
     await _prefs.setString('mouseSide', s.mouseSide);

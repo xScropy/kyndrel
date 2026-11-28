@@ -52,6 +52,10 @@ final engineSyncProvider = Provider<void>((ref) {
     if (initial.audioPassthrough) {
       await service.setAudioPassthrough(enabled: true);
     }
+    await service.setSubtitleCodepage(initial.subtitleCodepage);
+    if (initial.hideSoundDescriptions) {
+      await service.setHideSoundDescriptions(enabled: true);
+    }
     if (initial.downmixStereo) {
       await service.setDownmixStereo(enabled: true);
     }
@@ -96,6 +100,12 @@ final engineSyncProvider = Provider<void>((ref) {
     ..listen(settingsProvider.select((s) => s.volumeBoostMax), (_, max) {
       // A lower limit brings a louder volume down to it.
       if (service.state.volume > max) unawaited(service.setVolume(max));
+    })
+    ..listen(settingsProvider.select((s) => s.subtitleCodepage), (_, v) {
+      unawaited(service.setSubtitleCodepage(v));
+    })
+    ..listen(settingsProvider.select((s) => s.hideSoundDescriptions), (_, v) {
+      unawaited(service.setHideSoundDescriptions(enabled: v));
     })
     ..listen(settingsProvider.select((s) => s.downmixStereo), (_, v) {
       unawaited(service.setDownmixStereo(enabled: v));

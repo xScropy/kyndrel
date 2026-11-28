@@ -282,6 +282,18 @@ class SubtitleSettings extends ConsumerWidget {
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(autoLoadSubtitles: v)),
         ),
+        SwitchListTile(
+          key: const Key('settings-sdh'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Hide sound descriptions'),
+          subtitle: const Text(
+            'Drops "[door creaks]" and "JOHN:" from subtitles for the hard '
+            'of hearing',
+          ),
+          value: s.hideSoundDescriptions,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(hideSoundDescriptions: v)),
+        ),
         SettingsTextField(
           key: const Key('settings-languages'),
           label: 'Online search languages',

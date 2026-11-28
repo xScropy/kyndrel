@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/platform/device_media.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
+import 'package:kyndrel/core/subtitles/subtitle_prepare.dart';
 import 'package:path/path.dart' as p;
 
 /// What the panel's right pane shows.
@@ -86,8 +87,11 @@ abstract final class SubtitleFileActions {
   /// Adds [path], or every subtitle inside it when it is a ZIP.
   static Future<void> _add(WidgetRef ref, String path) async {
     final service = ref.read(playerServiceProvider);
+    final cache = ref.read(appCacheDirProvider);
+    // Old encodings (Windows-1256 Arabic...) become UTF-8 first (9.5).
+    String utf(String f) => prepareSubtitleFile(f, cache: cache);
     if (p.extension(path).toLowerCase() != '.zip') {
-      await service.addSubtitle(path);
+      await service.addSubtitle(utf(path));
       return;
     }
     final dir = p.join(
@@ -97,7 +101,7 @@ abstract final class SubtitleFileActions {
     );
     final files = unzipSubtitles(path, dir);
     for (final (i, f) in files.indexed) {
-      await service.addSubtitle(f, select: i == 0);
+      await service.addSubtitle(utf(f), select: i == 0);
     }
   }
 
