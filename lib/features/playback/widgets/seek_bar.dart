@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +14,7 @@ import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/replay_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/frame_view.dart';
+import 'package:kyndrel/core/ui/seek_bar_painter.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -194,6 +194,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
     final bookmarks = source == null
         ? const <Bookmark>[]
         : ref.watch(bookmarksProvider(source)).value ?? const <Bookmark>[];
+    final look = ref.watch(settingsProvider.select(SeekBarLook.fromSettings));
     final heat =
         source == null ||
             !ref.watch(settingsProvider.select((s) => s.showHeatmap))
@@ -313,6 +314,8 @@ class _SeekBarState extends ConsumerState<SeekBar> {
                               hovering:
                                   _hoverX.value != null ||
                                   _dragFraction.value != null,
+                              scrubbing: _dragFraction.value != null,
+                              look: look,
                               marks: [
                                 for (final c in chapters)
                                   if (c.start > Duration.zero)
@@ -442,142 +445,4 @@ class _TimeBubble extends StatelessWidget {
       ),
     );
   }
-}
-
-class SeekBarPainter extends CustomPainter {
-  new({
-    required this.progress,
-    required this.buffered,
-    required this.hovering,
-    this.marks = const [],
-    this.bookmarks = const [],
-    this.heat = const [],
-    this.loopA,
-    this.loopB,
-  });
-
-  /// "Most replayed": 0–1 heights along the bar (task 8.10), drawn while
-  /// hovering.
-  final List<double> heat;
-
-  /// Bookmarks as 0–1 fractions (task 8.8): small orange ticks above.
-  final List<double> bookmarks;
-
-  final double progress;
-  final double buffered;
-  final bool hovering;
-
-  /// Chapter starts as 0–1 fractions (task 3.6).
-  final List<double> marks;
-
-  /// A-B loop points as fractions (task 3.9).
-  final double? loopA;
-  final double? loopB;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final track = hovering ? 6.0 : 4.0;
-    final y = size.height / 2;
-    final r = Radius.circular(track / 2);
-    RRect bar(double to) =>
-        RRect.fromLTRBR(0, y - track / 2, to, y + track / 2, r);
-
-    // Most replayed: a soft curve above the bar while hovering.
-    if (hovering && heat.length > 1) {
-      final top = y - track / 2 - 2;
-      const tall = 14.0;
-      final path = Path()..moveTo(0, top);
-      for (var i = 0; i < heat.length; i++) {
-        final x = size.width * (i + 0.5) / heat.length;
-        path.lineTo(x, top - tall * heat[i]);
-      }
-      path
-        ..lineTo(size.width, top)
-        ..close();
-      canvas.drawPath(
-        path,
-        Paint()..color = KyndrelColors.accent.withValues(alpha: 0.35),
-      );
-    }
-    canvas
-      ..drawRRect(bar(size.width), Paint()..color = KyndrelColors.track)
-      ..drawRRect(
-        bar(size.width * buffered),
-        Paint()..color = KyndrelColors.trackBuffered,
-      )
-      ..drawRRect(
-        bar(size.width * progress),
-        Paint()..color = KyndrelColors.accent,
-      );
-    // Chapter marks: small gaps in the bar.
-    final gap = Paint()..color = KyndrelColors.background;
-    for (final m in marks) {
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(size.width * m, y),
-          width: 2,
-          height: track + 1,
-        ),
-        gap,
-      );
-    }
-    // Bookmarks: orange ticks over the bar.
-    final tick = Paint()..color = KyndrelColors.accent;
-    for (final b in bookmarks) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(size.width * b, y - track / 2 - 4),
-            width: 3,
-            height: 7,
-          ),
-          const Radius.circular(1.5),
-        ),
-        tick,
-      );
-    }
-    // A-B loop range.
-    final a = loopA;
-    if (a != null) {
-      final loopPaint = Paint()..color = KyndrelColors.textPrimary;
-      final b = loopB;
-      if (b != null) {
-        canvas.drawRect(
-          Rect.fromLTRB(
-            size.width * a,
-            y - track,
-            size.width * b,
-            y - track + 2,
-          ),
-          loopPaint,
-        );
-      }
-      for (final f in [a, ?b]) {
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: Offset(size.width * f, y),
-            width: 2,
-            height: 14,
-          ),
-          loopPaint,
-        );
-      }
-    }
-    canvas.drawCircle(
-      Offset(size.width * progress, y),
-      hovering ? 8 : 6,
-      Paint()..color = KyndrelColors.accent,
-    );
-  }
-
-  @override
-  bool shouldRepaint(SeekBarPainter old) =>
-      old.progress != progress ||
-      old.buffered != buffered ||
-      old.hovering != hovering ||
-      !listEquals(old.marks, marks) ||
-      !listEquals(old.bookmarks, bookmarks) ||
-      !listEquals(old.heat, heat) ||
-      old.loopA != loopA ||
-      old.loopB != loopB;
 }

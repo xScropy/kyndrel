@@ -438,13 +438,13 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 ),
                 const PositionedDirectional(
                   end: 20,
-                  bottom: 130,
+                  bottom: 176,
                   child: UpNextCard(),
                 ),
                 // "Skip intro" / "Next episode" (task 8.9).
                 const PositionedDirectional(
                   end: 24,
-                  bottom: 140,
+                  bottom: 186,
                   child: SkipIntroButton(),
                 ),
                 if (widget.launch.showDiagnostics ||
@@ -455,7 +455,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                     child: DiagnosticsOverlay(),
                   ),
                 const Positioned(
-                  bottom: 150,
+                  bottom: 196,
                   left: 0,
                   right: 0,
                   child: Center(child: ResumeBanner()),
@@ -472,7 +472,13 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                         child: WindowTitleBar(
                           showButtons: !fullScreen,
                           // Harbor's taller top bar (task 9.2).
-                          height: compact ? 64 : 88,
+                          // Only over a video: the library keeps its
+                          // header right under the window buttons.
+                          height: !hasMedia
+                              ? KyndrelTokens.titleBarHeight
+                              : compact
+                              ? 64
+                              : 88,
                           child: TopBarContent(
                             compact: compact,
                             onBack: () => unawaited(
@@ -535,7 +541,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   PositionedDirectional(
                     start: compact ? 8 : null,
                     end: compact ? 8 : 20,
-                    bottom: compact ? 8 : 130,
+                    bottom: compact ? 8 : 176,
                     child: _panelBox(
                       compact: compact,
                       screen: screen,
@@ -546,7 +552,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   PositionedDirectional(
                     start: compact ? 8 : null,
                     end: compact ? 8 : 20,
-                    bottom: compact ? 8 : 130,
+                    bottom: compact ? 8 : 176,
                     child: _panelBox(
                       compact: compact,
                       screen: screen,

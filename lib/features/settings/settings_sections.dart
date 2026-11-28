@@ -4,6 +4,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/mpv_options.dart';
@@ -12,6 +13,7 @@ import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/key_bindings.dart';
+import 'package:kyndrel/core/ui/seek_bar_painter.dart';
 import 'package:kyndrel/core/ui/settings_widgets.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -420,6 +422,16 @@ class AppearanceSettings extends ConsumerWidget {
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(amoledBlack: v)),
         ),
+        SwitchListTile(
+          key: const Key('settings-clock'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Clock in full screen'),
+          subtitle: const Text('The time, and when the film ends'),
+          value: s.showClock,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(showClock: v)),
+        ),
+        const SeekBarSettings(),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Hide controls after'),
@@ -889,3 +901,141 @@ final FutureProvider<List<SoundDevice>> audioDevicesProvider =
     FutureProvider.autoDispose<List<SoundDevice>>(
       (ref) => ref.watch(playerServiceProvider).audioDevices(),
     );
+
+/// Harbor's seek bar options (task 9.3), with a live preview.
+class SeekBarSettings extends ConsumerWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(settingsProvider);
+    void set(AppSettings Function(AppSettings) f) => updateSettings(ref, f);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 8),
+        const Text('SEEK BAR', style: KyndrelTheme.sectionLabel),
+        const SizedBox(height: 12),
+        SizedBox(
+          key: const Key('settings-seek-preview'),
+          height: 36,
+          child: CustomPaint(
+            painter: SeekBarPainter(
+              progress: 0.42,
+              buffered: 0.6,
+              hovering: true,
+              look: SeekBarLook.fromSettings(s),
+            ),
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Style'),
+          trailing: DropdownButton<SeekBarStyle>(
+            key: const Key('settings-seek-style'),
+            value: s.seekBarStyle,
+            dropdownColor: KyndrelColors.surface,
+            items: [
+              for (final v in SeekBarStyle.values)
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(switch (v) {
+                    SeekBarStyle.flat => 'Flat',
+                    SeekBarStyle.glass => 'Glass',
+                    SeekBarStyle.pinstripe => 'Pinstripe',
+                    SeekBarStyle.rainbow => 'Rainbow',
+                  }),
+                ),
+            ],
+            onChanged: (v) => set((x) => x.copyWith(seekBarStyle: v)),
+          ),
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final c in KyndrelColors.seekColors)
+              Semantics(
+                button: true,
+                selected: s.seekBarColor == c.toARGB32(),
+                label: 'Colour',
+                child: GestureDetector(
+                  key: Key('seek-color-${c.toARGB32()}'),
+                  onTap: () =>
+                      set((x) => x.copyWith(seekBarColor: c.toARGB32())),
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: c,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: s.seekBarColor == c.toARGB32()
+                            ? KyndrelColors.textPrimary
+                            : KyndrelColors.panelBorder,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text('Thickness: ${s.seekBarHeight.round()} px'),
+        ),
+        Slider(
+          key: const Key('settings-seek-height'),
+          value: s.seekBarHeight,
+          min: 3,
+          max: 14,
+          divisions: 11,
+          onChanged: (v) => set((x) => x.copyWith(seekBarHeight: v)),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Thumb'),
+          trailing: DropdownButton<SeekDotShape>(
+            key: const Key('settings-seek-dot'),
+            value: s.seekDotShape,
+            dropdownColor: KyndrelColors.surface,
+            items: [
+              for (final v in SeekDotShape.values)
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(switch (v) {
+                    SeekDotShape.circle => 'Circle',
+                    SeekDotShape.square => 'Square',
+                    SeekDotShape.hidden => 'Hidden',
+                  }),
+                ),
+            ],
+            onChanged: (v) => set((x) => x.copyWith(seekDotShape: v)),
+          ),
+        ),
+        if (s.seekDotShape != SeekDotShape.hidden) ...[
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text('Thumb size: ${s.seekDotSize.round()} px'),
+          ),
+          Slider(
+            key: const Key('settings-seek-dot-size'),
+            value: s.seekDotSize,
+            min: 8,
+            max: 32,
+            divisions: 12,
+            onChanged: (v) => set((x) => x.copyWith(seekDotSize: v)),
+          ),
+          SwitchListTile(
+            key: const Key('settings-seek-dot-hover'),
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Thumb only on hover'),
+            value: s.seekDotOnHover,
+            onChanged: (v) => set((x) => x.copyWith(seekDotOnHover: v)),
+          ),
+        ],
+      ],
+    );
+  }
+}

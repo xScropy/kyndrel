@@ -71,6 +71,42 @@ abstract final class KyndrelColors {
   static const Color scrimFaint = Color(0x26000000);
   static const Color scrimClear = Color(0x00000000);
 
+  /// Harbor's seek bar (task 9.3): its default amber, the colours the user
+  /// can pick, the rainbow's six bands, the glass sheen and the stripes.
+  static const Color seekAmber = Color(0xFFF4A25C);
+  static const List<Color> seekColors = [
+    seekAmber,
+    accent,
+    Color(0xFFFFFFFF),
+    Color(0xFFEF4444),
+    Color(0xFFEC4899),
+    Color(0xFFA855F7),
+    Color(0xFF3B82F6),
+    Color(0xFF22D3EE),
+    Color(0xFF22C55E),
+    Color(0xFFFACC15),
+  ];
+  static const List<Color> rainbow = [
+    Color(0xFFFF595E),
+    Color(0xFFFF924C),
+    Color(0xFFFFCA3A),
+    Color(0xFF8AC926),
+    Color(0xFF1982C4),
+    Color(0xFF6A4C93),
+  ];
+  static const Color glassSheenTop = Color(0x47FFFFFF);
+  static const Color glassSheenMid = Color(0x0AFFFFFF);
+  static const Color glassSheenBottom = Color(0x2E000000);
+  static const Color stripe = Color(0x38FFFFFF);
+
+  /// Harbor's empty seek track (white 15 %) and buffered part (35 %).
+  static const Color seekTrack = Color(0x26FFFFFF);
+  static const Color seekBuffered = Color(0x59FFFFFF);
+
+  /// The thumb's dark halo and drop shadow.
+  static const Color dotHalo = Color(0x80000000);
+  static const Color dotShadow = Color(0x73000000);
+
   /// Seek/volume track behind the progress fill.
   static const Color track = Color(0x33FFFFFF);
 

@@ -66,7 +66,7 @@ class TopBarContent extends ConsumerWidget {
         children: [
           GlassBackButton(onPressed: onBack),
           const SizedBox(width: 12),
-          Flexible(
+          Expanded(
             // Lets drags on the title move the window.
             child: IgnorePointer(
               child: Column(
@@ -125,8 +125,8 @@ class TopBarContent extends ConsumerWidget {
               ),
             ),
           ),
-          const Spacer(),
-          const FullscreenClock(),
+          // Phones are always full screen and have no room: desktop only.
+          if (!compact) const FullscreenClock(),
           // Decoding matters for pictures, not songs.
           if (!audioOnly) ...[const SizedBox(width: 8), const DecoderButton()],
           const SizedBox(width: 4),
@@ -194,9 +194,14 @@ class _GlassBackButtonState extends State<GlassBackButton> {
         cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hover = true),
         onExit: (_) => setState(() => _hover = false),
-        child: GestureDetector(
+        child: InkResponse(
           key: const Key('top-back'),
           onTap: widget.onPressed,
+          radius: 22,
+          focusColor: KyndrelColors.focus,
+          hoverColor: KyndrelColors.scrimClear,
+          highlightColor: KyndrelColors.scrimClear,
+          splashColor: KyndrelColors.controlHover,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             width: 44,

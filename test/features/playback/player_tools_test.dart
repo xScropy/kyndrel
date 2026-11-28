@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/core/storage/bookmark_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/ui/seek_bar_painter.dart';
 import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/features/playback/widgets/diagnostics_overlay.dart';
-import 'package:kyndrel/features/playback/widgets/seek_bar.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/app_harness.dart';

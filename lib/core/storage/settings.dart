@@ -18,6 +18,12 @@ enum LibraryPreviews {
   off,
 }
 
+/// Harbor's seek bar looks (task 9.3).
+enum SeekBarStyle { flat, glass, pinstripe, rainbow }
+
+/// The seek bar's thumb (task 9.3).
+enum SeekDotShape { circle, square, hidden }
+
 /// User preferences (shared_preferences). Persisted on every change.
 @immutable
 class AppSettings {
@@ -46,6 +52,12 @@ class AppSettings {
     this.boostWarningSeen = false,
     this.volumeBoostMax = 500,
     this.showClock = true,
+    this.seekBarStyle = SeekBarStyle.flat,
+    this.seekBarHeight = 6,
+    this.seekBarColor = 0xFFF4A25C,
+    this.seekDotShape = SeekDotShape.circle,
+    this.seekDotSize = 16,
+    this.seekDotOnHover = true,
     this.autoPlayNextEpisode = true,
     this.tmdbApiKey = '',
     this.screenshotFolder = '',
@@ -157,6 +169,16 @@ class AppSettings {
 
   /// Harbor's clock in full screen: the time and when the film ends.
   final bool showClock;
+
+  /// Harbor's seek bar (task 9.3): style, thickness at rest (3–14 px),
+  /// fill colour (ARGB, one of KyndrelColors.seekColors), thumb shape and
+  /// size (8–32 px), and whether the thumb shows only on hover.
+  final SeekBarStyle seekBarStyle;
+  final double seekBarHeight;
+  final int seekBarColor;
+  final SeekDotShape seekDotShape;
+  final double seekDotSize;
+  final bool seekDotOnHover;
 
   /// Opening an episode queues the next ones from the same folder (3.2).
   final bool autoPlayNextEpisode;
@@ -302,6 +324,12 @@ class AppSettings {
     bool? boostWarningSeen,
     double? volumeBoostMax,
     bool? showClock,
+    SeekBarStyle? seekBarStyle,
+    double? seekBarHeight,
+    int? seekBarColor,
+    SeekDotShape? seekDotShape,
+    double? seekDotSize,
+    bool? seekDotOnHover,
     bool? autoPlayNextEpisode,
     String? tmdbApiKey,
     String? screenshotFolder,
@@ -369,6 +397,12 @@ class AppSettings {
       boostWarningSeen: boostWarningSeen ?? this.boostWarningSeen,
       volumeBoostMax: volumeBoostMax ?? this.volumeBoostMax,
       showClock: showClock ?? this.showClock,
+      seekBarStyle: seekBarStyle ?? this.seekBarStyle,
+      seekBarHeight: seekBarHeight ?? this.seekBarHeight,
+      seekBarColor: seekBarColor ?? this.seekBarColor,
+      seekDotShape: seekDotShape ?? this.seekDotShape,
+      seekDotSize: seekDotSize ?? this.seekDotSize,
+      seekDotOnHover: seekDotOnHover ?? this.seekDotOnHover,
       autoPlayNextEpisode: autoPlayNextEpisode ?? this.autoPlayNextEpisode,
       tmdbApiKey: tmdbApiKey ?? this.tmdbApiKey,
       screenshotFolder: screenshotFolder ?? this.screenshotFolder,
@@ -492,6 +526,16 @@ class SettingsRepository {
           .clamp(100, 500)
           .toDouble(),
       showClock: _prefs.getBool('showClock') ?? d.showClock,
+      seekBarStyle: _enum(SeekBarStyle.values, 'seekBarStyle', d.seekBarStyle),
+      seekBarHeight: (_prefs.getDouble('seekBarHeight') ?? d.seekBarHeight)
+          .clamp(3, 14)
+          .toDouble(),
+      seekBarColor: _prefs.getInt('seekBarColor') ?? d.seekBarColor,
+      seekDotShape: _enum(SeekDotShape.values, 'seekDotShape', d.seekDotShape),
+      seekDotSize: (_prefs.getDouble('seekDotSize') ?? d.seekDotSize)
+          .clamp(8, 32)
+          .toDouble(),
+      seekDotOnHover: _prefs.getBool('seekDotOnHover') ?? d.seekDotOnHover,
       autoPlayNextEpisode:
           _prefs.getBool('autoPlayNextEpisode') ?? d.autoPlayNextEpisode,
       tmdbApiKey: _prefs.getString('tmdbApiKey') ?? d.tmdbApiKey,
@@ -608,6 +652,12 @@ class SettingsRepository {
     await _prefs.setBool('boostWarningSeen', s.boostWarningSeen);
     await _prefs.setDouble('volumeBoostMax', s.volumeBoostMax);
     await _prefs.setBool('showClock', s.showClock);
+    await _prefs.setString('seekBarStyle', s.seekBarStyle.name);
+    await _prefs.setDouble('seekBarHeight', s.seekBarHeight);
+    await _prefs.setInt('seekBarColor', s.seekBarColor);
+    await _prefs.setString('seekDotShape', s.seekDotShape.name);
+    await _prefs.setDouble('seekDotSize', s.seekDotSize);
+    await _prefs.setBool('seekDotOnHover', s.seekDotOnHover);
     await _prefs.setBool('autoPlayNextEpisode', s.autoPlayNextEpisode);
     await _prefs.setString('tmdbApiKey', s.tmdbApiKey);
     await _prefs.setString('screenshotFolder', s.screenshotFolder);

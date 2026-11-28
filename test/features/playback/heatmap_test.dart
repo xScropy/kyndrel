@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/core/storage/replay_repository.dart';
-import 'package:kyndrel/features/playback/widgets/seek_bar.dart';
+import 'package:kyndrel/core/ui/seek_bar_painter.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/app_harness.dart';

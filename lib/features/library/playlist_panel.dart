@@ -71,9 +71,14 @@ class _UpNextTabState extends ConsumerState<UpNextTab> {
           cursor: SystemMouseCursors.click,
           onEnter: (_) => setState(() => _hover = true),
           onExit: (_) => setState(() => _hover = false),
-          child: GestureDetector(
+          child: InkWell(
             key: const Key('queue-button'),
             onTap: ref.read(playlistPanelProvider.notifier).toggle,
+            focusColor: KyndrelColors.focus,
+            hoverColor: KyndrelColors.scrimClear,
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(20),
+            ),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               width: _hover || open ? 46 : 40,
