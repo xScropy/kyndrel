@@ -217,9 +217,31 @@ void main() {
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
     await tester.pump();
-    expect(find.text('CONTINUE WATCHING'), findsOneWidget);
-    expect(find.text('40 min left'), findsOneWidget);
-    expect(find.text('RECENT'), findsOneWidget);
+    // Harbor's home (task 9.16): a hero for the film, then the rows.
+    expect(find.byKey(const Key('hero-/v/Film.2019.mkv')), findsOneWidget);
+    expect(find.text('Continue Watching'), findsOneWidget);
+    expect(find.textContaining('40 min left'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('History'),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('library-home')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('History'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('continue-/v/Film.2019.mkv')),
+      -300,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('library-home')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
 
     await tester.tap(find.byKey(const Key('continue-/v/Film.2019.mkv')));
     await tester.pump();

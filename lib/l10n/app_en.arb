@@ -432,5 +432,22 @@
   "quickCommandsEmpty": "No quick commands yet. Add them in Settings › Advanced.",
   "skipIntro": "Skip intro",
   "skipCredits": "Skip credits",
-  "nextEpisode": "Next episode"
+  "nextEpisode": "Next episode",
+  "homeSearchHint": "Search your videos",
+  "homeResume": "Resume",
+  "homeStartOver": "Start over",
+  "homeContinueTitle": "Continue Watching",
+  "homeRecentlyAdded": "Recently Added",
+  "homeHistory": "History",
+  "homeOpenTitle": "Play anything",
+  "homeOpenSubtitle": "Open a file or paste a link. Your videos appear here as you watch.",
+  "homeLeft": "{time} left",
+  "@homeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "homeChip": "Continue watching"
 }

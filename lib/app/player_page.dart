@@ -275,6 +275,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   /// The library's Home section around [prompt].
   Widget _home(Widget prompt) => LibraryHome(
     openPrompt: prompt,
+    onOpenSettings: _showSettings,
     onOpen: (s) => unawaited(OpenActions.openSource(ref, s)),
     onResume: (s) {
       ref.read(resumeControllerProvider.notifier).resumeNextLoadOf(s);
@@ -323,6 +324,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
           child: SafeArea(
             bottom: false,
             child: LibraryShell(
+              onOpenSettings: _showSettings,
               topInset: 0,
               browse: const BrowseView(),
               home: _home(
@@ -411,6 +413,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   onPickFile: _pickFile,
                   // Home and the device's library (task 7.4).
                   idle: (prompt) => LibraryShell(
+                    onOpenSettings: _showSettings,
                     home: _home(prompt),
                     // Folders and network servers (task 8.7).
                     browse: const BrowseView(),

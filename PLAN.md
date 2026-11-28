@@ -250,6 +250,7 @@ Harbor (HarborCommunity/Harbor, MIT, a Tauri + libmpv Stremio client) is the ref
 - [ ] 9.13 Casting to Chromecast, AirPlay and Roku.
 - [ ] 9.14 Discord Rich Presence.
 - [ ] 9.15 Release 1.4.0.
+- [x] 9.16 Harbor's library look: a sidebar with the name, the sections and Settings at the bottom; a search pill; a hero for the video to pick up again (Resume / Start over); rows of large rounded cards (Continue Watching, Recently Added); the open prompt framed as a hero when nothing was played yet. Phones keep the bottom bar, with a Settings gear by the search.
 
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.

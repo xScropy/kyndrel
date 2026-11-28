@@ -296,5 +296,22 @@
   "quickCommandsEmpty": "لا أوامر سريعة بعد. أضفها من الإعدادات › متقدم.",
   "skipIntro": "تخطي المقدمة",
   "skipCredits": "تخطي الشارة",
-  "nextEpisode": "الحلقة التالية"
+  "nextEpisode": "الحلقة التالية",
+  "homeSearchHint": "ابحث في الفيديوهات",
+  "homeResume": "استكمال",
+  "homeStartOver": "من البداية",
+  "homeContinueTitle": "تابع المشاهدة",
+  "homeRecentlyAdded": "أُضيفت مؤخرًا",
+  "homeHistory": "السجل",
+  "homeOpenTitle": "شغّل أي شيء",
+  "homeOpenSubtitle": "افتح ملفًا أو الصق رابطًا. ستظهر فيديوهاتك هنا أثناء المشاهدة.",
+  "homeLeft": "متبقٍ {time}",
+  "@homeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "homeChip": "تابع المشاهدة"
 }
