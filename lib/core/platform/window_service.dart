@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show exit;
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -134,19 +135,33 @@ class WindowManagerService with WindowListener implements WindowService {
 
   bool _closing = false;
 
+  /// How long one close step (a save, releasing a player) may take.
+  /// Releasing libmpv can take a few seconds; cutting it short and
+  /// destroying the window under it crashed the app on close.
+  static const closeStepTimeout = Duration(seconds: 8);
+
   @override
   Future<void> onWindowClose() async {
     // Some platforms deliver the close event twice; save only once.
     if (_closing) return;
     _closing = true;
+    // The window goes at once; saving and releasing happen out of sight.
+    try {
+      await windowManager.hide();
+    } on Object {
+      // Closing anyway.
+    }
     for (final callback in _closeCallbacks) {
       try {
-        await callback().timeout(const Duration(seconds: 2));
+        await callback().timeout(closeStepTimeout);
       } on Object {
         // Never block closing on a failed save.
       }
     }
-    await windowManager.destroy();
+    // Everything is saved and both players are released: end the process
+    // here rather than destroying the window and letting the engine tear
+    // down plugins and textures one by one (where it used to crash).
+    exit(0);
   }
 
   @override

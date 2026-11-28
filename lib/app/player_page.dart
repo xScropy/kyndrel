@@ -17,6 +17,7 @@ import 'package:kyndrel/app/window/window_title_bar.dart';
 import 'package:kyndrel/core/platform/native_pip.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
+import 'package:kyndrel/core/player/frame_engine.dart';
 import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
@@ -129,6 +130,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..onHidden(history.saveNow)
       ..onHidden(_pauseInBackground)
       ..onShown(_backInForeground)
+      // Then the hidden player that makes previews and storyboards: it may
+      // be in the middle of a frame.
+      ..onClose(ref.read(frameEngineProvider).dispose)
       // Last: release libmpv and the video texture before the window is
       // destroyed. On Linux, destroying the GTK window with a live texture
       // aborts the process (g_mutex_clear on a locked mutex).
