@@ -956,4 +956,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextEpisode => 'Next episode';
+
+  @override
+  String get homeSearchHint => 'Search your videos';
+
+  @override
+  String get homeResume => 'Resume';
+
+  @override
+  String get homeStartOver => 'Start over';
+
+  @override
+  String get homeContinueTitle => 'Continue Watching';
+
+  @override
+  String get homeRecentlyAdded => 'Recently Added';
+
+  @override
+  String get homeHistory => 'History';
+
+  @override
+  String get homeOpenTitle => 'Play anything';
+
+  @override
+  String get homeOpenSubtitle =>
+      'Open a file or paste a link. Your videos appear here as you watch.';
+
+  @override
+  String homeLeft(String time) {
+    return '$time left';
+  }
+
+  @override
+  String get homeChip => 'Continue watching';
+
+  @override
+  String get settingsTogether => 'Watch together';
 }

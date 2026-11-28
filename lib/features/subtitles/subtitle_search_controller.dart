@@ -90,7 +90,7 @@ class SubtitleSearchController extends Notifier<SubtitleSearchState> {
   @override
   SubtitleSearchState build() => const SubtitleSearchState();
 
-  List<String> get _languages => ref
+  List<String> get languages => ref
       .read(settingsProvider)
       .subtitleLanguages
       .split(',')
@@ -131,7 +131,7 @@ class SubtitleSearchController extends Notifier<SubtitleSearchState> {
         year: episode == null ? title.year : null,
         season: episode == null ? null : int.parse(episode.group(1)!),
         episode: episode == null ? null : int.parse(episode.group(2)!),
-        languages: _languages,
+        languages: languages,
       ),
     );
   }
@@ -149,7 +149,7 @@ class SubtitleSearchController extends Notifier<SubtitleSearchState> {
         text: parsed?.group(1) ?? text,
         season: parsed == null ? null : int.parse(parsed.group(2)!),
         episode: parsed == null ? null : int.parse(parsed.group(3)!),
-        languages: _languages,
+        languages: languages,
       ),
     );
   }
@@ -294,5 +294,24 @@ List<SubtitleResult> rankSubtitles(
         r.hashMatch ? 100 : m.percent,
         r.hashMatch ? null : m.reasons.firstOrNull,
       ),
+  ];
+}
+
+/// Subtitle sites to search by name in the browser (the download then
+/// goes in with "Load file"): OpenSubtitles and SubDL.
+List<(String, Uri)> subtitleSiteSearches(String query, List<String> languages) {
+  final q = query.trim();
+  if (q.isEmpty) return const [];
+  final langs = [for (final l in languages) ?languageCode3(l)];
+  return [
+    (
+      'OpenSubtitles',
+      Uri.parse(
+        'https://www.opensubtitles.org/en/search2/'
+        'sublanguageid-${langs.isEmpty ? 'all' : langs.join(',')}/'
+        'moviename-${Uri.encodeComponent(q)}',
+      ),
+    ),
+    ('SubDL', Uri.parse('https://subdl.com/search/${Uri.encodeComponent(q)}')),
   ];
 }

@@ -1837,6 +1837,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next episode'**
   String get nextEpisode;
+
+  /// No description provided for @homeSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your videos'**
+  String get homeSearchHint;
+
+  /// No description provided for @homeResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get homeResume;
+
+  /// No description provided for @homeStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get homeStartOver;
+
+  /// No description provided for @homeContinueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Watching'**
+  String get homeContinueTitle;
+
+  /// No description provided for @homeRecentlyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Added'**
+  String get homeRecentlyAdded;
+
+  /// No description provided for @homeHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get homeHistory;
+
+  /// No description provided for @homeOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play anything'**
+  String get homeOpenTitle;
+
+  /// No description provided for @homeOpenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a file or paste a link. Your videos appear here as you watch.'**
+  String get homeOpenSubtitle;
+
+  /// No description provided for @homeLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} left'**
+  String homeLeft(String time);
+
+  /// No description provided for @homeChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue watching'**
+  String get homeChip;
+
+  /// No description provided for @settingsTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch together'**
+  String get settingsTogether;
 }
 
 class _AppLocalizationsDelegate

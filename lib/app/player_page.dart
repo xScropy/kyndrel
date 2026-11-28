@@ -17,6 +17,7 @@ import 'package:kyndrel/app/window/window_title_bar.dart';
 import 'package:kyndrel/core/platform/native_pip.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
+import 'package:kyndrel/core/player/frame_engine.dart';
 import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
@@ -68,6 +69,7 @@ import 'package:kyndrel/features/scripts/script_manager.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
+import 'package:kyndrel/features/together/together_panel.dart';
 import 'package:kyndrel/features/translate/translate_button.dart';
 import 'package:kyndrel/features/update/update_banner.dart';
 import 'package:kyndrel/l10n/l10n.dart';
@@ -129,6 +131,9 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       ..onHidden(history.saveNow)
       ..onHidden(_pauseInBackground)
       ..onShown(_backInForeground)
+      // Then the hidden player that makes previews and storyboards: it may
+      // be in the middle of a frame.
+      ..onClose(ref.read(frameEngineProvider).dispose)
       // Last: release libmpv and the video texture before the window is
       // destroyed. On Linux, destroying the GTK window with a live texture
       // aborts the process (g_mutex_clear on a locked mutex).
@@ -212,6 +217,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       (button: const SpeedSleepButton(), label: l.moreSpeed),
       (button: const TranslateButton(), label: l.moreTranslate),
       (button: const CastButton(), label: l.moreCast),
+      (button: const TogetherButton(), label: l.settingsTogether),
       (button: const DownloadButton(), label: l.moreDownload),
       if (ref.read(nativePipProvider) != null)
         (button: const PipButton(), label: l.morePip),
@@ -271,6 +277,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
   /// The library's Home section around [prompt].
   Widget _home(Widget prompt) => LibraryHome(
     openPrompt: prompt,
+    onOpenSettings: _showSettings,
     onOpen: (s) => unawaited(OpenActions.openSource(ref, s)),
     onResume: (s) {
       ref.read(resumeControllerProvider.notifier).resumeNextLoadOf(s);
@@ -319,6 +326,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
           child: SafeArea(
             bottom: false,
             child: LibraryShell(
+              onOpenSettings: _showSettings,
               topInset: 0,
               browse: const BrowseView(),
               home: _home(
@@ -407,6 +415,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   onPickFile: _pickFile,
                   // Home and the device's library (task 7.4).
                   idle: (prompt) => LibraryShell(
+                    onOpenSettings: _showSettings,
                     home: _home(prompt),
                     // Folders and network servers (task 8.7).
                     browse: const BrowseView(),
@@ -517,6 +526,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                                 leftActions: [DownloadButton()],
                                 rightActions: [
                                   FitMenuButton(),
+                                  TogetherButton(),
                                   TranslateButton(),
                                   SubtitlesButton(),
                                   SpeedSleepButton(),

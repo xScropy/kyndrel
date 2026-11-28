@@ -161,4 +161,16 @@ void main() {
     expect(id?.imdbId, 'tt0133093');
     expect(id?.series, isFalse);
   });
+
+  test("search the sites by name, in the user's languages", () {
+    final sites = subtitleSiteSearches('The Matrix', ['ar', 'en']);
+    expect(sites.map((s) => s.$1), ['OpenSubtitles', 'SubDL']);
+    expect(
+      '${sites.first.$2}',
+      'https://www.opensubtitles.org/en/search2/sublanguageid-ara,eng/'
+          'moviename-The%20Matrix',
+    );
+    expect('${sites.last.$2}', 'https://subdl.com/search/The%20Matrix');
+    expect(subtitleSiteSearches('  ', ['ar']), isEmpty);
+  });
 }

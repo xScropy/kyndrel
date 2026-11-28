@@ -245,11 +245,14 @@ Harbor (HarborCommunity/Harbor, MIT, a Tauri + libmpv Stremio client) is the ref
 - [ ] 9.8 Skip segments from online databases (AniSkip, TheIntroDB, IntroDB, SkipDB): intro, recap, credits; Harbor's skip pill.
 - [ ] 9.9 Playback rescue: frozen picture, stuck position and stalls are detected and retried.
 - [ ] 9.10 Anime4K shaders and a shader menu.
-- [ ] 9.11 Watch Together: rooms with a 6-letter code, synced play/pause/seek, chat; Harbor's relay on the user's own Cloudflare account.
+- [x] 9.11 Watch Together: rooms with a 6-letter code, synced play/pause/seek, chat; Harbor's relay on the user's own Cloudflare account.
+  - Harbor's room protocol (hello/joined, participants, host, state, cmd, chat, ping/pong) in Dart: `core/net/together_server.dart` (a room server a Kyndrel hosts on the local network, port 7637) and `together_client.dart` (clock offset from pings). For friends elsewhere: Kyndrel's own relay (`assets/together/worker.js`, rooms only; Harbor's relay also proxies torrent sites, so it isn't used) deployed to the user's free Cloudflare account from Settings › Watch together with an API token that isn't kept (`core/net/cloudflare_relay.dart`), or a friend's relay address.
+  - The host's play, pause, seek and speed reach the guests (who catch up when 1.5 s off, allowing for the time the message took); a guest's presses go to the host. Chat and join/leave notices in the panel; a warning when the host plays another file. Not ported: Harbor's cursors and drawing on the video.
 - [ ] 9.12 Multiview: two to four videos at once, one heard.
 - [ ] 9.13 Casting to Chromecast, AirPlay and Roku.
 - [ ] 9.14 Discord Rich Presence.
 - [ ] 9.15 Release 1.4.0.
+- [x] 9.16 Harbor's library look: a sidebar with the name, the sections and Settings at the bottom; a search pill; a hero for the video to pick up again (Resume / Start over); rows of large rounded cards (Continue Watching, Recently Added); the open prompt framed as a hero when nothing was played yet. Phones keep the bottom bar, with a Settings gear by the search.
 
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.

@@ -30,8 +30,12 @@ class LibraryShell extends ConsumerWidget {
     this.browse,
     this.bottom,
     this.topInset = topBar,
+    this.onOpenSettings,
     super.key,
   });
+
+  /// Settings, at the bottom of the sidebar (task 9.16).
+  final VoidCallback? onOpenSettings;
 
   /// The Home section (`LibraryHome`).
   final Widget home;
@@ -48,6 +52,9 @@ class LibraryShell extends ConsumerWidget {
 
   /// Height of the player's top bar, which overlays this screen.
   static const topBar = 52.0;
+
+  /// The full sidebar from this width; a rail below it.
+  static const sidebarFrom = 1000.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,6 +108,33 @@ class LibraryShell extends ConsumerWidget {
         ),
     ];
 
+    // Harbor's sidebar on wide screens (task 9.16): the name at the top,
+    // the sections as rounded rows, Settings at the bottom.
+    if (MediaQuery.sizeOf(context).width >= sidebarFrom) {
+      final shell = Row(
+        children: [
+          _Sidebar(
+            // Below the window's drag strip and its shade.
+            top:
+                MediaQuery.paddingOf(context).top +
+                KyndrelTokens.titleBarHeight,
+            background: background,
+            section: section,
+            destinations: destinations,
+            onSelect: controller.show,
+            onOpenSettings: onOpenSettings,
+          ),
+          Expanded(child: content),
+        ],
+      );
+      if (bottom == null) return shell;
+      return Column(
+        children: [
+          Expanded(child: shell),
+          bottom!,
+        ],
+      );
+    }
     if (wide) {
       final rail = Row(
         children: [
@@ -117,6 +151,14 @@ class LibraryShell extends ConsumerWidget {
               selectedIconTheme: const IconThemeData(
                 color: KyndrelColors.accent,
               ),
+              trailing: onOpenSettings == null
+                  ? null
+                  : IconButton(
+                      key: const Key('section-settings'),
+                      tooltip: l.settings,
+                      onPressed: onOpenSettings,
+                      icon: const Icon(Icons.settings_outlined),
+                    ),
               destinations: [
                 for (final (s, icon, selected, label) in destinations)
                   NavigationRailDestination(
@@ -167,6 +209,160 @@ class LibraryShell extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _Sidebar extends StatelessWidget {
+  const new({
+    required this.top,
+    required this.background,
+    required this.section,
+    required this.destinations,
+    required this.onSelect,
+    required this.onOpenSettings,
+  });
+
+  final double top;
+  final Color background;
+  final LibrarySection section;
+  final List<(LibrarySection, IconData, IconData, String)> destinations;
+  final ValueChanged<LibrarySection> onSelect;
+  final VoidCallback? onOpenSettings;
+
+  static const width = 240.0;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const Key('library-sidebar'),
+    width: width,
+    decoration: BoxDecoration(
+      color: background,
+      border: const BorderDirectional(
+        end: BorderSide(color: KyndrelColors.panelBorder),
+      ),
+    ),
+    padding: EdgeInsets.fromLTRB(16, top, 16, 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Padding(
+          padding: EdgeInsetsDirectional.only(start: 10, bottom: 28),
+          child: Row(
+            children: [
+              Icon(
+                Icons.play_circle_fill,
+                size: 32,
+                color: KyndrelColors.accent,
+              ),
+              SizedBox(width: 10),
+              Text(
+                'Kyndrel',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        for (final (s, icon, selected, label) in destinations)
+          _SidebarItem(
+            key: Key('section-${s.name}'),
+            icon: s == section ? selected : icon,
+            label: label,
+            selected: s == section,
+            onTap: () => onSelect(s),
+          ),
+        const Spacer(),
+        if (onOpenSettings != null)
+          _SidebarItem(
+            key: const Key('section-settings'),
+            icon: Icons.settings_outlined,
+            label: context.l10n.settings,
+            selected: false,
+            onTap: onOpenSettings!,
+          ),
+      ],
+    ),
+  );
+}
+
+class _SidebarItem extends StatefulWidget {
+  const new({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    super.key,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  State<_SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<_SidebarItem> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.selected || _hover
+        ? KyndrelColors.textPrimary
+        : KyndrelColors.textSecondary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Semantics(
+        button: true,
+        selected: widget.selected,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: widget.onTap,
+            focusColor: KyndrelColors.focus,
+            hoverColor: KyndrelColors.scrimClear,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              height: 52,
+              padding: const EdgeInsetsDirectional.only(start: 16),
+              decoration: BoxDecoration(
+                color: widget.selected
+                    ? KyndrelColors.controlHover
+                    : _hover
+                    ? KyndrelColors.windowButtonHover.withValues(alpha: 0.06)
+                    : KyndrelColors.scrimClear,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(widget.icon, size: 22, color: color),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      widget.label,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: widget.selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

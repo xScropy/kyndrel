@@ -970,4 +970,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nextEpisode => 'الحلقة التالية';
+
+  @override
+  String get homeSearchHint => 'ابحث في الفيديوهات';
+
+  @override
+  String get homeResume => 'استكمال';
+
+  @override
+  String get homeStartOver => 'من البداية';
+
+  @override
+  String get homeContinueTitle => 'تابع المشاهدة';
+
+  @override
+  String get homeRecentlyAdded => 'أُضيفت مؤخرًا';
+
+  @override
+  String get homeHistory => 'السجل';
+
+  @override
+  String get homeOpenTitle => 'شغّل أي شيء';
+
+  @override
+  String get homeOpenSubtitle =>
+      'افتح ملفًا أو الصق رابطًا. ستظهر فيديوهاتك هنا أثناء المشاهدة.';
+
+  @override
+  String homeLeft(String time) {
+    return 'متبقٍ $time';
+  }
+
+  @override
+  String get homeChip => 'تابع المشاهدة';
+
+  @override
+  String get settingsTogether => 'المشاهدة الجماعية';
 }
