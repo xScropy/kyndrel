@@ -3,6 +3,51 @@
 All notable changes to Kyndrel. The release workflow copies a version's
 section into its GitHub release.
 
+## [2.0.0] - 2026-11-28
+
+A new look: the player now takes after Harbor's, with its icons and
+layout, louder volume, and much better subtitles, especially Arabic ones.
+
+### New player look
+- Harbor's layout and icons: a glass back button and a larger title at
+  the top; volume and download on the left; Previous / −10 / play / +10 /
+  Next in the middle; the tools on the right; an "Up next" tab on the
+  right edge for the queue.
+- Buttons light up softly on hover; a green dot shows when subtitles are
+  on; the seek buttons swing when pressed.
+- In full screen, a clock shows the time and when the film will end.
+- The seek bar comes in four styles (flat, glass, pinstripe, rainbow) with
+  your choice of colour, thickness and thumb (Settings › Appearance).
+
+### Sound
+- Volume goes up to 500 %, on Harbor's slider: 100 % sits at about two
+  thirds, and the boost above it turns from orange to red. A glass panel
+  shows the volume when you change it with the keys or the wheel.
+  Settings › Audio › Boost limit sets the top (100–500 %).
+- Downmix to stereo: 5.1 films on laptop speakers and headphones keep
+  their dialogue (or any sound at all).
+- When the sound device fails, Kyndrel now says so and tries again,
+  instead of playing in silence. Settings › Audio › Output device picks
+  where the sound goes.
+- A stronger night mode.
+
+### Subtitles
+- Old Arabic subtitles (Windows-1256) and other old encodings show
+  correctly instead of as gibberish.
+- Online search works without an account: two free sources are searched
+  along with OpenSubtitles, and results are ordered by how well they fit
+  your file (shown in %).
+- Hide sound descriptions ("[door creaks]", "JOHN:").
+- A subtitle frame rate setting for subtitles made for another release.
+
+### Picture
+- The Fast, Standard and High quality presets now set more of mpv's
+  options, as Harbor's Performance, Balanced and Quality do.
+
+### Fixes
+- Browse no longer freezes on Windows while checking empty card readers,
+  DVD drives or disconnected network drives.
+
 ## [1.3.0] - 2026-11-26
 
 Lighter and smoother: scrubbing like YouTube, a library like MX Player, a

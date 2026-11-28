@@ -38,7 +38,7 @@ is out of date. Do not edit by hand.
 
 ## Dart and Flutter packages (runtime)
 
-134 packages: Apache-2.0 7, BSD-3-Clause 84, MIT 41, MPL-2.0 2.
+135 packages: Apache-2.0 7, BSD-3-Clause 84, MIT 42, MPL-2.0 2.
 
 | Package | Version | Licence |
 |---|---|---|
@@ -115,6 +115,7 @@ is out of date. Do not edit by hand.
 | [package_info_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/package_info_plus/package_info_plus) | 10.2.2 | BSD-3-Clause |
 | [package_info_plus_platform_interface](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/) | 4.1.0 | BSD-3-Clause |
 | [path](https://github.com/dart-lang/core/tree/main/pkgs/path) | 1.9.1 | BSD-3-Clause |
+| [path_parsing](https://github.com/flutter/packages/tree/main/third_party/packages/path_parsing) | 1.1.0 | MIT |
 | [path_provider](https://github.com/flutter/packages/tree/main/packages/path_provider/path_provider) | 2.1.6 | BSD-3-Clause |
 | [path_provider_android](https://github.com/flutter/packages/tree/main/packages/path_provider/path_provider_android) | 2.3.1 | BSD-3-Clause |
 | [path_provider_foundation](https://github.com/flutter/packages/tree/main/packages/path_provider/path_provider_foundation) | 2.6.0 | BSD-3-Clause |

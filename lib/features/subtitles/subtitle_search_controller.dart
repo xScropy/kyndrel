@@ -169,16 +169,13 @@ class SubtitleSearchController extends Notifier<SubtitleSearchState> {
     );
     // OpenSubtitles with the user's key, and the keyless sources, at once.
     OpenSubtitlesException? error;
-    var noKey = false;
     final official = ref
         .read(openSubtitlesClientProvider)
         .search(query)
         .catchError((Object e) {
-          if (e is MissingApiKey) {
-            noKey = true;
-          } else if (e is OpenSubtitlesException) {
-            error = e;
-          }
+          // Without a key, its message shows only when nothing else
+          // turned up either.
+          if (e is OpenSubtitlesException) error = e;
           return <SubtitleResult>[];
         });
     final free = ref
@@ -208,12 +205,8 @@ class SubtitleSearchController extends Notifier<SubtitleSearchState> {
     state = state.copyWith(
       status: SearchStatus.done,
       results: results,
-      message: () => results.isEmpty
-          ? noKey
-                ? 'No subtitles found. Add an OpenSubtitles API key in '
-                      'Settings to search more.'
-                : 'No subtitles found.'
-          : null,
+      // Without a key the panel already says what one adds.
+      message: () => results.isEmpty ? 'No subtitles found.' : null,
     );
   }
 
