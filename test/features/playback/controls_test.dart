@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/features/playback/widgets/seek_bar.dart';
 import 'package:kyndrel/features/playback/widgets/transport_controls.dart';
@@ -182,7 +184,10 @@ void main() {
       await tester.tap(find.byKey(const Key('mute')));
       await tester.pump();
       expect(h.service.state.isMuted, isTrue);
-      expect(find.byIcon(Icons.volume_off), findsOneWidget);
+      final mute = tester.widget<ControlButton>(
+        find.byKey(const Key('mute')),
+      );
+      expect(mute.harbor, HarborIcons.volumeMute);
     });
 
     testWidgets('golden at 255 %', (tester) async {

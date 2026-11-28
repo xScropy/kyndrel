@@ -164,6 +164,24 @@ abstract class AppLocalizations {
   /// **'Muted'**
   String get volumeMuted;
 
+  /// No description provided for @previous.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get previous;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @endsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends at {time}'**
+  String endsAt(String time);
+
   /// No description provided for @volume.
   ///
   /// In en, this message translates to:

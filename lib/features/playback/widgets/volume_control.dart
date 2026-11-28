@@ -8,6 +8,7 @@ import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/volume_scale.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -37,6 +38,8 @@ class VolumeControl extends ConsumerWidget {
         ControlButton(
           key: const Key('mute'),
           icon: silent ? Icons.volume_off : Icons.volume_up,
+          harbor: silent ? HarborIcons.volumeMute : HarborIcons.volume,
+          size: 24,
           tooltip: muted
               ? context.l10n.unmuteTooltip
               : context.l10n.muteTooltip,

@@ -47,6 +47,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get volumeMuted => 'صامت';
 
   @override
+  String get previous => 'السابق';
+
+  @override
+  String get next => 'التالي';
+
+  @override
+  String endsAt(String time) {
+    return 'ينتهي $time';
+  }
+
+  @override
   String get volume => 'مستوى الصوت';
 
   @override

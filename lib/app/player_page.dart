@@ -471,7 +471,10 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                         bottom: false,
                         child: WindowTitleBar(
                           showButtons: !fullScreen,
+                          // Harbor's taller top bar (task 9.2).
+                          height: compact ? 64 : 88,
                           child: TopBarContent(
+                            compact: compact,
                             onBack: () => unawaited(
                               ref.read(playerServiceProvider).close(),
                             ),
@@ -507,7 +510,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                             : const BottomControls(
                                 leftActions: [DownloadButton()],
                                 rightActions: [
-                                  PlaylistButton(),
                                   FitMenuButton(),
                                   TranslateButton(),
                                   SubtitlesButton(),
@@ -519,6 +521,14 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                               ),
                       ),
                     ),
+                  ),
+                // Harbor's "Up next" tab on the right edge (task 9.2).
+                if (hasMedia && !locked && !compact && !queueOpen)
+                  PositionedDirectional(
+                    end: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(child: fade(const UpNextTab())),
                   ),
                 // Phones: panels span the width above the controls.
                 if (panelOpen && hasMedia)

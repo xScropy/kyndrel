@@ -25,6 +25,16 @@
   "muteTooltip": "Mute (M)",
   "unmuteTooltip": "Unmute (M)",
   "volumeMuted": "Muted",
+  "previous": "Previous",
+  "next": "Next",
+  "endsAt": "Ends at {time}",
+  "@endsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "volume": "Volume",
   "fullscreenTooltip": "Full screen (F)",
   "exitFullscreenTooltip": "Exit full screen (F)",

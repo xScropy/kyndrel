@@ -45,6 +45,7 @@ class AppSettings {
     this.subtitleLanguages = 'en',
     this.boostWarningSeen = false,
     this.volumeBoostMax = 500,
+    this.showClock = true,
     this.autoPlayNextEpisode = true,
     this.tmdbApiKey = '',
     this.screenshotFolder = '',
@@ -153,6 +154,9 @@ class AppSettings {
   /// The top of the volume slider, 100–500 % (task 9.1); 100 turns the
   /// boost off.
   final double volumeBoostMax;
+
+  /// Harbor's clock in full screen: the time and when the film ends.
+  final bool showClock;
 
   /// Opening an episode queues the next ones from the same folder (3.2).
   final bool autoPlayNextEpisode;
@@ -297,6 +301,7 @@ class AppSettings {
     String? subtitleLanguages,
     bool? boostWarningSeen,
     double? volumeBoostMax,
+    bool? showClock,
     bool? autoPlayNextEpisode,
     String? tmdbApiKey,
     String? screenshotFolder,
@@ -363,6 +368,7 @@ class AppSettings {
       subtitleLanguages: subtitleLanguages ?? this.subtitleLanguages,
       boostWarningSeen: boostWarningSeen ?? this.boostWarningSeen,
       volumeBoostMax: volumeBoostMax ?? this.volumeBoostMax,
+      showClock: showClock ?? this.showClock,
       autoPlayNextEpisode: autoPlayNextEpisode ?? this.autoPlayNextEpisode,
       tmdbApiKey: tmdbApiKey ?? this.tmdbApiKey,
       screenshotFolder: screenshotFolder ?? this.screenshotFolder,
@@ -485,6 +491,7 @@ class SettingsRepository {
       volumeBoostMax: (_prefs.getDouble('volumeBoostMax') ?? d.volumeBoostMax)
           .clamp(100, 500)
           .toDouble(),
+      showClock: _prefs.getBool('showClock') ?? d.showClock,
       autoPlayNextEpisode:
           _prefs.getBool('autoPlayNextEpisode') ?? d.autoPlayNextEpisode,
       tmdbApiKey: _prefs.getString('tmdbApiKey') ?? d.tmdbApiKey,
@@ -600,6 +607,7 @@ class SettingsRepository {
     await _prefs.setString('subtitleLanguages', s.subtitleLanguages);
     await _prefs.setBool('boostWarningSeen', s.boostWarningSeen);
     await _prefs.setDouble('volumeBoostMax', s.volumeBoostMax);
+    await _prefs.setBool('showClock', s.showClock);
     await _prefs.setBool('autoPlayNextEpisode', s.autoPlayNextEpisode);
     await _prefs.setString('tmdbApiKey', s.tmdbApiKey);
     await _prefs.setString('screenshotFolder', s.screenshotFolder);

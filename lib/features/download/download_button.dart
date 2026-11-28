@@ -7,6 +7,7 @@ import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/core/ui/popover.dart';
 import 'package:kyndrel/features/download/download_manager.dart';
 import 'package:material_ui/material_ui.dart';
@@ -29,6 +30,9 @@ class DownloadButton extends ConsumerWidget {
       anchorBuilder: (context, toggle) => ControlButton(
         key: const Key('download'),
         icon: running.isEmpty ? Icons.download_outlined : Icons.downloading,
+        harbor: running.isEmpty
+            ? HarborIcons.downloadIdle
+            : HarborIcons.downloadDownloading,
         tooltip: 'Download',
         active: running.isNotEmpty,
         onPressed: toggle,

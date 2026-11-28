@@ -47,6 +47,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get volumeMuted => 'Muted';
 
   @override
+  String get previous => 'Previous';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String endsAt(String time) {
+    return 'Ends at $time';
+  }
+
+  @override
   String get volume => 'Volume';
 
   @override

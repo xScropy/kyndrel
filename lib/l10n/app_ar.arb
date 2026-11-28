@@ -11,6 +11,16 @@
   "muteTooltip": "كتم الصوت (M)",
   "unmuteTooltip": "إلغاء الكتم (M)",
   "volumeMuted": "صامت",
+  "previous": "السابق",
+  "next": "التالي",
+  "endsAt": "ينتهي {time}",
+  "@endsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "volume": "مستوى الصوت",
   "fullscreenTooltip": "ملء الشاشة (F)",
   "exitFullscreenTooltip": "الخروج من ملء الشاشة (F)",

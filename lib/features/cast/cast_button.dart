@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/core/ui/popover.dart';
 import 'package:kyndrel/features/cast/cast_controller.dart';
 import 'package:kyndrel/features/cast/cast_device.dart';
@@ -21,6 +22,9 @@ class CastButton extends ConsumerWidget {
       anchorBuilder: (context, toggle) => ControlButton(
         key: const Key('cast'),
         icon: active == null ? Icons.cast : Icons.cast_connected,
+        harbor: active == null
+            ? HarborIcons.castIdle
+            : HarborIcons.castConnected,
         tooltip: active == null ? 'Cast' : 'Casting to ${active.name}',
         active: active != null,
         onPressed: toggle,

@@ -49,10 +49,27 @@ abstract final class KyndrelColors {
   /// The volume HUD's glass panel and its edge.
   static const Color glass = Color(0x59080C12);
   static const Color glassBorder = Color(0x26FFFFFF);
+  static const Color glassEdge = Color(0x14FFFFFF);
 
   /// Colour of a boost [t] of the way (0–1) from 100 % to the limit.
   static Color boost(double t) =>
       Color.lerp(boostLow, boostHigh, t.clamp(0, 1).toDouble())!;
+
+  /// Harbor's player buttons (task 9.2): the icon at rest (white 85 %),
+  /// the hover circle (white 10 %) and the "on" circle (white 22 %).
+  static const Color controlIdle = Color(0xD9FFFFFF);
+  static const Color controlHover = Color(0x1AFFFFFF);
+  static const Color controlActive = Color(0x38FFFFFF);
+
+  /// The dot on a control whose feature is on (subtitles shown).
+  static const Color indicator = Color(0xFF34D399);
+
+  /// Harbor's scrims behind the top and bottom bars, strongest first.
+  static const Color scrimBottom = Color(0xB3000000);
+  static const Color scrimTop = Color(0x8C000000);
+  static const Color scrimMiddle = Color(0x40000000);
+  static const Color scrimFaint = Color(0x26000000);
+  static const Color scrimClear = Color(0x00000000);
 
   /// Seek/volume track behind the progress fill.
   static const Color track = Color(0x33FFFFFF);

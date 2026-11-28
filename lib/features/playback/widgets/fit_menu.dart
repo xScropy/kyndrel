@@ -5,6 +5,7 @@ import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/player/video_view_settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/core/ui/popover.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,6 +24,7 @@ class FitMenuButton extends ConsumerWidget {
       anchorBuilder: (context, toggle) => ControlButton(
         key: const Key('fit-button'),
         icon: Icons.aspect_ratio,
+        harbor: HarborIcons.aspect,
         tooltip: context.l10n.fitAndAspect,
         active: changed,
         onPressed: toggle,
