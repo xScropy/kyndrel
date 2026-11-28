@@ -959,6 +959,11 @@ class PlayerService {
     });
   }
 
+  /// Mixes surround down to stereo (`audio-channels=stereo`), or lets the
+  /// device take what it says it can (`auto-safe`, mpv's default).
+  Future<void> setDownmixStereo({required bool enabled}) =>
+      backend.setProperty('audio-channels', enabled ? 'stereo' : 'auto-safe');
+
   /// The sound devices mpv can play to; the first is `auto`, the system's
   /// default.
   Future<List<SoundDevice>> audioDevices() async =>

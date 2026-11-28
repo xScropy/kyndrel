@@ -96,6 +96,7 @@ class AppSettings {
     this.browseServers = const [],
     this.audioPassthrough = false,
     this.audioDevice = 'auto',
+    this.downmixStereo = false,
     this.customCommands = const [],
     this.mouseMiddle = 'playPause',
     this.mouseSide = 'seek',
@@ -281,6 +282,11 @@ class AppSettings {
   /// system's default.
   final String audioDevice;
 
+  /// 5.1 and 7.1 mixed down to two channels (task 9.4, Harbor): laptop
+  /// speakers and headphones that claim surround otherwise lose the
+  /// centre channel, where the dialogue is, or go silent.
+  final bool downmixStereo;
+
   /// The user's quick commands, `Label | mpv command` each (task 8.8).
   final List<String> customCommands;
 
@@ -368,6 +374,7 @@ class AppSettings {
     List<String>? browseServers,
     bool? audioPassthrough,
     String? audioDevice,
+    bool? downmixStereo,
     List<String>? customCommands,
     String? mouseMiddle,
     String? mouseSide,
@@ -444,6 +451,7 @@ class AppSettings {
       browseServers: browseServers ?? this.browseServers,
       audioPassthrough: audioPassthrough ?? this.audioPassthrough,
       audioDevice: audioDevice ?? this.audioDevice,
+      downmixStereo: downmixStereo ?? this.downmixStereo,
       customCommands: customCommands ?? this.customCommands,
       mouseMiddle: mouseMiddle ?? this.mouseMiddle,
       mouseSide: mouseSide ?? this.mouseSide,
@@ -593,6 +601,7 @@ class SettingsRepository {
       audioPassthrough:
           _prefs.getBool('audioPassthrough') ?? d.audioPassthrough,
       audioDevice: _prefs.getString('audioDevice') ?? d.audioDevice,
+      downmixStereo: _prefs.getBool('downmixStereo') ?? d.downmixStereo,
       customCommands:
           _prefs.getStringList('customCommands') ?? d.customCommands,
       mouseMiddle: _prefs.getString('mouseMiddle') ?? d.mouseMiddle,
@@ -698,6 +707,7 @@ class SettingsRepository {
     await _prefs.setStringList('browseServers', s.browseServers);
     await _prefs.setBool('audioPassthrough', s.audioPassthrough);
     await _prefs.setString('audioDevice', s.audioDevice);
+    await _prefs.setBool('downmixStereo', s.downmixStereo);
     await _prefs.setStringList('customCommands', s.customCommands);
     await _prefs.setString('mouseMiddle', s.mouseMiddle);
     await _prefs.setString('mouseSide', s.mouseSide);

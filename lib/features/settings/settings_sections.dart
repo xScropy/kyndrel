@@ -206,6 +206,18 @@ class AudioSettings extends ConsumerWidget {
           },
         ),
         SwitchListTile(
+          key: const Key('settings-downmix'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Downmix to stereo'),
+          subtitle: const Text(
+            'For laptop speakers and headphones: 5.1 films keep their '
+            'dialogue instead of losing it (or all sound)',
+          ),
+          value: s.downmixStereo,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(downmixStereo: v)),
+        ),
+        SwitchListTile(
           key: const Key('settings-passthrough'),
           contentPadding: EdgeInsets.zero,
           title: const Text('Audio passthrough'),

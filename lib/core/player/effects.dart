@@ -19,12 +19,20 @@ enum VideoPreset {
   final String label;
 
   Map<String, String> get options => switch (this) {
+    // Harbor's "Performance": also no dithering, faster decoding, no
+    // frame interpolation and no HDR peak measuring (task 9.4).
     VideoPreset.fast => const {
       'scale': 'bilinear',
       'cscale': 'bilinear',
       'dscale': 'bilinear',
       'correct-downscaling': 'no',
       'sigmoid-upscaling': 'no',
+      'linear-downscaling': 'no',
+      'dither': 'no',
+      'dither-depth': 'no',
+      'vd-lavc-fast': 'yes',
+      'interpolation': 'no',
+      'hdr-compute-peak': 'no',
     },
     VideoPreset.standard => const {
       'scale': 'lanczos',
@@ -32,13 +40,24 @@ enum VideoPreset {
       'dscale': 'hermite',
       'correct-downscaling': 'yes',
       'sigmoid-upscaling': 'yes',
+      'linear-downscaling': 'yes',
+      'dither': 'fruit',
+      'dither-depth': 'no',
+      'vd-lavc-fast': 'no',
+      'hdr-compute-peak': 'auto',
     },
+    // Harbor's "Quality".
     VideoPreset.highQuality || VideoPreset.sharpen => const {
       'scale': 'ewa_lanczossharp',
-      'cscale': 'ewa_lanczossoft',
+      'cscale': 'ewa_lanczossharp',
       'dscale': 'mitchell',
       'correct-downscaling': 'yes',
       'sigmoid-upscaling': 'yes',
+      'linear-downscaling': 'yes',
+      'dither': 'fruit',
+      'dither-depth': 'auto',
+      'vd-lavc-fast': 'no',
+      'hdr-compute-peak': 'yes',
     },
   };
 
@@ -73,8 +92,13 @@ enum Normalization {
   /// EBU R128 to −16 LUFS: consistent loudness between files.
   loudnorm('Loudness (EBU R128)', 'loudnorm=I=-16:TP=-1.5:LRA=11'),
 
-  /// Evens out quiet dialogue and loud effects within a file.
-  dynamic('Dynamic (night mode)', 'dynaudnorm=f=250:g=15:p=0.9');
+  /// Evens out quiet dialogue and loud effects within a file: Harbor's
+  /// stronger settings (longer window, more gain, a 4× cap) and a limiter
+  /// so the loud parts never clip (task 9.4).
+  dynamic(
+    'Dynamic (night mode)',
+    'dynaudnorm=f=500:g=31:p=0.9:m=4:b=1,alimiter=limit=0.97',
+  );
 
   new(this.label, this.filter);
   final String label;

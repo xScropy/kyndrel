@@ -52,6 +52,9 @@ final engineSyncProvider = Provider<void>((ref) {
     if (initial.audioPassthrough) {
       await service.setAudioPassthrough(enabled: true);
     }
+    if (initial.downmixStereo) {
+      await service.setDownmixStereo(enabled: true);
+    }
     if (initial.audioDevice != 'auto') {
       await service.setAudioDevice(initial.audioDevice);
     }
@@ -94,6 +97,9 @@ final engineSyncProvider = Provider<void>((ref) {
       // A lower limit brings a louder volume down to it.
       if (service.state.volume > max) unawaited(service.setVolume(max));
     })
+    ..listen(settingsProvider.select((s) => s.downmixStereo), (_, v) {
+      unawaited(service.setDownmixStereo(enabled: v));
+    })
     ..listen(settingsProvider.select((s) => s.audioDevice), (_, v) {
       unawaited(service.setAudioDevice(v));
     })
@@ -123,7 +129,8 @@ final audioProblemNoticeProvider = Provider<void>((ref) {
 
 const audioProblemText =
     'No sound: the audio device did not open. Retrying… '
-    'Pick one in Settings › Audio › Output device.';
+    'Pick one in Settings › Audio › Output device, or turn on '
+    'Downmix to stereo.';
 const audioProblemDeviceText =
     'No sound from the chosen output device. Try Automatic in '
     'Settings › Audio › Output device.';

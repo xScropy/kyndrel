@@ -63,6 +63,16 @@ void main() {
     });
   });
 
+  test('downmix to stereo (task 9.4)', () async {
+    final backend = FakePlayerBackend();
+    final service = PlayerService(backend);
+    addTearDown(service.dispose);
+    await service.setDownmixStereo(enabled: true);
+    expect(backend.properties['audio-channels'], 'stereo');
+    await service.setDownmixStereo(enabled: false);
+    expect(backend.properties['audio-channels'], 'auto-safe');
+  });
+
   test('output devices from mpv; automatic first', () async {
     final backend = FakePlayerBackend();
     final service = PlayerService(backend);
