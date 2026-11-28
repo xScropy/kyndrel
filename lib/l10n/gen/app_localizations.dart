@@ -1897,6 +1897,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue watching'**
   String get homeChip;
+
+  /// No description provided for @settingsTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch together'**
+  String get settingsTogether;
 }
 
 class _AppLocalizationsDelegate

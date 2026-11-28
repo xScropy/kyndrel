@@ -69,6 +69,7 @@ import 'package:kyndrel/features/scripts/script_manager.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
+import 'package:kyndrel/features/together/together_panel.dart';
 import 'package:kyndrel/features/translate/translate_button.dart';
 import 'package:kyndrel/features/update/update_banner.dart';
 import 'package:kyndrel/l10n/l10n.dart';
@@ -216,6 +217,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
       (button: const SpeedSleepButton(), label: l.moreSpeed),
       (button: const TranslateButton(), label: l.moreTranslate),
       (button: const CastButton(), label: l.moreCast),
+      (button: const TogetherButton(), label: l.settingsTogether),
       (button: const DownloadButton(), label: l.moreDownload),
       if (ref.read(nativePipProvider) != null)
         (button: const PipButton(), label: l.morePip),
@@ -524,6 +526,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                                 leftActions: [DownloadButton()],
                                 rightActions: [
                                   FitMenuButton(),
+                                  TogetherButton(),
                                   TranslateButton(),
                                   SubtitlesButton(),
                                   SpeedSleepButton(),

@@ -98,6 +98,8 @@ class AppSettings {
     this.audioDevice = 'auto',
     this.downmixStereo = false,
     this.hideSoundDescriptions = false,
+    this.togetherName = '',
+    this.togetherRelay = '',
     this.customCommands = const [],
     this.mouseMiddle = 'playPause',
     this.mouseSide = 'seek',
@@ -291,6 +293,12 @@ class AppSettings {
   /// Text subtitles without "[door creaks]" and "JOHN:" (task 9.5).
   final bool hideSoundDescriptions;
 
+  /// Watch Together (task 9.11): the name others see, and the relay for
+  /// rooms over the internet (`wss://…workers.dev`); empty hosts rooms on
+  /// the local network.
+  final String togetherName;
+  final String togetherRelay;
+
   /// mpv's guess for subtitle files that aren't UTF-8: Windows-1256 when
   /// Arabic is wanted, else its own detector (task 9.5).
   String get subtitleCodepage =>
@@ -391,6 +399,8 @@ class AppSettings {
     String? audioDevice,
     bool? downmixStereo,
     bool? hideSoundDescriptions,
+    String? togetherName,
+    String? togetherRelay,
     List<String>? customCommands,
     String? mouseMiddle,
     String? mouseSide,
@@ -470,6 +480,8 @@ class AppSettings {
       downmixStereo: downmixStereo ?? this.downmixStereo,
       hideSoundDescriptions:
           hideSoundDescriptions ?? this.hideSoundDescriptions,
+      togetherName: togetherName ?? this.togetherName,
+      togetherRelay: togetherRelay ?? this.togetherRelay,
       customCommands: customCommands ?? this.customCommands,
       mouseMiddle: mouseMiddle ?? this.mouseMiddle,
       mouseSide: mouseSide ?? this.mouseSide,
@@ -622,6 +634,8 @@ class SettingsRepository {
       downmixStereo: _prefs.getBool('downmixStereo') ?? d.downmixStereo,
       hideSoundDescriptions:
           _prefs.getBool('hideSoundDescriptions') ?? d.hideSoundDescriptions,
+      togetherName: _prefs.getString('togetherName') ?? d.togetherName,
+      togetherRelay: _prefs.getString('togetherRelay') ?? d.togetherRelay,
       customCommands:
           _prefs.getStringList('customCommands') ?? d.customCommands,
       mouseMiddle: _prefs.getString('mouseMiddle') ?? d.mouseMiddle,
@@ -729,6 +743,8 @@ class SettingsRepository {
     await _prefs.setString('audioDevice', s.audioDevice);
     await _prefs.setBool('downmixStereo', s.downmixStereo);
     await _prefs.setBool('hideSoundDescriptions', s.hideSoundDescriptions);
+    await _prefs.setString('togetherName', s.togetherName);
+    await _prefs.setString('togetherRelay', s.togetherRelay);
     await _prefs.setStringList('customCommands', s.customCommands);
     await _prefs.setString('mouseMiddle', s.mouseMiddle);
     await _prefs.setString('mouseSide', s.mouseSide);

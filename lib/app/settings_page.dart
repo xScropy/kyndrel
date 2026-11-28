@@ -10,6 +10,7 @@ import 'package:kyndrel/features/effects/effects_dialog.dart';
 import 'package:kyndrel/features/logs/log_viewer_page.dart';
 import 'package:kyndrel/features/scripts/scripts_settings.dart';
 import 'package:kyndrel/features/settings/settings_sections.dart';
+import 'package:kyndrel/features/together/together_settings.dart';
 import 'package:kyndrel/features/translate/translate_settings.dart';
 import 'package:kyndrel/features/update/update_controller.dart';
 import 'package:kyndrel/l10n/l10n.dart';
@@ -74,6 +75,12 @@ class _SettingsPageState extends State<SettingsPage> {
           (l) => l.settingsShortcuts,
           Icons.keyboard_outlined,
           const [ShortcutSettings()],
+        ),
+        (
+          'Together',
+          (l) => l.settingsTogether,
+          Icons.groups_outlined,
+          const [TogetherSettings()],
         ),
         (
           'Library',

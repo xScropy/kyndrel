@@ -1003,4 +1003,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeChip => 'تابع المشاهدة';
+
+  @override
+  String get settingsTogether => 'المشاهدة الجماعية';
 }

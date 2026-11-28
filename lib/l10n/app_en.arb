@@ -449,5 +449,6 @@
       }
     }
   },
-  "homeChip": "Continue watching"
+  "homeChip": "Continue watching",
+  "settingsTogether": "Watch together"
 }

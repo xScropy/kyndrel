@@ -989,4 +989,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeChip => 'Continue watching';
+
+  @override
+  String get settingsTogether => 'Watch together';
 }
