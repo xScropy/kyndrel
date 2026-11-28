@@ -3,10 +3,14 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:kyndrel/app/app.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/player_page.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/metadata/media_identity.dart';
+import 'package:kyndrel/core/net/skip_segments.dart';
 import 'package:kyndrel/core/platform/power_state.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/library_previews.dart';
@@ -19,6 +23,8 @@ import 'package:kyndrel/core/storage/database.dart';
 import 'package:kyndrel/core/storage/media_index.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/features/subtitles/opensubtitles/free_sources.dart';
+import 'package:kyndrel/features/subtitles/subtitle_search_controller.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,6 +70,14 @@ class AppHarness {
   /// Extra provider overrides for one test (e.g. a fake update server).
   final List<Override> extraOverrides;
 
+  /// Answers every request the online lookups make (Phase 9: titles,
+  /// skip segments, keyless subtitle sources). Not found by default; a test
+  /// sets it to serve answers.
+  Future<http.Response> Function(http.Request request) net = (_) async =>
+      http.Response('', 404);
+
+  late final http.Client _net = MockClient((r) => net(r));
+
   /// Builds the harness inside the test body (fake-async zone).
   static Future<AppHarness> create({
     Map<String, Object> prefs = const {},
@@ -101,6 +115,16 @@ class AppHarness {
     powerStateProvider.overrideWithValue(power),
     mediaScannerProvider.overrideWithValue(scanner),
     mediaProberProvider.overrideWithValue(prober),
+    mediaIdentifierProvider.overrideWithValue(MediaIdentifier(client: _net)),
+    skipSegmentsClientProvider.overrideWithValue(
+      SkipSegmentsClient(client: _net),
+    ),
+    freeSubtitleSourcesProvider.overrideWithValue(
+      FreeSubtitleSources(
+        cacheDir: Directory('${cacheDir.path}/subtitles'),
+        client: _net,
+      ),
+    ),
     ...extraOverrides,
   ];
 
