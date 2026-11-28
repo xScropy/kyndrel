@@ -72,10 +72,11 @@ void main() {
     tester,
   ) async {
     final h = await phone(tester);
-    // 50 % → 150 %: half the range = 0.5 × 0.8 × 720 px.
+    // 50 % (32 % of the scale) up half the range → 82 %, 300 %:
+    // 0.5 × 0.8 × 720 px.
     await swipe(tester, x: 1000, dy: -288);
     expect(phoneVolume.value, 1);
-    expect(h.service.state.volume, closeTo(150, 2));
+    expect(h.service.state.volume, closeTo(300, 4));
     expect(level(h)?.kind, LevelKind.volume);
     expect(level(h)?.isBoost, isTrue);
     expect(find.byKey(const Key('level-osd')), findsOneWidget);

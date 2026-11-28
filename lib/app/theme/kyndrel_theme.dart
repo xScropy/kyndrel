@@ -4,13 +4,15 @@ import 'package:material_ui/material_ui.dart';
 /// Builds the single dark theme Kyndrel ships with.
 abstract final class KyndrelTheme {
   /// [touch] makes control buttons 48 dp touch targets (phones, 6.5).
-  static ThemeData dark({bool touch = false}) {
-    const colors = ColorScheme.dark(
+  /// [black]: pure black backgrounds for OLED screens (task 8.8).
+  static ThemeData dark({bool touch = false, bool black = false}) {
+    final background = black ? KyndrelColors.black : KyndrelColors.background;
+    final colors = ColorScheme.dark(
       primary: KyndrelColors.accent,
       onPrimary: KyndrelColors.onAccent,
       secondary: KyndrelColors.accent,
       onSecondary: KyndrelColors.onAccent,
-      surface: KyndrelColors.surface,
+      surface: black ? KyndrelColors.black : KyndrelColors.surface,
       error: KyndrelColors.error,
     );
 
@@ -20,8 +22,8 @@ abstract final class KyndrelTheme {
       colorScheme: colors,
       fontFamily: KyndrelTokens.fontFamily,
       fontFamilyFallback: KyndrelTokens.fontFamilyFallback,
-      scaffoldBackgroundColor: KyndrelColors.background,
-      canvasColor: KyndrelColors.background,
+      scaffoldBackgroundColor: background,
+      canvasColor: background,
     );
 
     return base.copyWith(

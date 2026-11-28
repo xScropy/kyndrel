@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/resume_repository.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 
 @immutable
 class ResumeOffer {
@@ -31,9 +32,6 @@ class ResumeController extends Notifier<ResumeOffer?> {
   ResumeOffer? build() {
     final service = ref.watch(playerServiceProvider);
     final sub = service.states.listen(_onState);
-    _timer = Timer.periodic(saveInterval, (_) {
-      if (_last.isPlaying) unawaited(saveNow());
-    });
     ref.onDispose(() {
       unawaited(sub.cancel());
       _timer?.cancel();
@@ -42,6 +40,15 @@ class ResumeController extends Notifier<ResumeOffer?> {
   }
 
   void _onState(PlaybackState s) {
+    // Ticks only while playing: an idle app does no work (task 8.1).
+    if (s.isPlaying && _timer == null) {
+      _timer = Timer.periodic(saveInterval, (_) {
+        if (_last.isPlaying) unawaited(saveNow());
+      });
+    } else if (!s.isPlaying) {
+      _timer?.cancel();
+      _timer = null;
+    }
     final previous = _last;
     _last = s;
 
@@ -87,6 +94,8 @@ class ResumeController extends Notifier<ResumeOffer?> {
   Future<void> _save(PlaybackState s) async {
     final source = s.source;
     if (source == null || !s.isLoaded) return;
+    // Incognito leaves no trace (task 8.8).
+    if (ref.read(settingsProvider).incognito) return;
     await _repo.save(source, s.position, s.duration);
   }
 

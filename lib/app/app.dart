@@ -20,6 +20,7 @@ class KyndrelApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: KyndrelTheme.dark(
         touch: ref.watch(platformCapabilitiesProvider).isMobile,
+        black: ref.watch(settingsProvider.select((s) => s.amoledBlack)),
       ),
       themeMode: ThemeMode.dark,
       locale: L10n.localeFor(language),

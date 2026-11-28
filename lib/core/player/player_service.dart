@@ -3,6 +3,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+
 import 'package:kyndrel/core/player/effects.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
@@ -112,7 +114,7 @@ class PlayerService {
   }
 
   /// Maximum volume in percent (task 1.6).
-  static const double maxVolume = 400;
+  static const double maxVolume = 500;
 
   /// Label of the limiter filter added above 100 % volume.
   static const limiterLabel = '@kyndrel-limiter';
@@ -209,12 +211,44 @@ class PlayerService {
       ),
     );
     _updateTracks(TrackState.empty);
+    if (_subtitleFps != null) await setSubtitleFps(null);
     await backend.setProperty(
       'http-header-fields',
       (_headers[trimmed] ?? const []).join(','),
     );
+    await _setDemuxerCache(trimmed);
     await backend.open(trimmed, play: play);
   }
+
+  /// mpv reads up to 150 MB ahead and keeps 50 MB behind by default. A local
+  /// file is read as fast as it plays, so small buffers do (task 8.1);
+  /// streams keep mpv's defaults to ride out a slow network. Options the
+  /// user set in Advanced win.
+  static const ({String ahead, String behind}) localDemuxerCache = (
+    ahead: '32MiB',
+    behind: '8MiB',
+  );
+  static const ({String ahead, String behind}) streamDemuxerCache = (
+    ahead: '150MiB',
+    behind: '50MiB',
+  );
+
+  Future<void> _setDemuxerCache(String source) async {
+    final local =
+        !source.contains('://') ||
+        source.startsWith('file://') ||
+        source.startsWith('content://');
+    final size = local ? localDemuxerCache : streamDemuxerCache;
+    if (!_userOptions.contains('demuxer-max-bytes')) {
+      await backend.setProperty('demuxer-max-bytes', size.ahead);
+    }
+    if (!_userOptions.contains('demuxer-max-back-bytes')) {
+      await backend.setProperty('demuxer-max-back-bytes', size.behind);
+    }
+  }
+
+  /// Options set through [applyOptions] (Advanced › mpv.conf).
+  final _userOptions = <String>{};
 
   /// Stops playback and returns to idle.
   Future<void> close() async {
@@ -382,6 +416,34 @@ class PlayerService {
   Future<void> setSubtitleDelay(Duration delay) =>
       backend.setProperty('sub-delay', _formatSeconds(delay));
 
+  /// Runs one of the user's quick commands (task 8.8): any mpv command,
+  /// e.g. `cycle-values video-aspect-override 16:9 4:3 -1`.
+  Future<void> runUserCommand(List<String> args) => backend.command(args);
+
+  /// Adds an external audio file (another language, a commentary) and
+  /// selects it (task 8.8).
+  Future<void> addAudioTrack(String path) =>
+      backend.command(['audio-add', path, 'select']);
+
+  /// Picture adjustments, −100…100 each (task 8.8).
+  static const pictureAdjustments = [
+    'brightness',
+    'contrast',
+    'saturation',
+    'gamma',
+    'hue',
+  ];
+
+  Future<void> setPictureAdjustment(String name, int value) {
+    assert(pictureAdjustments.contains(name), name);
+    return backend.setProperty(name, '${value.clamp(-100, 100)}');
+  }
+
+  /// Sends AC-3, E-AC-3, DTS and TrueHD untouched to an AV receiver over
+  /// HDMI/S/PDIF (task 8.8).
+  Future<void> setAudioPassthrough({required bool enabled}) => backend
+      .setProperty('audio-spdif', enabled ? 'ac3,eac3,dts,dts-hd,truehd' : '');
+
   Future<void> applySubtitleStyle(SubtitleStyle style) async {
     for (final e in style.toMpvOptions().entries) {
       await backend.setProperty(e.key, e.value);
@@ -398,6 +460,30 @@ class PlayerService {
 
   /// Load subtitle files named like the video from the same folder
   /// (mpv `sub-auto=fuzzy`), or turn that off.
+  /// What mpv assumes for subtitle files that aren't UTF-8 (task 9.5):
+  /// `auto` (its detector, when built in) or e.g. `cp1256` for Arabic.
+  Future<void> setSubtitleCodepage(String codepage) =>
+      backend.setProperty('sub-codepage', codepage);
+
+  /// Hides sound descriptions for the hard of hearing ("[door creaks]",
+  /// "JOHN:") in text subtitles (task 9.5, Harbor's SDH filter; mpv's).
+  Future<void> setHideSoundDescriptions({required bool enabled}) =>
+      backend.setProperty('sub-filter-sdh', enabled ? 'yes' : 'no');
+
+  /// Re-times text subtitles made for another frame rate (task 9.5,
+  /// Harbor's subtitle FPS): null keeps their own timing. Reset for each
+  /// file.
+  Future<void> setSubtitleFps(double? fps) async {
+    _subtitleFps = fps;
+    await backend.setProperty(
+      'sub-fps',
+      fps == null ? '0' : fps.toStringAsFixed(3),
+    );
+  }
+
+  double? _subtitleFps;
+  double? get subtitleFps => _subtitleFps;
+
   Future<void> setAutoLoadSubtitles({required bool enabled}) =>
       backend.setProperty('sub-auto', enabled ? 'fuzzy' : 'no');
 
@@ -566,6 +652,9 @@ class PlayerService {
   /// Applies `mpv.conf`-style options (advanced settings, task 5.1).
   /// Returns the options mpv rejected.
   Future<List<String>> applyOptions(Map<String, String> options) async {
+    _userOptions
+      ..clear()
+      ..addAll(options.keys);
     final rejected = <String>[];
     for (final e in options.entries) {
       try {
@@ -635,6 +724,11 @@ class PlayerService {
     'container-fps',
     'estimated-vf-fps',
     'frame-drop-count',
+    // The statistics overlay (task 8.8).
+    'video-bitrate',
+    'audio-bitrate',
+    'audio-codec',
+    'demuxer-cache-duration',
   ];
 
   /// Current values of [diagnosticProperties]; unavailable ones are omitted.
@@ -751,6 +845,8 @@ class PlayerService {
     await _trackController.close();
     await _completions.close();
     await _logLines.close();
+    _audioRetry?.cancel();
+    await _audioProblems.close();
     await backend.dispose();
   }
 
@@ -849,8 +945,60 @@ class PlayerService {
   );
 
   void _onError(String message) {
-    if (message.trim().isEmpty || _nonFatal.hasMatch(message)) return;
+    if (message.trim().isEmpty) return;
+    if (_nonFatal.hasMatch(message)) {
+      _onAudioProblem(message);
+      return;
+    }
     _update(_state.copyWith(errorMessage: message));
+  }
+
+  // ---------------------------------------------------------- sound output
+
+  final _audioProblems = StreamController<String>.broadcast();
+
+  /// mpv couldn't open the sound device: the film plays, silently. Each
+  /// file gets one automatic retry ([audioRetryDelay] later, `ao-reload`);
+  /// every problem is reported here so the app can say so instead of
+  /// staying silent.
+  Stream<String> get audioProblems => _audioProblems.stream;
+
+  static const audioRetryDelay = Duration(milliseconds: 500);
+  String? _audioRetried;
+  Timer? _audioRetry;
+
+  void _onAudioProblem(String message) {
+    if (_disposed) return;
+    if (!_audioProblems.isClosed) _audioProblems.add(message.trim());
+    final source = _state.source;
+    if (source == null || _audioRetried == source) return;
+    _audioRetried = source;
+    _audioRetry?.cancel();
+    _audioRetry = Timer(audioRetryDelay, () {
+      if (_disposed) return;
+      unawaited(
+        backend.command(['ao-reload']).catchError((Object _) {
+          // Nothing playing any more.
+        }),
+      );
+    });
+  }
+
+  /// Mixes surround down to stereo (`audio-channels=stereo`), or lets the
+  /// device take what it says it can (`auto-safe`, mpv's default).
+  Future<void> setDownmixStereo({required bool enabled}) =>
+      backend.setProperty('audio-channels', enabled ? 'stereo' : 'auto-safe');
+
+  /// The sound devices mpv can play to; the first is `auto`, the system's
+  /// default.
+  Future<List<SoundDevice>> audioDevices() async =>
+      SoundDevice.parseList(await backend.getProperty('audio-device-list'));
+
+  /// Plays sound on [name] (from [audioDevices]); `auto` follows the
+  /// system's default device.
+  Future<void> setAudioDevice(String name) async {
+    _audioRetried = null;
+    await backend.setProperty('audio-device', name.isEmpty ? 'auto' : name);
   }
 
   void _onLog(PlayerLogLine line) {
@@ -899,4 +1047,42 @@ class PlayerService {
       (d.inMicroseconds / 1e6).toStringAsFixed(3);
 
   static String? _nonEmpty(String? s) => s == null || s.isEmpty ? null : s;
+}
+
+/// A sound device from mpv's `audio-device-list`.
+@immutable
+class SoundDevice {
+  const new(this.name, this.description);
+
+  /// What `audio-device` takes, like `wasapi/{...}` or `pulse/alsa_output...`.
+  final String name;
+  final String description;
+
+  static const automatic = SoundDevice('auto', 'Automatic');
+
+  /// Parses mpv's JSON list; [automatic] always comes first.
+  static List<SoundDevice> parseList(String? json) {
+    final out = [automatic];
+    if (json == null || json.isEmpty) return out;
+    try {
+      final list = jsonDecode(json);
+      if (list is! List) return out;
+      for (final e in list) {
+        if (e is! Map) continue;
+        final name = e['name'];
+        if (name is! String || name.isEmpty || name == 'auto') continue;
+        final d = e['description'];
+        out.add(SoundDevice(name, d is String && d.isNotEmpty ? d : name));
+      }
+    } on FormatException {
+      // Not JSON: automatic only.
+    }
+    return out;
+  }
+
+  @override
+  bool operator ==(Object other) => other is SoundDevice && other.name == name;
+
+  @override
+  int get hashCode => name.hashCode;
 }

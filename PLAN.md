@@ -169,6 +169,88 @@ preview frame while dragging; releases are signed APKs on GitHub.
 - [x] 7.6 Music player: spinning disc with the cover art, tags, live orange waves following the loudness (mpv astats), less-motion setting.
 - [x] 7.7 Release 1.2.0.
 
+### Phase 8: Light and smooth: YouTube-style scrubbing, MX-style library and browser (1.3)
+Decisions: keep Flutter + libmpv; cut RAM/CPU by sharing one hidden mpv for all
+frame work, smaller demuxer caches for local files, no sync IO or polling on the
+UI isolate, and repaint-only scrubbing. Storyboards become YouTube-style sprite
+sheets in levels (L0 whole video, tiny; L1/L2 denser), made coarse-to-fine and
+prepared in advance for library videos. A Rust FFmpeg frame helper is built only
+if the storyboard benchmark shows mpv is >2× slower or >40 MB heavier.
+Budget: Android idle library ≤ 110 MB PSS and 0 % CPU, 1080p playback ≤ 220 MB,
+desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
+- [x] 8.0 Preview bugs: cache keys ignore file size/mtime, `previews/` cache has no limit, storyboard cancel race, Android marks partial storyboards complete, sync file IO on the UI isolate.
+  - Also fixed: the desktop storyboard counted files in a scratch folder it emptied, so every frame after the first waited out the 3 s timeout. Frames are now found by name.
+  - Folder listings in render loops and cache trims are async. The 500 ms storyboard poll stays until 8.2 replaces it with a progress stream.
+- [x] 8.1 Lean engine: one shared, lazily started, auto-disposed frame engine for storyboard, exact frames and probing (≤ 2 libmpv instances); lean decode options; smaller demuxer cache for local files; image-cache cap and memory-pressure handling; no idle timers; deferred feature imports.
+  - `FrameEngine` (`core/player/frame_engine.dart`): jobs by priority (exact frame > storyboard > library), a storyboard hands over between frames and resumes, mpv closes after 30 s idle, on memory pressure and when the window is hidden. Seek-bar frames seek in the open file instead of reloading it. Library thumbnails no longer get dropped by hover requests.
+  - History and resume saving tick only while playing.
+  - Deferred imports dropped: on desktop and Android AOT builds all code is in one snapshot, so they save no memory.
+- [x] 8.2 Storyboard v2: sprite sheets with levels L0/L1/L2 and `spec.json`, bisection order with priority near the drag/playhead, sheet packing in an isolate (desktop) or Kotlin (Android), progress stream instead of polling, benchmark script.
+  - Levels: L0 = 100 frames at 96 px in one 10×10 sheet (the whole video), L1 = a frame every 2 s (≤ 300) at 160 px in 5×5 sheets, L2 = 320 px on phones. Seek bar shows the finest level that has the frame, else the nearest coarse one.
+  - Benchmark (`scripts/bench_storyboard.sh`, 20-minute 1080p H.264, this container): coarse level in 5.7 s, all 400 frames in 19.8 s (~50 ms a frame), 940 KB on disk. The Rust helper is not built: a keyframe decode and scale alone take much of those 50 ms, so it couldn't be 2× faster.
+  - Android keeps its native frame loop (no Kotlin change); Dart packs the sheets at each level's end. The tiles folder is listed once a second while the native loop runs, since it reports nothing until the end.
+- [x] 8.3 Smooth preview: LRU of decoded sheets, tile painted with `drawImageRect`, no `setState` per pointer move, L0 → L1/L2 → exact frame, chapter title and haptic tick.
+  - The seek bar keeps hover, drag and frame in `ValueNotifier`s: a pointer move repaints the bar and bubble only (a test checks 30 moves cause no rebuild). Sheets around the finger are decoded ahead; the exact frame fades in over the cell (150 ms); phones tick on chapter changes.
+- [x] 8.4 Library previews made in advance (L0 sheet per video, lowest priority, "only while charging" setting).
+  - `LibraryPreviewsController`: after 10 s of quiet and while nothing plays, the newest library video without one gets its coarse level (one 10×10 sheet), through its own storyboard source at the frame engine's lowest priority, so it never cancels the playing file's storyboard. Playback cancels it at once. Settings › Library: Automatic (always on desktop, only while charging on phones) / Always / Only while charging / Off, plus the preview cache size. Never in battery saver (battery_plus).
+- [x] 8.5 Library data: folders (hidden, pinned, private, sort), bookmarks, saved playlists, per-file settings; paged SQL queries; live refresh (`Directory.watch`, MediaStore observer); `.nomedia`.
+  - Schema 4: `LibraryFolders`, `Bookmarks`, `SavedPlaylists`/`SavedPlaylistItems`, `FileSettings`, `Replays`, `IntroMarks`; `watched` and `hasSubtitles` on `LibraryItems`. `LibraryRepository` groups folders and sorts/filters items in SQL (name order stays natural, done after the query). Full lists rather than pages: 10 000 rows are a few MB (checked in 8.12).
+  - Desktop scan runs in an isolate, skips `.nomedia` folders and notices subtitle files next to videos. `LibraryWatcher` watches the library folders (not recursively: Linux can't) and rescans 2 s after a change; any platform rescans when the app comes back after 10 minutes. Android MediaStore change events would need native code: not done.
+- [x] 8.6 Library like MX Player: fast-scroller with bubble, hover/slide previews on cards, multi-select with file actions, folder actions, views and filters, badges, kept scroll position, playlists.
+  - Folders · All videos · Recently added · Playlists, a continue-watching row, list/grid/compact with three grid sizes, ascending/descending, filters (unwatched, HD, subtitles), quality/CC/NEW/last-played badges, scroll position kept per view, each folder remembering its order and layout.
+  - Fast-scroller with a letter/month/size bubble (fixed row heights, so a jump costs nothing); hover or a sideways finger slide on a thumbnail flips through the coarse storyboard.
+  - Long-press selects (tap adds), select all, play, queue, add to a playlist, mark watched/unwatched, details; on desktop also rename and move (subtitle files follow) and move to the trash (gio / freedesktop trash, Finder, Recycle Bin).
+  - Folder sheet: play all, shuffle, pin, hide (and "show hidden"), private behind a PIN (a hash in settings: a privacy curtain, not encryption); private folders and incognito never reach history, decided when the file opens.
+  - Saved playlists (create, add, reorder, rename, delete) and two smart ones (unwatched, added this month).
+  - Not done: rename/move/delete and share on Android (MediaStore changes need a native confirmation flow); device-auth unlock.
+- [x] 8.7 Browse mode: file tree with breadcrumbs (storage roots, SD/USB, drives) and network servers (SMB, FTP/SFTP, WebDAV, DLNA).
+  - A Browse section (the app passes it to the library shell, so features stay apart): storage roots (home, library folders, drives, `/Volumes`, `/media`, `/mnt`, Android storage), folders and playable files, breadcrumbs, search in the folder, play all, shuffle; a file plays on through its folder.
+  - Network: WebDAV (client moved to `core/net`), FTP (a small passive-mode client, tested against a socket server; mpv plays `ftp://`), DLNA/UPnP media servers found by SSDP and browsed with ContentDirectory. Servers are saved without passwords; a password is asked once per session and kept in memory.
+  - SMB and SFTP are saved and opened by address only: listing them would need protocol libraries Kyndrel doesn't have.
+- [x] 8.8 Player extras from MX/mpvKt/Next Player/VLC/IINA/Haruna/SMPlayer/Just Player: bookmarks, per-file settings, quick decoder switch, long-press speed slide, custom buttons and gestures, video adjustments, stats overlay, subtitle list, passthrough, frame-rate matching, clip export, jump to time, incognito, AMOLED theme.
+  - Bookmarks (B, Ctrl+B; ticks on the seek bar), jump to time (Ctrl+G: `1:23:45`, `83:10`, `90`, `50%`), statistics overlay (Shift+I), HW/HW+/SW switch (H, or the badge in the top bar), per-file tracks/speed/delays/fit/zoom/rotation, incognito (no history, resume points or file settings), remove from history, picture adjustments, audio passthrough, external audio tracks, ZIP subtitles, long-press 2× with a sideways slide (1–4×), subtitle lines list (Ctrl+T, external subtitle files: jump, copy), quick commands (Ctrl+K, `Label | mpv command` in Advanced), middle/back/forward mouse buttons, A-B loop to a clip or GIF with ffmpeg (Ctrl+Shift+E, desktop), fling the phone controls for the next file, pure black theme.
+  - Not done: display frame-rate matching (needs Android display-mode code), an accent colour picker (the accent is a constant across the app; changing it would mean threading it through every widget). Night mode already existed as the "Dynamic" normalization.
+- [x] 8.9 Skip intro/credits from shared storyboard hashes across episodes, chapters, or a saved mark.
+  - "Skip intro" during the opening, "Next episode" (or "Skip credits") during the credits. Sources, in order: chapters named Intro/Opening/Credits/Ending; a mark for this file; one made by hand with Shift+M (start, then end) for the whole season; else, once this episode's storyboard is ready, a comparison with another episode of the season in the same folder: a 64-bit difference hash per storyboard frame, the longest matching run at any shift (flat/black frames never match), 15 s–3 min in the first 40 % for the intro, ≥ 20 s in the last 30 % for credits. Saved for both episodes. Setting in Playback.
+- [x] 8.10 Local "most replayed" heatmap on the seek bar.
+  - A jump back of 3 s–10 min counts the part between the new and the old position as replayed (100 parts per file, `Replays` table). While hovering, the seek bar shows a soft orange curve of it, scaled to the most replayed part. Never leaves the device; incognito records nothing; Settings › Playback turns it off.
+- [x] 8.11 Reliability: cancellation tokens, native-call timeouts, fault-injection tests, parser fuzzing.
+  - Timeouts on every Android call that can stick (frames 15 s, a storyboard level 10 min with a cancel, thumbnails 20 s, the MediaStore query 2 min); the storyboard writer keeps packing after a sheet fails to write (it used to stop the whole chain); cancellation tokens in storyboards, library previews and intro detection.
+  - `test/reliability`: a sheet that can't be written, corrupt specs and sheets, broken links and missing folders in the scan, a stuck Android frame request, and fuzzing of file-name, time, command-line, FTP, subtitle and spec parsing (found and fixed: a badly encoded URL crashed the title parser).
+- [x] 8.12 Performance harness (`scripts/measure_perf.sh`) and budget checks in CI; large-library and scrub rebuild tests.
+  - `scripts/measure_perf.sh linux|android` checks `perf/budget.env` (idle/playing RSS or PSS, idle CPU, start time, janky frames) and a recorded baseline with a 10 % margin. CI's `perf-linux` job builds a release, runs it under Xvfb and reports; it stays `continue-on-error` until a baseline is recorded from those runners. Not measured in this container: the Linux build downloads mimalloc from a host this session's network policy blocks.
+  - `test/perf/large_library_test.dart`: 10 000 videos in a folder build fewer than 30 rows, and the fast-scroller reaches the oldest at once. It exposed two quadratic loops, both fixed: library probing wrote one row at a time (each write re-ran the live library queries) and re-read every unprobed row per file; it now probes 25 at a time and writes them in one batch. Library previews re-read the whole library per video; now once per run.
+  - Earlier rebuild checks stay (30 seek-bar moves, 0 rebuilds, 8.3).
+- [x] 8.13 Release 1.3.0 (version and notes; tagging the release is left to the maintainer).
+
+### Phase 9: Harbor's player in Kyndrel (1.4)
+Harbor (HarborCommunity/Harbor, MIT, a Tauri + libmpv Stremio client) is the reference: only its player is ported; catalogs, IPTV, Trakt, debrid, torrents and profiles are not. Each task compares Harbor's version of a feature with Kyndrel's and takes Harbor's where it is better. Credited in `ATTRIBUTION.md`.
+- [x] 9.1 Volume boost to 500 %: Harbor's slider (100 % at 64 % of the track, the rest is boost), boost colour from orange to red, the volume HUD, a limiter whenever boosting, a boost limit setting.
+  - `volume-max=500`; Settings › Audio › Boost limit (100–500 %, default 500; a lower limit brings a louder volume down). The slider, the phone swipe and the swipe level all use Harbor's scale; Shift+wheel moves 50 %. Keys, wheel and mute show Harbor's glass volume panel at the top instead of a text message. The limiter stays on above 100 % (Harbor only limits when other filters are on; Kyndrel's is safer).
+- [x] 9.2 Harbor's player layout: back and two-line title on top, volume and download at the left, previous/next episode around −10/play/+10 in the middle, tools at the right, a thin seek bar, an "Up next" tab.
+  - Harbor's own icons (its 35 SVGs, painted from their path data by `scripts/make_player_icons.py` → `lib/core/ui/harbor_icons.g.dart`, so they stay exact, tintable and need no asset loading). Harbor's buttons: 48 px circles, icon white 85 %, a faint circle on hover, a brighter one when on, a green dot while subtitles show. Transport: ‹‹ Previous / Next ›› pills (when the queue has more), seek-step buttons that swing 40° when pressed, a clear 64 px play button. Top: a 44 px glass back button, the title at 19 px with its badges and a 13 px second line, a full-screen clock with the end time (desktop; a setting). Harbor's scrims and three-column bottom bar. The queue button became Harbor's "Up next" tab on the right edge.
+  - Kept from Kyndrel where Harbor has nothing: subtitle translation, picture fit, the decoder badge. Harbor's separate audio menu stays inside the subtitles panel (one panel for both).
+- [x] 9.3 Seek bar styles: flat, glass, pinstripe, rainbow; height, colour and thumb shape.
+  - Settings › Appearance › Seek bar, with a live preview: style, 10 colours (Harbor's amber by default), thickness 3–14 px (+2 on hover, +4 while dragging, as in Harbor), thumb circle/square/hidden, 8–32 px, thumb only on hover. The thumb has Harbor's dark halo and soft shadow.
+- [x] 9.4 Audio and picture profiles: stereo downmix (5.1 on laptop speakers), Harbor's night-mode settings, Performance/Balanced/Quality video profiles.
+  - Settings › Audio › Downmix to stereo (`audio-channels=stereo`); the no-sound message suggests it. Night mode uses Harbor's stronger `dynaudnorm` and a limiter. The Fast/Standard/High quality presets now set Harbor's extra options (dithering, faster decoding, interpolation, HDR peak, linear downscaling; High quality uses Harbor's sharper chroma scaler). Checked against libmpv.
+  - Not taken: Harbor's buffer profiles (up to 2 GiB of read-ahead); Kyndrel keeps its small buffers for local files to stay light (8.1).
+- [x] 9.5 Subtitle text: encoding detection (Arabic windows-1256 and others), Arabic quality checks, SDH filter, frame-rate conversion.
+  - Harbor's decoder ported (`core/subtitles/subtitle_encoding.dart`): byte-order marks, UTF-8, then Windows-1256, ISO-8859-6 and Windows-1252 scored on printable text, mojibake, control characters, timestamps and how Arabic the words look. Files Kyndrel loads (picked, from ZIPs, downloaded) reach mpv as a UTF-8 copy; the subtitle lines list and translation read any encoding; for files mpv finds next to the video, `sub-codepage` is Windows-1256 when Arabic is wanted.
+  - Hide sound descriptions (mpv's SDH filter, Settings › Subtitles) and a subtitle frame rate in the panel's Sync tab (Harbor's presets, reset per file). Harbor's Arabic quality scoring ranks search results, so it comes with 9.6.
+- [x] 9.6 Subtitle sources without an API key (OpenSubtitles v3, Wyzie, Podnapisi, SubDL with a key) and Harbor's ranking by language and release name.
+  - The film's IMDb id comes from Stremio's public Cinemeta catalogue (`core/metadata/media_identity.dart`); OpenSubtitles through Stremio's free addon and Wyzie are searched with it (Wyzie also by title), alongside OpenSubtitles with the user's key. Harbor's release matching ported (`core/subtitles/release_match.dart`): ranked by hash, the user's languages, then the fit (episode, group, source, resolution, edition), shown in %. Downloads are unpacked from gzip or ZIP.
+  - Not done: Podnapisi (its API answers XML by movie hash only) and SubDL (needs a key); the two keyless sources cover most films.
+- [ ] 9.7 Automatic subtitle sync to the audio (speech detection and alignment, offset and drift).
+- [ ] 9.8 Skip segments from online databases (AniSkip, TheIntroDB, IntroDB, SkipDB): intro, recap, credits; Harbor's skip pill.
+- [ ] 9.9 Playback rescue: frozen picture, stuck position and stalls are detected and retried.
+- [ ] 9.10 Anime4K shaders and a shader menu.
+- [ ] 9.11 Watch Together: rooms with a 6-letter code, synced play/pause/seek, chat; Harbor's relay on the user's own Cloudflare account.
+- [ ] 9.12 Multiview: two to four videos at once, one heard.
+- [ ] 9.13 Casting to Chromecast, AirPlay and Roku.
+- [ ] 9.14 Discord Rich Presence.
+- [ ] 9.15 Release 1.4.0.
+
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.
 - **Widget and golden:** seek bar, volume slider, speed popover, subtitle panel.

@@ -39,6 +39,23 @@ void main() {
     expect(backend.calls, ['open(a.mp4, play: false)']);
   });
 
+  test('small demuxer buffers for local files, mpv defaults for streams '
+      '(8.1)', () async {
+    String ahead() => backend.properties['demuxer-max-bytes']!;
+    String behind() => backend.properties['demuxer-max-back-bytes']!;
+    await service.open('/v/film.mkv');
+    expect((ahead(), behind()), ('32MiB', '8MiB'));
+    await service.open('content://media/external/video/media/7');
+    expect(ahead(), '32MiB');
+    await service.open('https://x.example/live.m3u8');
+    expect((ahead(), behind()), ('150MiB', '50MiB'));
+
+    // The user's own mpv.conf value wins.
+    await service.applyOptions({'demuxer-max-bytes': '64MiB'});
+    await service.open('/v/film.mkv');
+    expect((ahead(), behind()), ('64MiB', '8MiB'));
+  });
+
   test('open rejects an empty source', () {
     expect(() => service.open('   '), throwsArgumentError);
     expect(backend.calls, isEmpty);
@@ -278,19 +295,19 @@ void main() {
     expect(backend.disposed, isTrue);
   });
 
-  test('engine is configured for 400 % volume and pitch correction', () async {
+  test('engine is configured for 500 % volume and pitch correction', () async {
     await pumpEventQueue();
-    expect(backend.properties['volume-max'], '400');
+    expect(backend.properties['volume-max'], '500');
     expect(backend.properties['audio-pitch-correction'], 'yes');
   });
 
   group('volume', () {
-    test('clamps to 0–400', () async {
-      await service.setVolume(520);
-      expect(service.state.volume, 400);
+    test('clamps to 0–500', () async {
+      await service.setVolume(620);
+      expect(service.state.volume, 500);
       await service.setVolume(-3);
       expect(service.state.volume, 0);
-      expect(backend.calls, ['volume(400.0)', 'volume(0.0)']);
+      expect(backend.calls, ['volume(500.0)', 'volume(0.0)']);
     });
 
     test('adds the limiter above 100 % and removes it below', () async {

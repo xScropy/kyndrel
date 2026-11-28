@@ -43,6 +43,86 @@ class PlaylistButton extends ConsumerWidget {
   }
 }
 
+/// Harbor's "Up next" tab (task 9.2): a glass tab on the right edge,
+/// half off screen, with the queue icon and UP NEXT written upwards. Opens
+/// the queue.
+class UpNextTab extends ConsumerStatefulWidget {
+  const new({super.key});
+
+  @override
+  ConsumerState<UpNextTab> createState() => _UpNextTabState();
+}
+
+class _UpNextTabState extends ConsumerState<UpNextTab> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = ref.watch(playlistProvider.select((s) => s.items.length));
+    final open = ref.watch(playlistPanelProvider);
+    final l = context.l10n;
+    return Tooltip(
+      message: count > 1 ? l.queueCountTooltip(count) : l.queueTooltip,
+      waitDuration: const Duration(milliseconds: 500),
+      child: Semantics(
+        button: true,
+        label: count > 1 ? l.queueCountTooltip(count) : l.queueTooltip,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: InkWell(
+            key: const Key('queue-button'),
+            onTap: ref.read(playlistPanelProvider.notifier).toggle,
+            focusColor: KyndrelColors.focus,
+            hoverColor: KyndrelColors.scrimClear,
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(20),
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: _hover || open ? 46 : 40,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: open || _hover
+                    ? KyndrelColors.panel
+                    : KyndrelColors.glass,
+                borderRadius: const BorderRadiusDirectional.horizontal(
+                  start: Radius.circular(20),
+                ).resolve(Directionality.of(context)),
+                border: Border.all(color: KyndrelColors.glassBorder),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.playlist_play,
+                    size: 20,
+                    color: KyndrelColors.textPrimary,
+                  ),
+                  const SizedBox(height: 10),
+                  RotatedBox(
+                    quarterTurns: 3,
+                    child: Text(
+                      l.upNext,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.4,
+                        color: KyndrelColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Queue with drag-to-reorder, shuffle and repeat (task 3.1).
 class PlaylistPanel extends ConsumerStatefulWidget {
   const new({required this.onAddFiles, required this.onOpenFolder, super.key});

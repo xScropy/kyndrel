@@ -1,9 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/scrub_preview.dart';
+import 'package:kyndrel/core/player/storyboard.dart';
+import 'package:kyndrel/core/ui/frame_view.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/features/playback/widgets/video_gesture_layer.dart';
 import 'package:material_ui/material_ui.dart';
@@ -20,10 +20,10 @@ class SwipeSeekPreview extends ConsumerStatefulWidget {
 
 class _SwipeSeekPreviewState extends ConsumerState<SwipeSeekPreview> {
   Duration? _at;
-  String? _frame;
-  late final _scrub = ScrubPreview(ref, (path) {
-    if (mounted && _at != null && path != _frame) {
-      setState(() => _frame = path);
+  FrameRef? _frame;
+  late final _scrub = ScrubPreview(ref, (frame) {
+    if (mounted && _at != null && frame != _frame) {
+      setState(() => _frame = frame);
     }
   });
 
@@ -86,13 +86,7 @@ class _SwipeSeekPreviewState extends ConsumerState<SwipeSeekPreview> {
               aspectRatio: 16 / 9,
               child: frame == null
                   ? const ColoredBox(color: KyndrelColors.background)
-                  : Image.file(
-                      File(frame),
-                      key: const Key('swipe-seek-frame'),
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                    ),
+                  : FrameView(key: const Key('swipe-seek-frame'), frame: frame),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),

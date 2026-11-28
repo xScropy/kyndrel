@@ -1,16 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
-import 'package:kyndrel/core/player/player_service.dart';
+import 'package:kyndrel/core/player/volume_scale.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Mute button, 0–400 % slider and orange percentage (task 1.6).
+/// Mute button and the volume slider, up to the boost limit (500 % at
+/// most), drawn like Harbor's (task 9.1).
 class VolumeControl extends ConsumerWidget {
   const new({super.key});
 
@@ -21,11 +25,8 @@ class VolumeControl extends ConsumerWidget {
         (s) => (s.value?.volume ?? 100, s.value?.isMuted ?? false),
       ),
     );
-    final icon = muted || volume == 0
-        ? Icons.volume_off
-        : volume < 50
-        ? Icons.volume_down
-        : Icons.volume_up;
+    final max = ref.watch(settingsProvider.select((s) => s.volumeBoostMax));
+    final silent = muted || volume == 0;
 
     void warn(String message) =>
         ScaffoldMessenger.maybeOf(context)
@@ -36,34 +37,24 @@ class VolumeControl extends ConsumerWidget {
       children: [
         ControlButton(
           key: const Key('mute'),
-          icon: icon,
+          icon: silent ? Icons.volume_off : Icons.volume_up,
+          harbor: silent ? HarborIcons.volumeMute : HarborIcons.volume,
+          size: 24,
           tooltip: muted
               ? context.l10n.unmuteTooltip
               : context.l10n.muteTooltip,
           onPressed: () => unawaited(VolumeActions.toggleMute(ref)),
         ),
+        const SizedBox(width: 6),
         SizedBox(
-          width: 130,
+          width: VolumeSlider.trackWidth,
           child: VolumeSlider(
             value: muted ? 0 : volume,
+            max: max,
             onChanged: (v) => unawaited(
               VolumeActions.set(ref, v, persist: false, onFirstBoost: warn),
             ),
             onChangeEnd: (v) => unawaited(VolumeActions.set(ref, v)),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 44,
-          child: Text(
-            '${(muted ? 0 : volume).round()}%',
-            key: const Key('volume-label'),
-            style: const TextStyle(
-              color: KyndrelColors.accent,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
           ),
         ),
       ],
@@ -71,24 +62,26 @@ class VolumeControl extends ConsumerWidget {
   }
 }
 
-/// Horizontal 0–400 slider with a marker at 100 % and the boosted part in
-/// the accent colour.
+/// Harbor's volume slider: 0–100 % on the first 64 % of the track, the
+/// boost after a tick, filling from orange to red; the value shows in a
+/// bubble over the thumb while it is hovered or dragged.
 class VolumeSlider extends StatefulWidget {
   const new({
     required this.value,
     required this.onChanged,
     this.onChangeEnd,
-    this.max = PlayerService.maxVolume,
+    this.max = 500,
     super.key,
   });
 
+  static const trackWidth = 128.0;
+
   final double value;
+
+  /// The top of the track, 100–500 %.
   final double max;
   final ValueChanged<double> onChanged;
   final ValueChanged<double>? onChangeEnd;
-
-  /// Values this close to 100 snap to exactly 100 while dragging.
-  static const snap = 4.0;
 
   @override
   State<VolumeSlider> createState() => _VolumeSliderState();
@@ -98,14 +91,26 @@ class _VolumeSliderState extends State<VolumeSlider> {
   double? _drag;
   bool _hover = false;
 
-  double _valueAt(double x, double width) {
-    final v = ((x / width).clamp(0.0, 1.0) * widget.max).roundToDouble();
-    return (v - 100).abs() <= VolumeSlider.snap ? 100 : v;
+  double _valueAt(double x, double width) =>
+      VolumeScale.valueAt(x / width, widget.max);
+
+  void _scroll(PointerSignalEvent e) {
+    if (e is! PointerScrollEvent || e.scrollDelta.dy == 0) return;
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    final step = shift ? 50.0 : VolumeActions.step;
+    final v = (widget.value - e.scrollDelta.dy.sign * step).clamp(
+      0.0,
+      widget.max,
+    );
+    widget.onChanged(v);
+    widget.onChangeEnd?.call(v);
   }
 
   @override
   Widget build(BuildContext context) {
-    final value = _drag ?? widget.value;
+    final value = (_drag ?? widget.value).clamp(0.0, widget.max);
+    final active = _hover || _drag != null;
+    final boost = VolumeScale.boostAmount(value, widget.max);
     return Semantics(
       slider: true,
       label: context.l10n.volume,
@@ -113,21 +118,13 @@ class _VolumeSliderState extends State<VolumeSlider> {
       child: LayoutBuilder(
         builder: (context, c) {
           final w = c.maxWidth;
+          final x = w * VolumeScale.fraction(value, widget.max);
           return MouseRegion(
             cursor: SystemMouseCursors.click,
             onEnter: (_) => setState(() => _hover = true),
             onExit: (_) => setState(() => _hover = false),
             child: Listener(
-              onPointerSignal: (e) {
-                if (e is PointerScrollEvent) {
-                  final v =
-                      (widget.value -
-                              e.scrollDelta.dy.sign * VolumeActions.step)
-                          .clamp(0.0, widget.max);
-                  widget.onChanged(v);
-                  widget.onChangeEnd?.call(v);
-                }
-              },
+              onPointerSignal: _scroll,
               child: GestureDetector(
                 key: const Key('volume-slider'),
                 behavior: HitTestBehavior.opaque,
@@ -150,13 +147,39 @@ class _VolumeSliderState extends State<VolumeSlider> {
                   if (v != null) widget.onChangeEnd?.call(v);
                 },
                 child: SizedBox(
-                  height: 32,
-                  child: CustomPaint(
-                    painter: VolumeSliderPainter(
-                      value: value,
-                      max: widget.max,
-                      emphasised: _hover || _drag != null,
-                    ),
+                  height: 48,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned.fill(
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(end: active ? 1 : 0),
+                          duration: const Duration(milliseconds: 200),
+                          curve: const Cubic(0.22, 0.61, 0.36, 1),
+                          builder: (context, t, _) => CustomPaint(
+                            painter: VolumeSliderPainter(
+                              value: value,
+                              max: widget.max,
+                              emphasis: t,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (active)
+                        Positioned(
+                          left: x - 24,
+                          width: 48,
+                          bottom: 36,
+                          child: Center(
+                            child: _Bubble(
+                              text: '${value.round()}%',
+                              color: boost > 0
+                                  ? KyndrelColors.boost(boost)
+                                  : KyndrelColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -168,58 +191,109 @@ class _VolumeSliderState extends State<VolumeSlider> {
   }
 }
 
+class _Bubble extends StatelessWidget {
+  const new({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const Key('volume-label'),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+    decoration: BoxDecoration(
+      color: KyndrelColors.titleBarScrim,
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(
+        color: color,
+        fontWeight: FontWeight.w600,
+        fontSize: 11,
+        height: 1,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    ),
+  );
+}
+
+/// The track, the boost zone, the fill and the thumb. [emphasis] grows
+/// the track (7 → 12 px) and the thumb (14 → 19 px) while hovered.
 class VolumeSliderPainter extends CustomPainter {
-  new({required this.value, required this.max, required this.emphasised});
+  new({required this.value, required this.max, this.emphasis = 0});
 
   final double value;
   final double max;
-  final bool emphasised;
+  final double emphasis;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final h = emphasised ? 5.0 : 4.0;
+    final h = 7 + 5 * emphasis;
     final y = size.height / 2;
     final r = Radius.circular(h / 2);
-    double x(double v) => size.width * (v / max).clamp(0.0, 1.0);
-    RRect seg(double from, double to) =>
-        RRect.fromLTRBR(from, y - h / 2, to, y + h / 2, r);
+    final track = RRect.fromLTRBR(0, y - h / 2, size.width, y + h / 2, r);
+    final boosts = max > 100;
+    final unity = size.width * VolumeScale.fraction(100, max);
+    final x = size.width * VolumeScale.fraction(value, max);
+    final boost = VolumeScale.boostAmount(value, max);
+    final color = boost > 0
+        ? KyndrelColors.boost(boost)
+        : KyndrelColors.textPrimary;
 
-    final unity = x(100);
-    canvas
-      // Unfilled: normal range, then the boost zone tinted orange.
-      ..drawRRect(seg(0, unity), Paint()..color = KyndrelColors.track)
-      ..drawRRect(
-        seg(unity, size.width),
-        Paint()..color = KyndrelColors.accent.withValues(alpha: 0.22),
-      )
-      // Filled: white up to 100 %, accent beyond.
-      ..drawRRect(
-        seg(0, x(value < 100 ? value : 100)),
-        Paint()..color = KyndrelColors.textPrimary,
-      );
-    if (value > 100) {
+    canvas.drawRRect(track, Paint()..color = KyndrelColors.track);
+    if (boosts) {
+      final zone = Rect.fromLTRB(unity, y - h / 2, size.width, y + h / 2);
       canvas.drawRRect(
-        seg(unity, x(value)),
-        Paint()..color = KyndrelColors.accent,
+        RRect.fromRectAndCorners(zone, topRight: r, bottomRight: r),
+        Paint()
+          ..shader = const LinearGradient(
+            colors: [KyndrelColors.boostZoneLow, KyndrelColors.boostZoneHigh],
+          ).createShader(zone),
       );
     }
-    // 100 % marker.
-    canvas
-      ..drawRect(
-        Rect.fromCenter(center: Offset(unity, y), width: 2, height: 12),
-        Paint()..color = KyndrelColors.textSecondary,
-      )
-      ..drawCircle(
-        Offset(x(value), y),
-        emphasised ? 7 : 6,
-        Paint()
-          ..color = value > 100
-              ? KyndrelColors.accent
-              : KyndrelColors.textPrimary,
+    if (x > 0) {
+      final fill = Rect.fromLTRB(0, y - h / 2, x, y + h / 2);
+      final paint = Paint();
+      if (boost > 0) {
+        final split = (unity / x).clamp(0.0, 1.0);
+        paint.shader = LinearGradient(
+          colors: [
+            KyndrelColors.textPrimary,
+            KyndrelColors.textPrimary,
+            KyndrelColors.boostLow,
+            color,
+          ],
+          stops: [0, split, split, 1],
+        ).createShader(fill);
+      } else {
+        paint.color = KyndrelColors.textPrimary;
+      }
+      canvas.drawRRect(RRect.fromRectAndRadius(fill, r), paint);
+    }
+    if (boosts) {
+      // 100 %: where the boost begins.
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(unity, y), width: 2, height: h),
+          const Radius.circular(1),
+        ),
+        Paint()..color = KyndrelColors.trackBuffered,
       );
+    }
+    final thumb = 7 + 2.5 * emphasis;
+    canvas
+      ..drawCircle(
+        Offset(x, y + 1),
+        thumb + 1,
+        Paint()
+          ..color = KyndrelColors.titleBarScrim
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      )
+      ..drawCircle(Offset(x, y), thumb, Paint()..color = color);
   }
 
   @override
   bool shouldRepaint(VolumeSliderPainter old) =>
-      old.value != value || old.max != max || old.emphasised != emphasised;
+      old.value != value || old.max != max || old.emphasis != emphasis;
 }

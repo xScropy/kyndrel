@@ -44,6 +44,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unmuteTooltip => 'إلغاء الكتم (M)';
 
   @override
+  String get volumeMuted => 'صامت';
+
+  @override
+  String get previous => 'السابق';
+
+  @override
+  String get next => 'التالي';
+
+  @override
+  String endsAt(String time) {
+    return 'ينتهي $time';
+  }
+
+  @override
   String get volume => 'مستوى الصوت';
 
   @override
@@ -679,4 +693,281 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reduceMotionHelp => 'تبقى الأسطوانة ثابتة وتتحرك الموجات بهدوء.';
+
+  @override
+  String get libraryViewRecent => 'أضيفت مؤخرًا';
+
+  @override
+  String get libraryViewPlaylists => 'قوائم التشغيل';
+
+  @override
+  String get libraryContinue => 'تابع المشاهدة';
+
+  @override
+  String librarySelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عنصر محدد',
+      many: '$count عنصرًا محددًا',
+      few: '$count عناصر محددة',
+      two: 'عنصران محددان',
+      one: 'عنصر محدد',
+      zero: 'لا شيء محدد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get librarySelectAll => 'تحديد الكل';
+
+  @override
+  String get libraryAddToPlaylist => 'أضف إلى قائمة تشغيل';
+
+  @override
+  String get libraryNewPlaylist => 'قائمة تشغيل جديدة';
+
+  @override
+  String get libraryPlaylistName => 'اسم قائمة التشغيل';
+
+  @override
+  String get libraryRename => 'إعادة تسمية';
+
+  @override
+  String get libraryDelete => 'حذف';
+
+  @override
+  String libraryDeleteConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'نقل $count ملف إلى سلة المهملات؟',
+      many: 'نقل $count ملفًا إلى سلة المهملات؟',
+      few: 'نقل $count ملفات إلى سلة المهملات؟',
+      two: 'نقل الملفين إلى سلة المهملات؟',
+      one: 'نقل هذا الملف إلى سلة المهملات؟',
+      zero: 'لا ملفات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryMove => 'نقل إلى…';
+
+  @override
+  String get libraryShare => 'مشاركة';
+
+  @override
+  String get libraryMarkWatched => 'تعليم كمُشاهَد';
+
+  @override
+  String get libraryMarkUnwatched => 'تعليم كغير مُشاهَد';
+
+  @override
+  String get libraryPin => 'تثبيت في الأعلى';
+
+  @override
+  String get libraryUnpin => 'إلغاء التثبيت';
+
+  @override
+  String get libraryHide => 'إخفاء المجلد';
+
+  @override
+  String get libraryUnhide => 'إظهار المجلد';
+
+  @override
+  String get libraryShowHidden => 'إظهار المجلدات المخفية';
+
+  @override
+  String get libraryMakePrivate => 'جعله خاصًا';
+
+  @override
+  String get libraryMakePublic => 'إزالة من الخاص';
+
+  @override
+  String get libraryPrivate => 'المجلدات الخاصة';
+
+  @override
+  String get libraryLock => 'قفل المجلدات الخاصة';
+
+  @override
+  String get libraryPinTitle => 'أدخل رمز PIN';
+
+  @override
+  String get librarySetPin => 'اختر رمز PIN (من 4 إلى 8 أرقام)';
+
+  @override
+  String get libraryWrongPin => 'رمز PIN غير صحيح';
+
+  @override
+  String get libraryPlayAll => 'تشغيل الكل';
+
+  @override
+  String get libraryShuffle => 'تشغيل عشوائي';
+
+  @override
+  String get libraryDescending => 'الأحدث أو الأكبر أولًا';
+
+  @override
+  String get layoutCompact => 'مضغوط';
+
+  @override
+  String get libraryGridSmall => 'شبكة صغيرة';
+
+  @override
+  String get libraryGridLarge => 'شبكة كبيرة';
+
+  @override
+  String get libraryFilterUnwatched => 'غير المُشاهَدة فقط';
+
+  @override
+  String get libraryFilterHd => 'دقة عالية فأعلى';
+
+  @override
+  String get libraryFilterSubtitles => 'مع ترجمة';
+
+  @override
+  String get libraryLastPlayed => 'آخر تشغيل';
+
+  @override
+  String get libraryPlaylistEmpty =>
+      'لا توجد قوائم تشغيل بعد. حدد مقاطع وأضفها إلى قائمة.';
+
+  @override
+  String get librarySmartUnwatched => 'مقاطع لم تُشاهَد';
+
+  @override
+  String get librarySmartRecent => 'أضيفت هذا الشهر';
+
+  @override
+  String libraryActionFailed(String name) {
+    return 'تعذّر ذلك: $name';
+  }
+
+  @override
+  String get playlistRename => 'إعادة تسمية قائمة التشغيل';
+
+  @override
+  String get playlistDelete => 'حذف قائمة التشغيل';
+
+  @override
+  String get playlistRemove => 'إزالة من قائمة التشغيل';
+
+  @override
+  String get libraryFilters => 'عوامل التصفية';
+
+  @override
+  String get libraryFolderActions => 'المجلد';
+
+  @override
+  String get libraryBrowse => 'تصفح';
+
+  @override
+  String get browseDevice => 'هذا الجهاز';
+
+  @override
+  String get browseNetwork => 'الشبكة';
+
+  @override
+  String get browseHome => 'المجلد الرئيسي';
+
+  @override
+  String get browseRoot => 'القرص كاملًا';
+
+  @override
+  String get browseAddServer => 'إضافة خادم';
+
+  @override
+  String get browseServerKind => 'النوع';
+
+  @override
+  String get browseServerName => 'الاسم';
+
+  @override
+  String get browseServerAddress => 'العنوان';
+
+  @override
+  String get browseUser => 'اسم المستخدم (اختياري)';
+
+  @override
+  String get browsePassword => 'كلمة المرور';
+
+  @override
+  String get browseSave => 'حفظ';
+
+  @override
+  String get browseRemove => 'إزالة الخادم';
+
+  @override
+  String get browseSearching => 'جارٍ البحث عن خوادم الوسائط…';
+
+  @override
+  String get browseNoServers => 'لم يُعثر على خوادم وسائط في هذه الشبكة.';
+
+  @override
+  String get browseEmpty => 'لا مجلدات أو ملفات قابلة للتشغيل هنا.';
+
+  @override
+  String browseFailed(String reason) {
+    return 'تعذّر فتح هذا المجلد: $reason';
+  }
+
+  @override
+  String get browseOpenOnly =>
+      'لا يمكن عرض محتوى هذا النوع من الخوادم: تُفتح ملفاته بالعنوان.';
+
+  @override
+  String get browseFind => 'بحث في هذا المجلد';
+
+  @override
+  String get bookmarks => 'العلامات المرجعية';
+
+  @override
+  String get bookmarksEmpty =>
+      'لا توجد علامات بعد. اضغط B لإضافة علامة عند الموضع الحالي.';
+
+  @override
+  String get bookmarkAdd => 'أضف علامة هنا';
+
+  @override
+  String get jumpToTime => 'الانتقال إلى وقت';
+
+  @override
+  String get jumpToTimeHint => '‎1:23:45 أو 83:10 أو 90 أو ‎50%';
+
+  @override
+  String get decoderTooltip =>
+      'فك الترميز: بالعتاد، بالعتاد مع النسخ، أو بالبرمجيات';
+
+  @override
+  String get loadAudioFile => 'تحميل ملف صوتي';
+
+  @override
+  String get libraryForget => 'إزالة من السجل';
+
+  @override
+  String get subtitleLines => 'أسطر الترجمة';
+
+  @override
+  String get subtitleLinesUnavailable =>
+      'تُعرض الأسطر لملفات الترجمة. حمّل ملفًا أو اختر مسارًا من ملف.';
+
+  @override
+  String get copy => 'نسخ';
+
+  @override
+  String get quickCommands => 'أوامر سريعة';
+
+  @override
+  String get quickCommandsEmpty =>
+      'لا أوامر سريعة بعد. أضفها من الإعدادات › متقدم.';
+
+  @override
+  String get skipIntro => 'تخطي المقدمة';
+
+  @override
+  String get skipCredits => 'تخطي الشارة';
+
+  @override
+  String get nextEpisode => 'الحلقة التالية';
 }

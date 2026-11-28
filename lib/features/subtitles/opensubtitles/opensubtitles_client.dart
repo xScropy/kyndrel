@@ -20,6 +20,10 @@ class SubtitleResult {
     this.hearingImpaired = false,
     this.machineTranslated = false,
     this.hashMatch = false,
+    this.provider = 'OpenSubtitles',
+    this.url,
+    this.matchPercent,
+    this.matchReason,
   });
 
   factory fromJson(Map<String, Object?> item) {
@@ -52,6 +56,32 @@ class SubtitleResult {
 
   /// Found by the file's hash, so it should be in sync.
   final bool hashMatch;
+
+  /// Where it comes from (task 9.6): OpenSubtitles (with a key), or the
+  /// keyless OpenSubtitles addon and Wyzie, which give a direct [url].
+  final String provider;
+  final String? url;
+
+  /// How well its release name fits the video, 0–100 (Harbor's release
+  /// matching), and the main reason.
+  final int? matchPercent;
+  final String? matchReason;
+
+  SubtitleResult withMatch(int percent, String? reason) => SubtitleResult(
+    fileId: fileId,
+    language: language,
+    release: release,
+    fileName: fileName,
+    rating: rating,
+    downloadCount: downloadCount,
+    hearingImpaired: hearingImpaired,
+    machineTranslated: machineTranslated,
+    hashMatch: hashMatch,
+    provider: provider,
+    url: url,
+    matchPercent: percent,
+    matchReason: reason,
+  );
 }
 
 /// What to search for. Empty fields are left out of the request.

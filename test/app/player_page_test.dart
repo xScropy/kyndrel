@@ -183,7 +183,10 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
     await tester.pump();
     expect(h.service.state.volume, 105);
-    expect(find.text('Volume 105%'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('volume-hud-value'))).data,
+      '105%',
+    );
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.pump();
     expect(h.service.state.volume, 100);

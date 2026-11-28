@@ -7,6 +7,7 @@ import 'package:kyndrel/core/player/mpv_options.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/settings.dart';
+import 'package:kyndrel/core/ui/osd.dart';
 import 'package:path/path.dart' as p;
 
 /// Copies the bundled shader to a real file mpv can read.
@@ -37,7 +38,9 @@ final engineSyncProvider = Provider<void>((ref) {
 
   unawaited(() async {
     await service.setLimiterEnabled(enabled: initial.limiterEnabled);
-    await service.setVolume(initial.volume);
+    await service.setVolume(
+      initial.volume.clamp(0, initial.volumeBoostMax).toDouble(),
+    );
     await service.setAutoLoadSubtitles(enabled: initial.autoLoadSubtitles);
     await service.applySubtitleStyle(initial.subtitleStyle);
     await service.setHardwareDecoding(_decoder(initial.hwdec));
@@ -46,6 +49,19 @@ final engineSyncProvider = Provider<void>((ref) {
     await applyVideo(initial);
     await service.setEqualizer(initial.equalizer);
     await service.setNormalization(initial.normalization);
+    if (initial.audioPassthrough) {
+      await service.setAudioPassthrough(enabled: true);
+    }
+    await service.setSubtitleCodepage(initial.subtitleCodepage);
+    if (initial.hideSoundDescriptions) {
+      await service.setHideSoundDescriptions(enabled: true);
+    }
+    if (initial.downmixStereo) {
+      await service.setDownmixStereo(enabled: true);
+    }
+    if (initial.audioDevice != 'auto') {
+      await service.setAudioDevice(initial.audioDevice);
+    }
     // Last, so the user's own options win.
     await service.applyOptions(parseMpvOptions(initial.mpvOptions).options);
   }());
@@ -78,10 +94,59 @@ final engineSyncProvider = Provider<void>((ref) {
     ..listen(settingsProvider.select((s) => s.normalization), (_, v) {
       unawaited(service.setNormalization(v));
     })
+    ..listen(settingsProvider.select((s) => s.audioPassthrough), (_, v) {
+      unawaited(service.setAudioPassthrough(enabled: v));
+    })
+    ..listen(settingsProvider.select((s) => s.volumeBoostMax), (_, max) {
+      // A lower limit brings a louder volume down to it.
+      if (service.state.volume > max) unawaited(service.setVolume(max));
+    })
+    ..listen(settingsProvider.select((s) => s.subtitleCodepage), (_, v) {
+      unawaited(service.setSubtitleCodepage(v));
+    })
+    ..listen(settingsProvider.select((s) => s.hideSoundDescriptions), (_, v) {
+      unawaited(service.setHideSoundDescriptions(enabled: v));
+    })
+    ..listen(settingsProvider.select((s) => s.downmixStereo), (_, v) {
+      unawaited(service.setDownmixStereo(enabled: v));
+    })
+    ..listen(settingsProvider.select((s) => s.audioDevice), (_, v) {
+      unawaited(service.setAudioDevice(v));
+    })
     ..listen(settingsProvider.select((s) => s.mpvOptions), (_, v) {
       unawaited(service.applyOptions(parseMpvOptions(v).options));
     });
 });
+
+/// Says so when the sound device didn't open, instead of playing silently:
+/// the usual causes are a device that was unplugged or taken by another
+/// app, the wrong output device, or passthrough to laptop speakers.
+final audioProblemNoticeProvider = Provider<void>((ref) {
+  final sub = ref.watch(playerServiceProvider).audioProblems.listen((_) {
+    final s = ref.read(settingsProvider);
+    ref
+        .read(osdProvider.notifier)
+        .show(
+          s.audioPassthrough
+              ? audioProblemPassthroughText
+              : s.audioDevice == 'auto'
+              ? audioProblemText
+              : audioProblemDeviceText,
+        );
+  });
+  ref.onDispose(() => unawaited(sub.cancel()));
+});
+
+const audioProblemText =
+    'No sound: the audio device did not open. Retrying… '
+    'Pick one in Settings › Audio › Output device, or turn on '
+    'Downmix to stereo.';
+const audioProblemDeviceText =
+    'No sound from the chosen output device. Try Automatic in '
+    'Settings › Audio › Output device.';
+const audioProblemPassthroughText =
+    'No sound: audio passthrough needs an AV receiver. Turn it off in '
+    'Settings › Audio for speakers and headphones.';
 
 /// "Automatic" on Android is MediaCodec with a copy back (task 6.7): it is
 /// what works with media_kit's texture output, and mpv still falls back to

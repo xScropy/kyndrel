@@ -56,7 +56,32 @@ jobs:
       # once deadlock on the 2-core runner (every later test then hangs).
       - run: flutter test -t engine --run-skipped -r expanded --timeout 120s --concurrency=1 test/engine
 
-  build-windows:
+  perf-linux:
+    # The resource budget (task 8.12, perf/budget.env): a release build,
+    # idle and playing, under Xvfb. Reports only until a baseline is
+    # recorded from these runners (scripts/measure_perf.sh ... --record,
+    # committed as perf/baseline-linux.env); then drop continue-on-error.
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - timeout-minutes: 12
+        run: |
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
+            libmpv-dev libsqlite3-dev ffmpeg python3-pil xvfb clang cmake ninja-build \
+            pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.0
+          cache: true
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - run: scripts/make_test_media.sh
+      - run: scripts/measure_perf.sh linux build/linux/x64/release/bundle/kyndrel
+
     runs-on: windows-latest
     needs: analyze-test
     steps:

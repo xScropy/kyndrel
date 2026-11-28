@@ -8,6 +8,7 @@ import 'package:kyndrel/app/engine_sync.dart';
 import 'package:kyndrel/app/launch_options.dart';
 import 'package:kyndrel/app/log_sync.dart';
 import 'package:kyndrel/app/media_session_sync.dart';
+import 'package:kyndrel/app/memory_guard.dart';
 import 'package:kyndrel/app/perf_log.dart';
 import 'package:kyndrel/app/player_shortcuts.dart';
 import 'package:kyndrel/app/settings_page.dart';
@@ -16,6 +17,7 @@ import 'package:kyndrel/app/window/window_title_bar.dart';
 import 'package:kyndrel/core/platform/native_pip.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
+import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/player_video_view.dart';
@@ -24,6 +26,8 @@ import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
+import 'package:kyndrel/core/ui/volume_hud.dart';
+import 'package:kyndrel/features/browse/browse_view.dart';
 import 'package:kyndrel/features/cast/cast_button.dart';
 import 'package:kyndrel/features/download/download_button.dart';
 import 'package:kyndrel/features/effects/effects_dialog.dart';
@@ -40,12 +44,16 @@ import 'package:kyndrel/features/music/now_playing.dart';
 import 'package:kyndrel/features/network/open_url_dialog.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:kyndrel/features/pip/pip_view.dart';
+import 'package:kyndrel/features/playback/file_settings_controller.dart';
 import 'package:kyndrel/features/playback/gesture_lock.dart';
+import 'package:kyndrel/features/playback/heatmap.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
 import 'package:kyndrel/features/playback/phone_playback.dart';
+import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/features/playback/resume/resume_banner.dart';
 import 'package:kyndrel/features/playback/resume/resume_controller.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
+import 'package:kyndrel/features/playback/skip_intro.dart';
 import 'package:kyndrel/features/playback/widgets/bottom_controls.dart';
 import 'package:kyndrel/features/playback/widgets/diagnostics_overlay.dart';
 import 'package:kyndrel/features/playback/widgets/fit_menu.dart';
@@ -87,11 +95,23 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
     super.initState();
     ref
       ..read(engineSyncProvider)
+      // "No sound" instead of silence when the device fails.
+      ..read(audioProblemNoticeProvider)
+      // Image-cache cap, and closing the frame engine when memory is short.
+      ..read(memoryGuardProvider)
       ..read(mediaSessionSyncProvider)
       ..read(scriptManagerProvider)
       ..read(logSyncProvider)
       // Frames for the whole video, made in the background (task 7.2).
       ..read(storyboardProvider)
+      // Library videos' coarse storyboards, made while idle (task 8.4).
+      ..read(libraryPreviewsProvider)
+      // Each file's tracks, speed, delays and picture (task 8.8).
+      ..read(fileSettingsControllerProvider)
+      // Openings and credits to skip (task 8.9).
+      ..read(skipIntroProvider)
+      // What gets watched again, for the seek bar's heatmap (task 8.10).
+      ..read(replayRecorderProvider)
       // Music: tags, cover and the level meter (task 7.6).
       ..read(nowPlayingProvider);
     // Phones: immersive full screen and rotation while a video plays.
@@ -300,6 +320,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
             bottom: false,
             child: LibraryShell(
               topInset: 0,
+              browse: const BrowseView(),
               home: _home(
                 OpenSourcePrompt(
                   onOpen: ref.read(playlistProvider.notifier).open,
@@ -385,7 +406,11 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 StatusLayer(
                   onPickFile: _pickFile,
                   // Home and the device's library (task 7.4).
-                  idle: (prompt) => LibraryShell(home: _home(prompt)),
+                  idle: (prompt) => LibraryShell(
+                    home: _home(prompt),
+                    // Folders and network servers (task 8.7).
+                    browse: const BrowseView(),
+                  ),
                 ),
                 const Center(child: CastingBanner()),
                 const Positioned(
@@ -396,6 +421,13 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 ),
                 // Brightness/volume level while swiping (task 6.3).
                 const Center(child: LevelOsdView()),
+                // Harbor's volume panel for keys, wheel and mute (9.1).
+                const Positioned(
+                  top: 36,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: VolumeHud()),
+                ),
                 // The scene under the finger while swipe-seeking (6.4).
                 const Center(child: SwipeSeekPreview()),
                 const Positioned(
@@ -406,17 +438,24 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 ),
                 const PositionedDirectional(
                   end: 20,
-                  bottom: 130,
+                  bottom: 176,
                   child: UpNextCard(),
                 ),
-                if (widget.launch.showDiagnostics)
+                // "Skip intro" / "Next episode" (task 8.9).
+                const PositionedDirectional(
+                  end: 24,
+                  bottom: 186,
+                  child: SkipIntroButton(),
+                ),
+                if (widget.launch.showDiagnostics ||
+                    ref.watch(statsOverlayProvider))
                   const PositionedDirectional(
                     top: 56,
                     end: 12,
                     child: DiagnosticsOverlay(),
                   ),
                 const Positioned(
-                  bottom: 150,
+                  bottom: 196,
                   left: 0,
                   right: 0,
                   child: Center(child: ResumeBanner()),
@@ -432,7 +471,16 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                         bottom: false,
                         child: WindowTitleBar(
                           showButtons: !fullScreen,
+                          // Harbor's taller top bar (task 9.2).
+                          // Only over a video: the library keeps its
+                          // header right under the window buttons.
+                          height: !hasMedia
+                              ? KyndrelTokens.titleBarHeight
+                              : compact
+                              ? 64
+                              : 88,
                           child: TopBarContent(
+                            compact: compact,
                             onBack: () => unawaited(
                               ref.read(playerServiceProvider).close(),
                             ),
@@ -468,7 +516,6 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                             : const BottomControls(
                                 leftActions: [DownloadButton()],
                                 rightActions: [
-                                  PlaylistButton(),
                                   FitMenuButton(),
                                   TranslateButton(),
                                   SubtitlesButton(),
@@ -481,12 +528,20 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                       ),
                     ),
                   ),
+                // Harbor's "Up next" tab on the right edge (task 9.2).
+                if (hasMedia && !locked && !compact && !queueOpen)
+                  PositionedDirectional(
+                    end: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(child: fade(const UpNextTab())),
+                  ),
                 // Phones: panels span the width above the controls.
                 if (panelOpen && hasMedia)
                   PositionedDirectional(
                     start: compact ? 8 : null,
                     end: compact ? 8 : 20,
-                    bottom: compact ? 8 : 130,
+                    bottom: compact ? 8 : 176,
                     child: _panelBox(
                       compact: compact,
                       screen: screen,
@@ -497,7 +552,7 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                   PositionedDirectional(
                     start: compact ? 8 : null,
                     end: compact ? 8 : 20,
-                    bottom: compact ? 8 : 130,
+                    bottom: compact ? 8 : 176,
                     child: _panelBox(
                       compact: compact,
                       screen: screen,

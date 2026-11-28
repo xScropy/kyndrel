@@ -9,6 +9,21 @@ import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// When library videos get their coarse storyboard in advance (task 8.4).
+enum LibraryPreviews {
+  /// Always on desktop; only while charging on phones.
+  auto,
+  always,
+  charging,
+  off,
+}
+
+/// Harbor's seek bar looks (task 9.3).
+enum SeekBarStyle { flat, glass, pinstripe, rainbow }
+
+/// The seek bar's thumb (task 9.3).
+enum SeekDotShape { circle, square, hidden }
+
 /// User preferences (shared_preferences). Persisted on every change.
 @immutable
 class AppSettings {
@@ -35,6 +50,14 @@ class AppSettings {
     this.openSubtitlesApiKey = '',
     this.subtitleLanguages = 'en',
     this.boostWarningSeen = false,
+    this.volumeBoostMax = 500,
+    this.showClock = true,
+    this.seekBarStyle = SeekBarStyle.flat,
+    this.seekBarHeight = 6,
+    this.seekBarColor = 0xFFF4A25C,
+    this.seekDotShape = SeekDotShape.circle,
+    this.seekDotSize = 16,
+    this.seekDotOnHover = true,
     this.autoPlayNextEpisode = true,
     this.tmdbApiKey = '',
     this.screenshotFolder = '',
@@ -62,9 +85,25 @@ class AppSettings {
     this.mpvOptions = '',
     this.checkForUpdates = true,
     this.offerCrashReports = true,
+    this.libraryPreviews = LibraryPreviews.auto,
+    this.frameCacheMb = 500,
+    this.incognito = false,
+    this.amoledBlack = false,
+    this.rememberFileSettings = true,
+    this.showHeatmap = true,
+    this.skipIntro = true,
+    this.privatePin = '',
+    this.browseServers = const [],
+    this.audioPassthrough = false,
+    this.audioDevice = 'auto',
+    this.downmixStereo = false,
+    this.hideSoundDescriptions = false,
+    this.customCommands = const [],
+    this.mouseMiddle = 'playPause',
+    this.mouseSide = 'seek',
   });
 
-  /// Last volume, 0–400.
+  /// Last volume, 0–500.
   final double volume;
 
   /// Length of the back/forward skip and the ←/→ seek (task 1.5).
@@ -125,6 +164,23 @@ class AppSettings {
 
   /// The one-time warning about boosting above 100 % has been shown.
   final bool boostWarningSeen;
+
+  /// The top of the volume slider, 100–500 % (task 9.1); 100 turns the
+  /// boost off.
+  final double volumeBoostMax;
+
+  /// Harbor's clock in full screen: the time and when the film ends.
+  final bool showClock;
+
+  /// Harbor's seek bar (task 9.3): style, thickness at rest (3–14 px),
+  /// fill colour (ARGB, one of KyndrelColors.seekColors), thumb shape and
+  /// size (8–32 px), and whether the thumb shows only on hover.
+  final SeekBarStyle seekBarStyle;
+  final double seekBarHeight;
+  final int seekBarColor;
+  final SeekDotShape seekDotShape;
+  final double seekDotSize;
+  final bool seekDotOnHover;
 
   /// Opening an episode queues the next ones from the same folder (3.2).
   final bool autoPlayNextEpisode;
@@ -189,7 +245,77 @@ class AppSettings {
   /// After a crash, offer to open a pre-filled bug report (5.7).
   final bool offerCrashReports;
 
+  /// When library videos get their storyboard in advance (task 8.4).
+  final LibraryPreviews libraryPreviews;
+
+  /// Size limit of the storyboard cache in MB (task 8.4).
+  final int frameCacheMb;
+
+  /// Nothing goes into history, resume points or per-file settings
+  /// (task 8.8).
+  final bool incognito;
+
+  /// Pure black backgrounds for OLED screens (task 8.8).
+  final bool amoledBlack;
+
+  /// Each file keeps its own tracks, speed, zoom and delays (task 8.8).
+  final bool rememberFileSettings;
+
+  /// The "most replayed" shading above the seek bar (task 8.10).
+  final bool showHeatmap;
+
+  /// Offer "Skip intro" where an episode's opening is known (task 8.9).
+  final bool skipIntro;
+
+  /// Hash of the PIN that opens private folders; empty when none is set
+  /// (task 8.6). A privacy curtain, not encryption: the files stay where
+  /// they are.
+  final String privatePin;
+
+  /// Saved network servers for Browse, as JSON (task 8.7). Passwords are
+  /// not saved: they are asked for once per session.
+  final List<String> browseServers;
+
+  /// AC-3/DTS/TrueHD go untouched to an AV receiver (task 8.8).
+  final bool audioPassthrough;
+
+  /// mpv's audio output device (`audio-device`); `auto` follows the
+  /// system's default.
+  final String audioDevice;
+
+  /// 5.1 and 7.1 mixed down to two channels (task 9.4, Harbor): laptop
+  /// speakers and headphones that claim surround otherwise lose the
+  /// centre channel, where the dialogue is, or go silent.
+  final bool downmixStereo;
+
+  /// Text subtitles without "[door creaks]" and "JOHN:" (task 9.5).
+  final bool hideSoundDescriptions;
+
+  /// mpv's guess for subtitle files that aren't UTF-8: Windows-1256 when
+  /// Arabic is wanted, else its own detector (task 9.5).
+  String get subtitleCodepage =>
+      language == 'ar' ||
+          subtitleLanguages
+              .split(',')
+              .map((l) => l.trim().toLowerCase())
+              .any((l) => l == 'ar' || l == 'ara')
+      ? 'cp1256'
+      : 'auto';
+
+  /// The user's quick commands, `Label | mpv command` each (task 8.8).
+  final List<String> customCommands;
+
+  /// What the middle mouse button does: `playPause`, `mute`, `fullscreen`,
+  /// `screenshot` or `none` (task 8.8).
+  final String mouseMiddle;
+
+  /// What the back/forward mouse buttons do: `seek`, `playlist` or
+  /// `none` (task 8.8).
+  final String mouseSide;
+
   static const hideChoices = [2, 3, 5, 10];
+
+  static const frameCacheChoices = [200, 500, 1000, 2000];
 
   static const skipChoices = [5, 10, 15, 30, 60];
   static const upNextChoices = [0, 5, 10, 15, 30];
@@ -217,6 +343,14 @@ class AppSettings {
     String? openSubtitlesApiKey,
     String? subtitleLanguages,
     bool? boostWarningSeen,
+    double? volumeBoostMax,
+    bool? showClock,
+    SeekBarStyle? seekBarStyle,
+    double? seekBarHeight,
+    int? seekBarColor,
+    SeekDotShape? seekDotShape,
+    double? seekDotSize,
+    bool? seekDotOnHover,
     bool? autoPlayNextEpisode,
     String? tmdbApiKey,
     String? screenshotFolder,
@@ -244,6 +378,22 @@ class AppSettings {
     String? mpvOptions,
     bool? checkForUpdates,
     bool? offerCrashReports,
+    LibraryPreviews? libraryPreviews,
+    int? frameCacheMb,
+    bool? incognito,
+    bool? amoledBlack,
+    bool? rememberFileSettings,
+    bool? showHeatmap,
+    bool? skipIntro,
+    String? privatePin,
+    List<String>? browseServers,
+    bool? audioPassthrough,
+    String? audioDevice,
+    bool? downmixStereo,
+    bool? hideSoundDescriptions,
+    List<String>? customCommands,
+    String? mouseMiddle,
+    String? mouseSide,
   }) {
     return AppSettings(
       volume: volume ?? this.volume,
@@ -268,6 +418,14 @@ class AppSettings {
       openSubtitlesApiKey: openSubtitlesApiKey ?? this.openSubtitlesApiKey,
       subtitleLanguages: subtitleLanguages ?? this.subtitleLanguages,
       boostWarningSeen: boostWarningSeen ?? this.boostWarningSeen,
+      volumeBoostMax: volumeBoostMax ?? this.volumeBoostMax,
+      showClock: showClock ?? this.showClock,
+      seekBarStyle: seekBarStyle ?? this.seekBarStyle,
+      seekBarHeight: seekBarHeight ?? this.seekBarHeight,
+      seekBarColor: seekBarColor ?? this.seekBarColor,
+      seekDotShape: seekDotShape ?? this.seekDotShape,
+      seekDotSize: seekDotSize ?? this.seekDotSize,
+      seekDotOnHover: seekDotOnHover ?? this.seekDotOnHover,
       autoPlayNextEpisode: autoPlayNextEpisode ?? this.autoPlayNextEpisode,
       tmdbApiKey: tmdbApiKey ?? this.tmdbApiKey,
       screenshotFolder: screenshotFolder ?? this.screenshotFolder,
@@ -298,6 +456,23 @@ class AppSettings {
       mpvOptions: mpvOptions ?? this.mpvOptions,
       checkForUpdates: checkForUpdates ?? this.checkForUpdates,
       offerCrashReports: offerCrashReports ?? this.offerCrashReports,
+      libraryPreviews: libraryPreviews ?? this.libraryPreviews,
+      frameCacheMb: frameCacheMb ?? this.frameCacheMb,
+      incognito: incognito ?? this.incognito,
+      amoledBlack: amoledBlack ?? this.amoledBlack,
+      rememberFileSettings: rememberFileSettings ?? this.rememberFileSettings,
+      showHeatmap: showHeatmap ?? this.showHeatmap,
+      skipIntro: skipIntro ?? this.skipIntro,
+      privatePin: privatePin ?? this.privatePin,
+      browseServers: browseServers ?? this.browseServers,
+      audioPassthrough: audioPassthrough ?? this.audioPassthrough,
+      audioDevice: audioDevice ?? this.audioDevice,
+      downmixStereo: downmixStereo ?? this.downmixStereo,
+      hideSoundDescriptions:
+          hideSoundDescriptions ?? this.hideSoundDescriptions,
+      customCommands: customCommands ?? this.customCommands,
+      mouseMiddle: mouseMiddle ?? this.mouseMiddle,
+      mouseSide: mouseSide ?? this.mouseSide,
     );
   }
 }
@@ -341,7 +516,7 @@ class SettingsRepository {
       }
     }
     return AppSettings(
-      volume: (_prefs.getDouble('volume') ?? d.volume).clamp(0, 400),
+      volume: (_prefs.getDouble('volume') ?? d.volume).clamp(0, 500),
       skipSeconds: _prefs.getInt('skipSeconds') ?? d.skipSeconds,
       upNextSeconds: _prefs.getInt('upNextSeconds') ?? d.upNextSeconds,
       libraryFolders:
@@ -373,6 +548,20 @@ class SettingsRepository {
           _prefs.getString('subtitleLanguages') ?? d.subtitleLanguages,
       boostWarningSeen:
           _prefs.getBool('boostWarningSeen') ?? d.boostWarningSeen,
+      volumeBoostMax: (_prefs.getDouble('volumeBoostMax') ?? d.volumeBoostMax)
+          .clamp(100, 500)
+          .toDouble(),
+      showClock: _prefs.getBool('showClock') ?? d.showClock,
+      seekBarStyle: _enum(SeekBarStyle.values, 'seekBarStyle', d.seekBarStyle),
+      seekBarHeight: (_prefs.getDouble('seekBarHeight') ?? d.seekBarHeight)
+          .clamp(3, 14)
+          .toDouble(),
+      seekBarColor: _prefs.getInt('seekBarColor') ?? d.seekBarColor,
+      seekDotShape: _enum(SeekDotShape.values, 'seekDotShape', d.seekDotShape),
+      seekDotSize: (_prefs.getDouble('seekDotSize') ?? d.seekDotSize)
+          .clamp(8, 32)
+          .toDouble(),
+      seekDotOnHover: _prefs.getBool('seekDotOnHover') ?? d.seekDotOnHover,
       autoPlayNextEpisode:
           _prefs.getBool('autoPlayNextEpisode') ?? d.autoPlayNextEpisode,
       tmdbApiKey: _prefs.getString('tmdbApiKey') ?? d.tmdbApiKey,
@@ -413,6 +602,30 @@ class SettingsRepository {
       checkForUpdates: _prefs.getBool('checkForUpdates') ?? d.checkForUpdates,
       offerCrashReports:
           _prefs.getBool('offerCrashReports') ?? d.offerCrashReports,
+      libraryPreviews: _enum(
+        LibraryPreviews.values,
+        'libraryPreviews',
+        d.libraryPreviews,
+      ),
+      frameCacheMb: _prefs.getInt('frameCacheMb') ?? d.frameCacheMb,
+      incognito: _prefs.getBool('incognito') ?? d.incognito,
+      amoledBlack: _prefs.getBool('amoledBlack') ?? d.amoledBlack,
+      rememberFileSettings:
+          _prefs.getBool('rememberFileSettings') ?? d.rememberFileSettings,
+      showHeatmap: _prefs.getBool('showHeatmap') ?? d.showHeatmap,
+      skipIntro: _prefs.getBool('skipIntro') ?? d.skipIntro,
+      privatePin: _prefs.getString('privatePin') ?? d.privatePin,
+      browseServers: _prefs.getStringList('browseServers') ?? d.browseServers,
+      audioPassthrough:
+          _prefs.getBool('audioPassthrough') ?? d.audioPassthrough,
+      audioDevice: _prefs.getString('audioDevice') ?? d.audioDevice,
+      downmixStereo: _prefs.getBool('downmixStereo') ?? d.downmixStereo,
+      hideSoundDescriptions:
+          _prefs.getBool('hideSoundDescriptions') ?? d.hideSoundDescriptions,
+      customCommands:
+          _prefs.getStringList('customCommands') ?? d.customCommands,
+      mouseMiddle: _prefs.getString('mouseMiddle') ?? d.mouseMiddle,
+      mouseSide: _prefs.getString('mouseSide') ?? d.mouseSide,
     );
   }
 
@@ -466,6 +679,14 @@ class SettingsRepository {
     await _prefs.setString('openSubtitlesApiKey', s.openSubtitlesApiKey);
     await _prefs.setString('subtitleLanguages', s.subtitleLanguages);
     await _prefs.setBool('boostWarningSeen', s.boostWarningSeen);
+    await _prefs.setDouble('volumeBoostMax', s.volumeBoostMax);
+    await _prefs.setBool('showClock', s.showClock);
+    await _prefs.setString('seekBarStyle', s.seekBarStyle.name);
+    await _prefs.setDouble('seekBarHeight', s.seekBarHeight);
+    await _prefs.setInt('seekBarColor', s.seekBarColor);
+    await _prefs.setString('seekDotShape', s.seekDotShape.name);
+    await _prefs.setDouble('seekDotSize', s.seekDotSize);
+    await _prefs.setBool('seekDotOnHover', s.seekDotOnHover);
     await _prefs.setBool('autoPlayNextEpisode', s.autoPlayNextEpisode);
     await _prefs.setString('tmdbApiKey', s.tmdbApiKey);
     await _prefs.setString('screenshotFolder', s.screenshotFolder);
@@ -495,6 +716,22 @@ class SettingsRepository {
     await _prefs.setString('mpvOptions', s.mpvOptions);
     await _prefs.setBool('checkForUpdates', s.checkForUpdates);
     await _prefs.setBool('offerCrashReports', s.offerCrashReports);
+    await _prefs.setString('libraryPreviews', s.libraryPreviews.name);
+    await _prefs.setInt('frameCacheMb', s.frameCacheMb);
+    await _prefs.setBool('incognito', s.incognito);
+    await _prefs.setBool('amoledBlack', s.amoledBlack);
+    await _prefs.setBool('rememberFileSettings', s.rememberFileSettings);
+    await _prefs.setBool('showHeatmap', s.showHeatmap);
+    await _prefs.setBool('skipIntro', s.skipIntro);
+    await _prefs.setString('privatePin', s.privatePin);
+    await _prefs.setStringList('browseServers', s.browseServers);
+    await _prefs.setBool('audioPassthrough', s.audioPassthrough);
+    await _prefs.setString('audioDevice', s.audioDevice);
+    await _prefs.setBool('downmixStereo', s.downmixStereo);
+    await _prefs.setBool('hideSoundDescriptions', s.hideSoundDescriptions);
+    await _prefs.setStringList('customCommands', s.customCommands);
+    await _prefs.setString('mouseMiddle', s.mouseMiddle);
+    await _prefs.setString('mouseSide', s.mouseSide);
   }
 }
 

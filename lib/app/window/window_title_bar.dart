@@ -13,9 +13,18 @@ import 'package:material_ui/material_ui.dart';
 /// maximizes or restores. [child] fills the draggable area (the top bar's
 /// back button, title and badges in task 1.3).
 class WindowTitleBar extends ConsumerWidget {
-  const new({this.child, this.showButtons = true, super.key});
+  const new({
+    this.child,
+    this.showButtons = true,
+    this.height = KyndrelTokens.titleBarHeight,
+    super.key,
+  });
 
   final Widget? child;
+
+  /// Taller over the player (Harbor's top bar, task 9.2): the window
+  /// buttons stay at the top and the scrim fades out further down.
+  final double height;
 
   /// False in full screen, where there's no window to manage.
   final bool showButtons;
@@ -24,13 +33,23 @@ class WindowTitleBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final window = ref.watch(windowServiceProvider);
     return Container(
-      height: KyndrelTokens.titleBarHeight,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [KyndrelColors.titleBarScrim, Color(0x00000000)],
-        ),
+      height: height,
+      decoration: BoxDecoration(
+        gradient: height > KyndrelTokens.titleBarHeight
+            ? const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  KyndrelColors.scrimTop,
+                  KyndrelColors.scrimFaint,
+                  KyndrelColors.scrimClear,
+                ],
+              )
+            : const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [KyndrelColors.titleBarScrim, KyndrelColors.scrimClear],
+              ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -54,7 +73,13 @@ class WindowTitleBar extends ConsumerWidget {
           ),
           if (showButtons &&
               ref.watch(platformCapabilitiesProvider).hasWindowControls)
-            const WindowButtons(),
+            const Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                height: KyndrelTokens.titleBarHeight,
+                child: WindowButtons(),
+              ),
+            ),
         ],
       ),
     );

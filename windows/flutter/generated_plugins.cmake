@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  battery_plus
   desktop_drop
   file_selector_windows
   flutter_volume_controller

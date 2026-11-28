@@ -5,19 +5,27 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
 import 'package:kyndrel/core/player/storyboard.dart';
-import 'package:kyndrel/core/utils/hashing.dart';
+import 'package:kyndrel/core/player/storyboard_writer.dart';
+import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
 /// Preview frames on Android (task 6.4): `MediaMetadataRetriever` through
 /// `kyndrel/frames` (MainActivity.kt). It reads `content://` files, uses
 /// the hardware decoder and needs no second mpv. Same cache layout as
-/// [PreviewThumbnailer]: `<cache>/previews/<hash>/<second>.jpg`.
+/// [PreviewThumbnailer]: `<cache>/previews/<key>/<second>.jpg`.
 class AndroidFrameSource implements PreviewSource {
-  new({required this.cacheDir, MethodChannel? channel})
-    : _channel = channel ?? const MethodChannel('kyndrel/frames');
+  new({
+    required this.cacheDir,
+    MethodChannel? channel,
+    this.frameTimeout = defaultFrameTimeout,
+  }) : _channel = channel ?? const MethodChannel('kyndrel/frames');
 
   /// Bigger than the desktop's: the phone preview is ~40 % of the screen.
   static const width = 480;
+
+  /// The most one frame may take before it is given up (task 8.11).
+  static const defaultFrameTimeout = Duration(seconds: 15);
+  final Duration frameTimeout;
 
   final Directory cacheDir;
   final MethodChannel _channel;
@@ -35,7 +43,7 @@ class AndroidFrameSource implements PreviewSource {
   String _path(String source, int second, {bool exact = false}) => p.join(
     cacheDir.path,
     'previews',
-    fnv1a64(source),
+    mediaCacheKey(source),
     exact ? '${second}x.jpg' : '$second.jpg',
   );
 
@@ -45,6 +53,7 @@ class AndroidFrameSource implements PreviewSource {
     Duration at,
     Duration duration, {
     bool exact = false,
+    bool background = false,
   }) {
     // Network streams: decoding a second copy costs data and time.
     if (source.startsWith('http://') || source.startsWith('https://')) {
@@ -53,9 +62,9 @@ class AndroidFrameSource implements PreviewSource {
     final step = stepFor(duration).inSeconds;
     final second = exact ? at.inSeconds : (at.inSeconds ~/ step) * step;
     final path = _path(source, second, exact: exact);
-    if (File(path).existsSync()) return Future.value(path);
     final pending = _waiting[path];
     if (pending != null) return pending.future;
+    if (File(path).existsSync()) return Future.value(path);
     final completer = _waiting[path] = Completer<String?>();
     // Only the newest few positions matter while the finger moves.
     while (_queue.length >= 3) {
@@ -75,18 +84,24 @@ class AndroidFrameSource implements PreviewSource {
         final r = _queue.removeLast();
         String? result;
         try {
-          final ok = await _channel.invokeMethod<bool>('frame', {
-            'source': r.source,
-            'ms': r.second * 1000,
-            'width': width,
-            'path': r.path,
-            // The exact frame decodes from the keyframe on: slower.
-            'exact': r.exact,
-          });
+          final ok = await _channel
+              .invokeMethod<bool>('frame', {
+                'source': r.source,
+                'ms': r.second * 1000,
+                'width': width,
+                'path': r.path,
+                // The exact frame decodes from the keyframe on: slower.
+                'exact': r.exact,
+              })
+              .timeout(frameTimeout);
           if ((ok ?? false) && File(r.path).existsSync()) result = r.path;
         } on PlatformException {
           result = null;
         } on MissingPluginException {
+          result = null;
+        } on TimeoutException {
+          // A file the retriever chokes on: no picture, the queue goes on
+          // (task 8.11).
           result = null;
         }
         _waiting.remove(r.path)?.complete(result);
@@ -97,31 +112,104 @@ class AndroidFrameSource implements PreviewSource {
   }
 }
 
-/// Storyboards on Android (task 7.2): MediaMetadataRetriever walks the
-/// video on its own thread (`storyboard` on `kyndrel/frames`), nearest
-/// keyframe for each step, writing `<i>.jpg` into the storyboard folder.
+/// Storyboards on Android (tasks 7.2, 8.2): MediaMetadataRetriever walks
+/// the video on its own thread (`storyboard` on `kyndrel/frames`), level by
+/// level, nearest keyframe for each step, writing `<i>.jpg` tiles. Dart then
+/// packs them into sheets in a background isolate.
+///
+/// The native loop reports nothing while it runs, so the tiles folder is
+/// listed (asynchronously) once a second to show frames as they appear.
 class AndroidStoryboardSource implements StoryboardSource {
   new({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel('kyndrel/frames');
 
   final MethodChannel _channel;
 
+  /// How often the tiles folder is checked during a level.
+  static const progressInterval = Duration(seconds: 1);
+
+  /// The most one level may take (300 frames at a slow 1 s each, and some).
+  static const levelTimeout = Duration(minutes: 10);
+
   @override
-  Future<bool> render(Storyboard board) async {
+  void focus(Duration at) {
+    // The native loop goes in order; the coarse level covers the video.
+  }
+
+  @override
+  Future<bool> render(
+    Storyboard board, {
+    void Function(Storyboard board)? onChange,
+    int? maxLevel,
+  }) async {
+    // Packing waits for each level's end: the native loop skips frames
+    // whose tiles exist, so they must stay until then.
+    final writer = StoryboardWriter(
+      board,
+      onChange: onChange,
+      packEarly: false,
+    );
+    final levels = [
+      for (final l in board.levels)
+        if (maxLevel == null || l.spec.index <= maxLevel) l,
+    ];
+    for (final level in levels) {
+      if (level.complete) continue;
+      final n = level.spec.index;
+      final dir = board.tilesDirectory(n);
+      await Directory(dir).create(recursive: true);
+      final progress = Timer.periodic(
+        progressInterval,
+        (_) => unawaited(_report(writer, n, dir)),
+      );
+      bool? ok;
+      try {
+        ok = await _channel
+            .invokeMethod<bool>('storyboard', {
+              'source': board.source,
+              'dir': dir,
+              'stepMs': level.spec.step.inMilliseconds,
+              'count': level.spec.count,
+              'width': level.spec.width,
+            })
+            .timeout(levelTimeout);
+      } on PlatformException {
+        ok = false;
+      } on MissingPluginException {
+        ok = false;
+      } on TimeoutException {
+        // Stuck on a file: stop the native loop and try another time.
+        await cancel();
+        ok = false;
+      } finally {
+        progress.cancel();
+      }
+      if (!(ok ?? false)) return false;
+      await _report(writer, n, dir);
+      if (writer.board.levels[n].tiles.isEmpty &&
+          writer.board.levels[n].sheets.isEmpty) {
+        return false; // Nothing could be decoded.
+      }
+      await writer.finishLevel(n);
+    }
+    return levels.every((l) => writer.board.levels[l.spec.index].complete);
+  }
+
+  /// Tells [writer] about tiles the native loop wrote.
+  static Future<void> _report(
+    StoryboardWriter writer,
+    int level,
+    String dir,
+  ) async {
+    final count = writer.board.levels[level].spec.count;
     try {
-      final ok = await _channel.invokeMethod<bool>('storyboard', {
-        'source': board.source,
-        'dir': board.directory,
-        'stepMs': board.step.inMilliseconds,
-        'count': board.count,
-        'width': Storyboard.width,
-      });
-      if (ok ?? false) board.writeIndex();
-      return ok ?? false;
-    } on PlatformException {
-      return false;
-    } on MissingPluginException {
-      return false;
+      await for (final f in Directory(dir).list()) {
+        if (!f.path.endsWith('.jpg')) continue;
+        final i = int.tryParse(p.basenameWithoutExtension(f.path));
+        if (i != null && i < count) writer.tileWritten(level, i);
+      }
+    } on FileSystemException {
+      // Gone: the render was cancelled.
     }
   }
 

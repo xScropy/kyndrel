@@ -3,6 +3,121 @@
 All notable changes to Kyndrel. The release workflow copies a version's
 section into its GitHub release.
 
+## [2.0.0] - 2026-11-28
+
+A new look: the player now takes after Harbor's, with its icons and
+layout, louder volume, and much better subtitles, especially Arabic ones.
+
+### New player look
+- Harbor's layout and icons: a glass back button and a larger title at
+  the top; volume and download on the left; Previous / −10 / play / +10 /
+  Next in the middle; the tools on the right; an "Up next" tab on the
+  right edge for the queue.
+- Buttons light up softly on hover; a green dot shows when subtitles are
+  on; the seek buttons swing when pressed.
+- In full screen, a clock shows the time and when the film will end.
+- The seek bar comes in four styles (flat, glass, pinstripe, rainbow) with
+  your choice of colour, thickness and thumb (Settings › Appearance).
+
+### Sound
+- Volume goes up to 500 %, on Harbor's slider: 100 % sits at about two
+  thirds, and the boost above it turns from orange to red. A glass panel
+  shows the volume when you change it with the keys or the wheel.
+  Settings › Audio › Boost limit sets the top (100–500 %).
+- Downmix to stereo: 5.1 films on laptop speakers and headphones keep
+  their dialogue (or any sound at all).
+- When the sound device fails, Kyndrel now says so and tries again,
+  instead of playing in silence. Settings › Audio › Output device picks
+  where the sound goes.
+- A stronger night mode.
+
+### Subtitles
+- Old Arabic subtitles (Windows-1256) and other old encodings show
+  correctly instead of as gibberish.
+- Online search works without an account: two free sources are searched
+  along with OpenSubtitles, and results are ordered by how well they fit
+  your file (shown in %).
+- Hide sound descriptions ("[door creaks]", "JOHN:").
+- A subtitle frame rate setting for subtitles made for another release.
+
+### Picture
+- The Fast, Standard and High quality presets now set more of mpv's
+  options, as Harbor's Performance, Balanced and Quality do.
+
+### Fixes
+- Browse no longer freezes on Windows while checking empty card readers,
+  DVD drives or disconnected network drives.
+
+## [1.3.0] - 2026-11-26
+
+Lighter and smoother: scrubbing like YouTube, a library like MX Player, a
+Browse section for folders and network servers, and many player extras.
+
+### Scrubbing
+- Storyboards now come in levels like YouTube's: a small sheet covering
+  the whole video first, then finer frames, made coarse to fine so every
+  part of the timeline has a frame within seconds; frames near your finger
+  come first.
+- Library videos get their coarse storyboard while Kyndrel is idle
+  (Settings > Library: always, only while charging, or off), so a video
+  opened from the library scrubs at once.
+- The seek bar only repaints while you drag (no rebuilds), sheets around
+  your finger are decoded ahead, and the exact frame fades in when you
+  rest.
+
+### Library
+- Folders, All videos, Recently added and Playlists; a continue-watching
+  row; list, grid (three sizes) or compact; filters (unwatched, HD,
+  subtitles); ascending/descending; each folder remembers its order and
+  layout.
+- A fast-scroller with a letter, month or size bubble; thumbnails flip
+  through the video's scenes when you hover or slide a finger across them.
+- Long-press to select: play, queue, add to a playlist, mark watched or
+  unwatched; on computers also rename, move, and move to the trash.
+- Folders can be pinned, hidden, or made private behind a PIN.
+- Saved playlists, plus "Unwatched" and "Added this month".
+- The library updates itself when files are added or removed (computers),
+  or when you come back to the app after a while.
+
+### Browse
+- A new section: your device's folders and drives, and network servers
+  (WebDAV, FTP, media servers found on the network; SMB and SFTP open by
+  address).
+
+### Player
+- Bookmarks (B, Ctrl+B), jump to time (Ctrl+G), playback statistics
+  (Shift+I), HW / HW+ / SW decoding (H, or the badge at the top).
+- Each file remembers its audio and subtitle tracks, speed, delays, fit
+  and zoom. Incognito leaves no history, resume points or file settings.
+- "Skip intro" and "Next episode": from chapters, from a mark you set with
+  Shift+M, or found by comparing episodes of a season.
+- A "most replayed" curve over the seek bar from what you rewatch (kept
+  on your device).
+- Picture adjustments, audio passthrough, external audio tracks, ZIP
+  subtitles, a list of subtitle lines (Ctrl+T), your own quick commands
+  (Ctrl+K), mouse buttons, saving the A-B loop as a clip or GIF (with
+  ffmpeg), hold-for-2x with a slide to change speed, a swipe for the next
+  file on phones, and a pure black theme.
+
+### Lighter
+- One hidden player for storyboards, previews and the library instead of
+  three, started only when needed and closed after 30 s idle.
+- Smaller read-ahead buffers for local files; a cap on decoded images;
+  nothing ticks while idle.
+- A big library's first scan no longer slows down as it goes.
+
+### Fixes
+- The desktop storyboard waited 3 s for every frame after the first.
+- A file replaced under the same name showed the old one's thumbnails.
+- Storyboards with missing frames were marked finished on Android.
+- A file watched in incognito could be added to history when the next
+  one opened.
+
+### Known limitations
+- Rename, move, delete and share are not available for Android's media
+  files yet.
+- Display frame-rate matching is not done.
+
 ## [1.2.0] - 2026-11-20
 
 A library and a music player, and a seek bar that shows the scene under

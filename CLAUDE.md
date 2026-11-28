@@ -3,7 +3,7 @@ Flutter video player on libmpv via media_kit. Dark UI, orange accent (#F26A1B).
 - Only core/player/PlayerService touches libmpv. UI uses Riverpod providers.
   media_kit is imported only in `core/player/media_kit_backend.dart` and
   `core/player/player_video_view.dart`.
-- Max volume is 400 (volume-max=400). Slider range 0..400.
+- Max volume is 500 (volume-max=500). Slider range 0..500 (100 % at 64 % of the track, as in Harbor; the top is the "Boost limit" setting).
 - Follow PLAN.md; do tasks in order and tick the checkbox when done.
 - Before finishing a task: `flutter analyze` and `flutter test` must pass.
 - Keep commits small, one task per commit, message format: `feat(subtitles): load external file (2.6)`.

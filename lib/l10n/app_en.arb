@@ -24,6 +24,17 @@
   },
   "muteTooltip": "Mute (M)",
   "unmuteTooltip": "Unmute (M)",
+  "volumeMuted": "Muted",
+  "previous": "Previous",
+  "next": "Next",
+  "endsAt": "Ends at {time}",
+  "@endsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "volume": "Volume",
   "fullscreenTooltip": "Full screen (F)",
   "exitFullscreenTooltip": "Exit full screen (F)",
@@ -312,5 +323,114 @@
   "musicWavesSetting": "Waves that follow the music",
   "musicWavesHelp": "Orange waves under the record move with the loudness.",
   "reduceMotionSetting": "Less motion",
-  "reduceMotionHelp": "The record stays still and the waves move gently."
+  "reduceMotionHelp": "The record stays still and the waves move gently.",
+  "libraryViewRecent": "Recently added",
+  "libraryViewPlaylists": "Playlists",
+  "libraryContinue": "Continue watching",
+  "librarySelected": "{count, plural, =1{1 selected} other{{count} selected}}",
+  "@librarySelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "librarySelectAll": "Select all",
+  "libraryAddToPlaylist": "Add to playlist",
+  "libraryNewPlaylist": "New playlist",
+  "libraryPlaylistName": "Playlist name",
+  "libraryRename": "Rename",
+  "libraryDelete": "Delete",
+  "libraryDeleteConfirm": "{count, plural, =1{Move this file to the trash?} other{Move {count} files to the trash?}}",
+  "@libraryDeleteConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMove": "Move to…",
+  "libraryShare": "Share",
+  "libraryMarkWatched": "Mark as watched",
+  "libraryMarkUnwatched": "Mark as unwatched",
+  "libraryPin": "Pin to top",
+  "libraryUnpin": "Unpin",
+  "libraryHide": "Hide folder",
+  "libraryUnhide": "Show folder",
+  "libraryShowHidden": "Show hidden folders",
+  "libraryMakePrivate": "Make private",
+  "libraryMakePublic": "Remove from private",
+  "libraryPrivate": "Private folders",
+  "libraryLock": "Lock private folders",
+  "libraryPinTitle": "Enter your PIN",
+  "librarySetPin": "Choose a PIN (4–8 digits)",
+  "libraryWrongPin": "Wrong PIN",
+  "libraryPlayAll": "Play all",
+  "libraryShuffle": "Shuffle",
+  "libraryDescending": "Newest / largest first",
+  "layoutCompact": "Compact",
+  "libraryGridSmall": "Small grid",
+  "libraryGridLarge": "Large grid",
+  "libraryFilterUnwatched": "Unwatched only",
+  "libraryFilterHd": "HD and above",
+  "libraryFilterSubtitles": "With subtitles",
+  "libraryLastPlayed": "Last played",
+  "libraryPlaylistEmpty": "No playlists yet. Select videos and add them to one.",
+  "librarySmartUnwatched": "Unwatched videos",
+  "librarySmartRecent": "Added this month",
+  "libraryActionFailed": "Couldn't do that: {name}",
+  "@libraryActionFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistRename": "Rename playlist",
+  "playlistDelete": "Delete playlist",
+  "playlistRemove": "Remove from playlist",
+  "libraryFilters": "Filters",
+  "libraryFolderActions": "Folder",
+  "libraryBrowse": "Browse",
+  "browseDevice": "This device",
+  "browseNetwork": "Network",
+  "browseHome": "Home folder",
+  "browseRoot": "Whole disk",
+  "browseAddServer": "Add server",
+  "browseServerKind": "Type",
+  "browseServerName": "Name",
+  "browseServerAddress": "Address",
+  "browseUser": "User name (optional)",
+  "browsePassword": "Password",
+  "browseSave": "Save",
+  "browseRemove": "Remove server",
+  "browseSearching": "Looking for media servers…",
+  "browseNoServers": "No media servers found on this network.",
+  "browseEmpty": "No folders or playable files here.",
+  "browseFailed": "Couldn't open this folder: {reason}",
+  "@browseFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "browseOpenOnly": "This kind of server can't be listed: its files open by address.",
+  "browseFind": "Find in this folder",
+  "bookmarks": "Bookmarks",
+  "bookmarksEmpty": "No bookmarks yet. Press B to add one where you are.",
+  "bookmarkAdd": "Bookmark here",
+  "jumpToTime": "Jump to time",
+  "jumpToTimeHint": "1:23:45, 83:10, 90 or 50%",
+  "decoderTooltip": "Decoding: hardware, hardware with copy, or software",
+  "loadAudioFile": "Load audio file",
+  "libraryForget": "Remove from history",
+  "subtitleLines": "Subtitle lines",
+  "subtitleLinesUnavailable": "Lines can be listed for subtitle files. Load one, or pick a file track.",
+  "copy": "Copy",
+  "quickCommands": "Quick commands",
+  "quickCommandsEmpty": "No quick commands yet. Add them in Settings › Advanced.",
+  "skipIntro": "Skip intro",
+  "skipCredits": "Skip credits",
+  "nextEpisode": "Next episode"
 }

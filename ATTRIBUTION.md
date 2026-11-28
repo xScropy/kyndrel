@@ -21,6 +21,7 @@ is out of date. Do not edit by hand.
 | Inter font | `assets/fonts/Inter.ttf` | SIL OFL 1.1 (`assets/fonts/OFL.txt`) | [rsms/inter](https://github.com/rsms/inter) |
 | Noto Sans Arabic font | `assets/fonts/NotoSansArabic.ttf` | SIL OFL 1.1 (`assets/fonts/NotoSansArabic-OFL.txt`) | [notofonts/arabic](https://github.com/notofonts/arabic) |
 | Material Icons | bundled by Flutter | Apache-2.0 | [google/material-design-icons](https://github.com/google/material-design-icons) |
+| Harbor (player design and features) | the player chrome, volume boost, skip segments, subtitle handling and Watch Together relay are ported from Harbor (Phase 9); `Copyright (c) 2026 Harbor` | MIT | [HarborCommunity/Harbor](https://github.com/HarborCommunity/Harbor) |
 
 ### What this means
 - Kyndrel is GPL-3.0. Every component above is GPL-3.0-compatible
@@ -37,13 +38,15 @@ is out of date. Do not edit by hand.
 
 ## Dart and Flutter packages (runtime)
 
-131 packages: Apache-2.0 7, BSD-3-Clause 82, MIT 41, MPL-2.0 1.
+135 packages: Apache-2.0 7, BSD-3-Clause 84, MIT 42, MPL-2.0 2.
 
 | Package | Version | Licence |
 |---|---|---|
 | [archive](https://github.com/brendan-duncan/archive) | 4.7.1 | MIT |
 | [args](https://github.com/dart-lang/core/tree/main/pkgs/args) | 2.7.0 | BSD-3-Clause |
 | [async](https://github.com/dart-lang/core/tree/main/pkgs/async) | 2.13.1 | BSD-3-Clause |
+| [battery_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/battery_plus/battery_plus) | 7.1.2 | BSD-3-Clause |
+| [battery_plus_platform_interface](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/) | 2.0.1 | BSD-3-Clause |
 | [boolean_selector](https://github.com/dart-lang/tools/tree/main/pkgs/boolean_selector) | 2.1.2 | BSD-3-Clause |
 | [characters](https://github.com/dart-lang/core/tree/main/pkgs/characters) | 1.4.1 | BSD-3-Clause |
 | [clock](https://github.com/dart-lang/tools/tree/main/pkgs/clock) | 1.1.3 | Apache-2.0 |
@@ -112,6 +115,7 @@ is out of date. Do not edit by hand.
 | [package_info_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/package_info_plus/package_info_plus) | 10.2.2 | BSD-3-Clause |
 | [package_info_plus_platform_interface](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/) | 4.1.0 | BSD-3-Clause |
 | [path](https://github.com/dart-lang/core/tree/main/pkgs/path) | 1.9.1 | BSD-3-Clause |
+| [path_parsing](https://github.com/flutter/packages/tree/main/third_party/packages/path_parsing) | 1.1.0 | MIT |
 | [path_provider](https://github.com/flutter/packages/tree/main/packages/path_provider/path_provider) | 2.1.6 | BSD-3-Clause |
 | [path_provider_android](https://github.com/flutter/packages/tree/main/packages/path_provider/path_provider_android) | 2.3.1 | BSD-3-Clause |
 | [path_provider_foundation](https://github.com/flutter/packages/tree/main/packages/path_provider/path_provider_foundation) | 2.6.0 | BSD-3-Clause |
@@ -160,6 +164,7 @@ is out of date. Do not edit by hand.
 | [test_api](https://github.com/dart-lang/test/tree/master/pkgs/test_api) | 0.7.14 | BSD-3-Clause |
 | [typed_data](https://github.com/dart-lang/core/tree/main/pkgs/typed_data) | 1.4.0 | BSD-3-Clause |
 | [universal_platform](https://github.com/gskinnerTeam/flutter-universal-platform) | 1.1.0 | MIT |
+| [upower](https://github.com/canonical/upower.dart) | 0.7.0 | MPL-2.0 |
 | [uri_parser](https://github.com/alexmercerind/uri_parser) | 3.0.2 | MIT |
 | [uuid](https://github.com/Daegalus/dart-uuid) | 4.6.0 | MIT |
 | [vector_math](https://github.com/flutter/core-packages/tree/main/packages/vector_math) | 2.4.3 | BSD-3-Clause |

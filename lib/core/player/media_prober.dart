@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:kyndrel/core/platform/media_scanner.dart';
-import 'package:kyndrel/core/player/media_kit_backend.dart';
+import 'package:kyndrel/core/player/frame_engine.dart';
 import 'package:kyndrel/core/player/player_backend.dart';
 import 'package:kyndrel/core/player/preview_thumbnailer.dart';
-import 'package:kyndrel/core/utils/hashing.dart';
+import 'package:kyndrel/core/utils/media_cache_key.dart';
 import 'package:path/path.dart' as p;
 
 /// What a probe learns about a file (task 7.3).
@@ -56,22 +56,42 @@ abstract interface class MediaProber {
   });
 }
 
-/// Desktop: a hidden mpv opens the file paused and reads what the
-/// container says (no decoding); thumbnails come from the preview
-/// thumbnailer.
+/// Desktop: the shared [FrameEngine] opens the file paused and reads what
+/// the container says (no decoding, lowest priority, task 8.1); thumbnails
+/// come from the preview thumbnailer.
 class MpvMediaProber implements MediaProber {
-  new({required this.previews, PlayerBackend Function()? backendFactory})
-    : _factory = backendFactory ?? (() => MediaKitBackend(withVideo: false));
+  /// [engine] is shared in the app; tests may pass [backendFactory] for an
+  /// engine of their own.
+  new({
+    required this.previews,
+    FrameEngine? engine,
+    PlayerBackend Function()? backendFactory,
+  }) : _engine = engine ?? FrameEngine(backendFactory: backendFactory),
+       _ownsEngine = engine == null;
+
+  /// Options of the probe profile: no picture. A song needs its audio
+  /// track selected (output goes nowhere) or mpv has nothing to open.
+  static const options = [('vo', 'null'), ('vid', 'auto'), ('aid', 'auto')];
 
   final PreviewSource previews;
-  final PlayerBackend Function() _factory;
-  PlayerBackend? _backend;
+  final FrameEngine _engine;
+  final bool _ownsEngine;
 
   @override
   Future<ProbedDetails?> probe(String uri) async {
-    final b = _backend ??= await _setUp();
     try {
+      return await _engine.run(FrameJob.probe, (s) => _probe(s, uri));
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<ProbedDetails?> _probe(FrameSession s, String uri) async {
+    final b = s.backend;
+    try {
+      await s.configure('probe', options);
       await b.command(['loadfile', uri, 'replace']);
+      s.loaded = 'probe|$uri';
       final end = DateTime.now().add(const Duration(seconds: 6));
       String? duration;
       while (DateTime.now().isBefore(end)) {
@@ -124,27 +144,13 @@ class MpvMediaProber implements MediaProber {
         trackNo: number(await text('metadata/by-key/track')),
         hasCover: hasCover,
       );
-      await b.command(['stop']);
       return details;
     } on Object {
       return null;
+    } finally {
+      await b.command(['stop']);
+      s.loaded = null;
     }
-  }
-
-  Future<PlayerBackend> _setUp() async {
-    final b = _factory();
-    for (final (k, v) in const [
-      ('ao', 'null'),
-      ('vo', 'null'),
-      ('aid', 'auto'),
-      ('vid', 'auto'),
-      ('sid', 'no'),
-      ('pause', 'yes'),
-      ('keep-open', 'yes'),
-    ]) {
-      await b.setProperty(k, v);
-    }
-    return b;
   }
 
   @override
@@ -161,13 +167,22 @@ class MpvMediaProber implements MediaProber {
         uri,
         Duration.zero,
         duration ?? Duration.zero,
+        background: true,
       );
     }
     final length = duration ?? Duration.zero;
-    return await previews.frameAt(uri, length * 0.1, length, exact: true);
+    return await previews.frameAt(
+      uri,
+      length * 0.1,
+      length,
+      exact: true,
+      background: true,
+    );
   }
 
-  Future<void> dispose() async => await _backend?.dispose();
+  Future<void> dispose() async {
+    if (_ownsEngine) await _engine.dispose();
+  }
 }
 
 /// Android: MediaStore already gave the details; thumbnails are the
@@ -189,19 +204,25 @@ class AndroidMediaProber implements MediaProber {
     Duration? duration,
     bool hasCover = true,
   }) async {
-    final path = p.join(cacheDir.path, 'library', '${fnv1a64(uri)}.jpg');
+    // The key changes when the file does, so a replaced file gets a new
+    // thumbnail (task 8.0).
+    final path = p.join(cacheDir.path, 'library', '${mediaCacheKey(uri)}.jpg');
     if (File(path).existsSync()) return path;
     try {
-      final ok = await _channel.invokeMethod<bool>('thumbnail', {
-        'uri': uri,
-        'path': path,
-        'size': 320,
-      });
+      final ok = await _channel
+          .invokeMethod<bool>('thumbnail', {
+            'uri': uri,
+            'path': path,
+            'size': 320,
+          })
+          .timeout(const Duration(seconds: 20));
       return (ok ?? false) ? path : null;
     } on PlatformException {
       return null;
     } on MissingPluginException {
       return null;
+    } on TimeoutException {
+      return null; // Task 8.11: one stuck file doesn't stop the library.
     }
   }
 }

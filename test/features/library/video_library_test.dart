@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kyndrel/core/platform/media_scanner.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
@@ -53,7 +54,7 @@ void main() {
   }) async {
     final h = await AppHarness.create(prefs: prefs);
     h.scanner.files = [
-      _video('/m/Films/The Heist.mkv', added: DateTime.now()),
+      _video('/m/Films/The Heist.mkv', added: clock.now()),
       _video('/m/Films/Arrival.mp4', minutes: 116, size: 900000000),
       _video('/m/Clips/cat.mp4', minutes: 1, width: 1280, height: 720),
     ];
@@ -110,7 +111,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('library-search')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('library-all')));
+    await tester.tap(find.byKey(const Key('library-view-all')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('library-menu')));
     await tester.pumpAndSettle();
@@ -169,20 +170,23 @@ void main() {
     ('phone_en', const Size(392, 800), 'en'),
     ('phone_ar', const Size(392, 800), 'ar'),
   ]) {
+    // Pinned to the day the goldens were made, so dates on screen match.
     testWidgets('looks right: $name', (tester) async {
-      await library(tester, size: size, prefs: {'language': lang});
-      expect(tester.takeException(), isNull);
-      await expectLater(
-        find.byType(MaterialApp),
-        matchesGoldenFile('goldens/video_library_$name.png'),
-      );
-      await tester.tap(find.byKey(const Key('folder-Films')));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await expectLater(
-        find.byType(MaterialApp),
-        matchesGoldenFile('goldens/video_folder_$name.png'),
-      );
+      await withClock(Clock.fixed(DateTime(2026, 11, 20, 12)), () async {
+        await library(tester, size: size, prefs: {'language': lang});
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('goldens/video_library_$name.png'),
+        );
+        await tester.tap(find.byKey(const Key('folder-Films')));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('goldens/video_folder_$name.png'),
+        );
+      });
     });
   }
 }

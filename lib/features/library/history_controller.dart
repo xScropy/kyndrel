@@ -7,6 +7,8 @@ import 'package:kyndrel/core/player/playback_state.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/storage/app_directories.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
+import 'package:kyndrel/core/storage/library_repository.dart';
+import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/utils/hashing.dart';
 import 'package:kyndrel/core/utils/media_title.dart';
 import 'package:path/path.dart' as p;
@@ -29,16 +31,41 @@ class HistoryController extends Notifier<void> {
 
   HistoryRepository get _repo => ref.read(historyRepositoryProvider);
 
+  /// Folders made private in the library: never recorded (task 8.6).
+  Set<String> _private = const {};
+
   @override
   void build() {
     final sub = ref.watch(playerServiceProvider).states.listen(_onState);
-    _timer = Timer.periodic(saveInterval, (_) {
-      if (_last.isPlaying) unawaited(_save(_last, thumbnail: _thumbnailDue()));
-    });
+    final folders = ref
+        .watch(libraryRepositoryProvider)
+        .watchFolderPrefs()
+        .listen(
+          (m) => _private = {
+            for (final f in m.values)
+              if (f.private) f.path,
+          },
+        );
     ref.onDispose(() {
       unawaited(sub.cancel());
+      unawaited(folders.cancel());
       _timer?.cancel();
     });
+  }
+
+  /// Files opened in incognito (task 8.8) or from a private folder leave
+  /// no trace, decided when the file opens: turning incognito off later
+  /// doesn't record a file watched with it on.
+  final _untracked = <String>{};
+
+  bool _skip(String source) {
+    if (_untracked.contains(source)) return true;
+    if (ref.read(settingsProvider).incognito ||
+        _private.contains(p.dirname(source))) {
+      _untracked.add(source);
+      return true;
+    }
+    return false;
   }
 
   static String titleFor(String source) {
@@ -47,6 +74,17 @@ class HistoryController extends Notifier<void> {
   }
 
   void _onState(PlaybackState s) {
+    // Ticks only while playing: an idle app does no work (task 8.1).
+    if (s.isPlaying && _timer == null) {
+      _timer = Timer.periodic(saveInterval, (_) {
+        if (_last.isPlaying) {
+          unawaited(_save(_last, thumbnail: _thumbnailDue()));
+        }
+      });
+    } else if (!s.isPlaying) {
+      _timer?.cancel();
+      _timer = null;
+    }
     final previous = _last;
     _last = s;
     if (previous.source != null && previous.source != s.source) {
@@ -57,6 +95,9 @@ class HistoryController extends Notifier<void> {
     final source = s.source;
     if (source != null && s.isLoaded && _recordedSource != source) {
       _recordedSource = source;
+      // Decided now, for as long as this file stays open.
+      _untracked.remove(source);
+      _skip(source);
       unawaited(_save(s));
     }
     if (source == null) _recordedSource = null;
@@ -79,7 +120,7 @@ class HistoryController extends Notifier<void> {
     bool finished = false,
   }) async {
     final source = s.source;
-    if (source == null || !s.isLoaded) return;
+    if (source == null || !s.isLoaded || _skip(source)) return;
     if (thumbnail && s.videoWidth != null && source == _last.source) {
       _thumbnail = await _takeThumbnail(source) ?? _thumbnail;
     }

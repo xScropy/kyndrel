@@ -7,6 +7,7 @@ import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/platform/window_service.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -121,6 +122,7 @@ class PipButton extends ConsumerWidget {
     return ControlButton(
       key: const Key('pip'),
       icon: Icons.picture_in_picture_alt,
+      harbor: HarborIcons.pipActive,
       tooltip: 'Picture in picture (I)',
       onPressed: () => unawaited(ref.read(pipProvider.notifier).enter()),
     );

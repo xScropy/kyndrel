@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/platform/platform_capabilities.dart';
 import 'package:kyndrel/core/player/media_track.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/core/ui/popover.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
@@ -33,8 +35,11 @@ class SubtitlesButton extends ConsumerWidget {
     return ControlButton(
       key: const Key('subtitles-button'),
       icon: on ? Icons.closed_caption : Icons.closed_caption_off_outlined,
+      harbor: HarborIcons.subtitle,
       tooltip: context.l10n.subtitlesAudioTooltip,
-      active: on || open,
+      // Harbor: a green dot while subtitles show, a circle while open.
+      dot: on,
+      active: open,
       onPressed: ref.read(subtitlePanelProvider.notifier).toggle,
     );
   }
@@ -207,6 +212,17 @@ class _TrackColumn extends ConsumerWidget {
               track: t,
               selected: tracks.audioId == t.id,
               onTap: () => unawaited(service.selectAudioTrack(t.id)),
+            ),
+          // Another language or a commentary in its own file (8.8).
+          if (!ref.read(platformCapabilitiesProvider).isMobile)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const Key('load-audio'),
+                onPressed: () => unawaited(SubtitleFileActions.loadAudio(ref)),
+                icon: const Icon(Icons.audio_file_outlined, size: 18),
+                label: Text(context.l10n.loadAudioFile),
+              ),
             ),
         ],
       ],

@@ -34,8 +34,13 @@ MediaTitle parseMediaTitle(String source) {
   if (known != null) {
     name = known;
   } else if (uri != null && uri.hasScheme && uri.scheme.length > 1) {
-    final segments = uri.pathSegments.where((s) => s.isNotEmpty);
-    name = segments.isEmpty ? uri.host : Uri.decodeComponent(segments.last);
+    try {
+      final segments = uri.pathSegments.where((s) => s.isNotEmpty);
+      name = segments.isEmpty ? uri.host : Uri.decodeComponent(segments.last);
+    } on FormatException {
+      // Badly encoded (found by fuzzing, task 8.11): the raw last part.
+      name = source.split('/').last;
+    }
   } else {
     name = p.basename(source.replaceAll(r'\', '/'));
   }

@@ -5,6 +5,8 @@ import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/ui/control_button.dart';
+import 'package:kyndrel/core/ui/harbor_icon.dart';
+import 'package:kyndrel/core/ui/harbor_icons.g.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/core/ui/popover.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
@@ -48,26 +50,37 @@ class SpeedSleepButton extends ConsumerWidget {
         tooltip: context.l10n.speedAndSleep,
         active: rate != 1 || sleep != null,
         onPressed: toggle,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(formatRate(rate)),
-            if (sleep != null) ...[
-              const SizedBox(width: 6),
-              const Icon(Icons.bedtime, size: 16, color: KyndrelColors.accent),
-              if (sleep.remaining != null) ...[
-                const SizedBox(width: 2),
-                Text(
-                  formatDuration(sleep.remaining!),
-                  key: const Key('sleep-remaining'),
-                  style: const TextStyle(
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
-            ],
-          ],
-        ),
+        harbor: HarborIcons.speed,
+        // Harbor's gauge; the speed itself once it isn't 1×.
+        child: rate == 1 && sleep == null
+            ? null
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (rate == 1)
+                    const HarborIcon(HarborIcons.speed, size: 22)
+                  else
+                    Text(formatRate(rate)),
+                  if (sleep != null) ...[
+                    const SizedBox(width: 6),
+                    const Icon(
+                      Icons.bedtime,
+                      size: 16,
+                      color: KyndrelColors.accent,
+                    ),
+                    if (sleep.remaining != null) ...[
+                      const SizedBox(width: 2),
+                      Text(
+                        formatDuration(sleep.remaining!),
+                        key: const Key('sleep-remaining'),
+                        style: const TextStyle(
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              ),
       ),
       contentBuilder: (context, close) => const SpeedSleepPanel(),
     );

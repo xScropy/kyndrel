@@ -11,11 +11,15 @@ import 'package:kyndrel/core/ui/key_bindings.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/features/library/playlist_panel.dart';
 import 'package:kyndrel/features/pip/pip_controller.dart';
+import 'package:kyndrel/features/playback/clip_export.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
 import 'package:kyndrel/features/playback/open/open_actions.dart';
+import 'package:kyndrel/features/playback/player_tools.dart';
 import 'package:kyndrel/features/playback/screenshot_actions.dart';
+import 'package:kyndrel/features/playback/skip_intro.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/features/speed_sleep/speed_sleep_button.dart';
+import 'package:kyndrel/features/subtitles/subtitle_lines.dart';
 import 'package:kyndrel/features/subtitles/subtitle_panel_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -47,7 +51,7 @@ class PlayerShortcuts extends ConsumerWidget {
         context.findAncestorWidgetOfExactType<EditableText>() != null;
   }
 
-  KeyEventResult _onKey(WidgetRef ref, KeyEvent event) {
+  KeyEventResult _onKey(BuildContext context, WidgetRef ref, KeyEvent event) {
     if (event is KeyUpEvent || _typing()) return KeyEventResult.ignored;
     final repeat = event is KeyRepeatEvent;
     final service = ref.read(playerServiceProvider);
@@ -84,11 +88,16 @@ class PlayerShortcuts extends ConsumerWidget {
     final action = ref.read(settingsProvider).keyBindings.actionFor(combo);
     if (action == null) return KeyEventResult.ignored;
     if (repeat && !action.repeats) return KeyEventResult.handled;
-    _run(ref, action, skip);
+    _run(context, ref, action, skip);
     return KeyEventResult.handled;
   }
 
-  void _run(WidgetRef ref, PlayerAction action, Duration skip) {
+  void _run(
+    BuildContext context,
+    WidgetRef ref,
+    PlayerAction action,
+    Duration skip,
+  ) {
     final service = ref.read(playerServiceProvider);
     final playlist = ref.read(playlistProvider.notifier);
     final osd = ref.read(osdProvider.notifier);
@@ -166,14 +175,55 @@ class PlayerShortcuts extends ConsumerWidget {
         unawaited(ScreenshotActions.take(ref));
       case PlayerAction.settings:
         onOpenSettings();
+      case PlayerAction.bookmark:
+        unawaited(BookmarkActions.add(ref));
+      case PlayerAction.bookmarks:
+        unawaited(showBookmarks(context));
+      case PlayerAction.jumpToTime:
+        unawaited(showJumpToTime(context, ref));
+      case PlayerAction.decoder:
+        DecoderActions.next(ref);
+      case PlayerAction.stats:
+        ref.read(statsOverlayProvider.notifier).toggle();
+      case PlayerAction.subtitleLines:
+        unawaited(showSubtitleLines(context, ref));
+      case PlayerAction.quickCommands:
+        unawaited(showQuickCommands(context, ref));
+      case PlayerAction.exportClip:
+        unawaited(_exportClip(context, ref));
+      case PlayerAction.markIntro:
+        unawaited(ref.read(skipIntroProvider.notifier).mark());
     }
+  }
+
+  /// Clip or GIF of the A-B loop (task 8.8).
+  static Future<void> _exportClip(BuildContext context, WidgetRef ref) async {
+    final gif = await showDialog<bool>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        key: const Key('export-clip'),
+        children: [
+          SimpleDialogOption(
+            key: const Key('export-video'),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Video clip'),
+          ),
+          SimpleDialogOption(
+            key: const Key('export-gif'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('GIF'),
+          ),
+        ],
+      ),
+    );
+    if (gif != null) await ClipExport.export(ref, gif: gif);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Focus(
       autofocus: true,
-      onKeyEvent: (_, event) => _onKey(ref, event),
+      onKeyEvent: (_, event) => _onKey(context, ref, event),
       child: child,
     );
   }

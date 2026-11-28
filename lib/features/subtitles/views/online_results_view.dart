@@ -117,7 +117,12 @@ class _ResultTile extends ConsumerWidget {
       languageName(result.language),
       if (result.rating > 0) '★ ${result.rating.toStringAsFixed(1)}',
       '↓ ${result.downloadCount}',
-      if (result.hashMatch) 'Matches file',
+      if (result.hashMatch)
+        'Matches file'
+      else if (result.matchPercent case final m?)
+        '$m% fit',
+      ?result.matchReason,
+      result.provider,
       if (result.hearingImpaired) 'SDH',
       if (result.machineTranslated) 'Machine-translated',
     ].join('  ·  ');

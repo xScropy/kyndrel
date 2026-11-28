@@ -6,11 +6,14 @@ import 'package:kyndrel/core/platform/brightness_service.dart';
 import 'package:kyndrel/core/platform/system_volume.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/video_view_settings.dart';
+import 'package:kyndrel/core/player/volume_scale.dart';
+import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
 import 'package:kyndrel/core/utils/time_format.dart';
 import 'package:kyndrel/features/playback/fullscreen_actions.dart';
+import 'package:kyndrel/features/playback/screenshot_actions.dart';
 import 'package:kyndrel/features/playback/volume_actions.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -53,6 +56,9 @@ class VideoGestureLayer extends ConsumerStatefulWidget {
 
   /// Speed while long-pressing.
   static const holdRate = 2.0;
+
+  /// Sideways distance for one 0.25× step while holding (task 8.8).
+  static const holdSlideStep = 40.0;
 
   /// Where a swipe-seek would land; the scene preview (6.4) follows it.
   static final seekPreview = ValueNotifier<Duration?>(null);
@@ -155,6 +161,22 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
     unawaited(service.setRate(VideoGestureLayer.holdRate));
     ref.read(osdProvider.notifier).show('2× ▶▶');
   }
+
+  /// While holding: sliding sideways changes the speed in 0.25 steps,
+  /// 1× to 4× (mpvKt).
+  void _onLongPressMove(LongPressMoveUpdateDetails d) {
+    if (_rateBeforeHold == null) return;
+    final steps = (d.offsetFromOrigin.dx / VideoGestureLayer.holdSlideStep)
+        .round();
+    final rate = (VideoGestureLayer.holdRate + steps * 0.25).clamp(1.0, 4.0);
+    final service = ref.read(playerServiceProvider);
+    if (rate == service.state.rate) return;
+    unawaited(service.setRate(rate));
+    ref.read(osdProvider.notifier).show('${_rateLabel(rate)}× ▶▶');
+  }
+
+  static String _rateLabel(double r) =>
+      r == r.roundToDouble() ? '${r.round()}' : '$r';
 
   void _onLongPressEnd([Object? _]) {
     final rate = _rateBeforeHold;
@@ -268,11 +290,16 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
       case _Drag.volume:
         final start = _levelStart;
         if (start == null) return;
-        final v = (start + _verticalFraction * CombinedVolume.max)
-            .clamp(0.0, CombinedVolume.max)
-            .roundToDouble();
+        // On the same scale as the slider: 100 % at 64 % of the way.
+        final max = ref.read(settingsProvider).volumeBoostMax;
+        final v = VolumeScale.valueAt(
+          VolumeScale.fraction(start, max) + _verticalFraction,
+          max,
+        );
         unawaited(_setCombinedVolume(v));
-        ref.read(levelOsdProvider.notifier).show(OsdLevel(LevelKind.volume, v));
+        ref
+            .read(levelOsdProvider.notifier)
+            .show(OsdLevel(LevelKind.volume, v, max: max));
       case _Drag.none:
       case _Drag.pinch:
       case _Drag.ignored:
@@ -342,6 +369,41 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
     VideoGestureLayer.seekPreview.value = null;
   }
 
+  // ------------------------------------------------------------ mouse
+
+  /// Middle, back and forward mouse buttons (task 8.8), as set in
+  /// Settings › Shortcuts.
+  void _mouseButton(int buttons) {
+    // Tests without settings: the defaults.
+    final s = _settings ?? const AppSettings();
+    final service = ref.read(playerServiceProvider);
+    final osd = ref.read(osdProvider.notifier);
+    if (buttons & kMiddleMouseButton != 0) {
+      switch (s.mouseMiddle) {
+        case 'playPause':
+          unawaited(service.playOrPause());
+        case 'mute':
+          unawaited(VolumeActions.toggleMute(ref));
+        case 'fullscreen':
+          unawaited(FullscreenActions.toggle(ref));
+        case 'screenshot':
+          unawaited(ScreenshotActions.take(ref));
+      }
+      return;
+    }
+    final back = buttons & kBackMouseButton != 0;
+    final forward = buttons & kForwardMouseButton != 0;
+    if (!back && !forward) return;
+    if (s.mouseSide == 'seek') {
+      final skip = Duration(seconds: s.skipSeconds);
+      unawaited(service.seekBy(back ? -skip : skip));
+      osd.show('${back ? '−' : '+'}${skip.inSeconds} s');
+    } else if (s.mouseSide == 'playlist') {
+      final playlist = ref.read(playlistProvider.notifier);
+      unawaited(back ? playlist.previous() : playlist.next());
+    }
+  }
+
   // ------------------------------------------------------------ build
 
   @override
@@ -350,6 +412,7 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
       onPointerDown: (e) {
         _lastKind = e.kind;
         _pointerDownAt = e.localPosition;
+        if (e.kind == PointerDeviceKind.mouse) _mouseButton(e.buttons);
       },
       onPointerSignal: (e) {
         if (e is PointerScrollEvent && e.scrollDelta.dy != 0) {
@@ -380,6 +443,7 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
               PointerDeviceKind.stylus,
             },
             onLongPressStart: _onLongPressStart,
+            onLongPressMoveUpdate: _onLongPressMove,
             onLongPressEnd: _onLongPressEnd,
             onLongPressCancel: _onLongPressEnd,
             onScaleStart: _onScaleStart,

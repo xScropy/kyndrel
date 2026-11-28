@@ -9,7 +9,7 @@ uses them.
 | Name | Value | Why | Task |
 |---|---|---|---|
 | `hwdec` | `auto-safe` | Hardware decoding with safe fallback (VideoController) | 0.5 |
-| `volume-max` | `400` | Volume up to 400 % | 1.6 |
+| `volume-max` | `500` | Volume up to 500 % (task 9.1) | 1.6, 9.1 |
 | `audio-pitch-correction` | `yes` | Keep pitch when changing speed | 2.2 |
 | `stream-lavf-o` | `reconnect_delay_max=15` | Give up on a dropped HTTP stream after the 15 s retry (~26 s in all) instead of ~2 min | 5.5 |
 | `sub-ass`, `sub-visibility`, `secondary-sub-visibility` | `yes` | media_kit `libass: true`: mpv draws subtitles, so image subtitles and styles work | 2.8, 2.10 |
@@ -47,7 +47,6 @@ uses them.
 | `video-rotate` | property | write | 0/90/180/270 | 2.12 |
 | `chapter-list/count`, `chapter-list/N/{time,title}` | property | read | Chapter marks | 3.6 |
 | `chapter` | property | observed | Current chapter | 3.6 |
-| second mpv: `vo=image`, `vo-image-{format,jpeg-quality,outdir}`, `vf=scale`, `frames=1`, `start`, `loadfile` | options/command | write | Seek-bar preview frames | 3.7 |
 | `add chapter ±1` | command | write | Next/previous chapter | 3.6 |
 | `ab-loop-a`, `ab-loop-b` | property | read/write | A-B loop (`no` clears) | 3.9 |
 | `http-header-fields` | option | write | Per-source login headers (WebDAV, protected streams) | 4.5 |
@@ -57,9 +56,6 @@ uses them.
 | `af add/remove @kyndrel-eq:lavfi=[equalizer=…]`, `@kyndrel-norm:lavfi=[loudnorm\|dynaudnorm]` | command | write | Equalizer and loudness normalization | 4.7 |
 | `frame-step`, `frame-back-step` | command | write | Frame stepping | 3.9 |
 | `screenshot-to-file <path> video\|subtitles` | command | write | History thumbnails (3.3), screenshots (3.8) | 3.3 |
-| storyboard mpv: `vo=image`, `vf=scale`, `hr-seek=no`, `keep-open=always`, `pause`, `seek <t> absolute+keyframes`, `time-pos`, `seeking`, `stop` | options/command/property | write/read | Seek-bar storyboard: one paused load, one keyframe seek per frame | 7.2 |
-| library probe mpv: `vo=null`, `pause`, `duration`, `track-list/count`, `track-list/N/{type,codec,demux-w,demux-h,albumart}`, `metadata/by-key/{title,artist,album,track}` | property | read | Library details without decoding | 7.3 |
-| `audio-display=embedded-first` (preview mpv) | option | write | A song's cover art becomes its thumbnail | 7.3 |
 | `af add/remove @kviz:lavfi=[astats=metadata=1:reset=1]`, `af-metadata/kviz` (whole JSON only: reading one key, `af-metadata/kviz/<key>`, crashes libmpv) | command/property | write/read | Loudness for the music view's waves | 7.6 |
 | `track-list/N/albumart`, `metadata/by-key/{title,artist,album}` | property | read | Music: cover art is not video; the song's tags | 7.6 |
 | `sub-fonts-dir` | option | write | Fonts libass draws text subtitles with (Kyndrel's Inter and Noto Sans Arabic; needed on Android) | 7.1 |
@@ -67,9 +63,42 @@ uses them.
 | `sub-text` | property | read | Engine tests: the text of the current cue | 7.1 |
 | `hwdec=mediacodec-copy` | option | write | "Automatic" decoding on Android | 6.7 |
 | `vid` (`no`, then the saved track) | property | read/write | No picture decoding while a phone plays in the background | 6.7 |
+| `demuxer-max-bytes`, `demuxer-max-back-bytes` | option | write | Set on each open: 32/8 MiB for local files, 150/50 MiB (mpv's defaults) for streams, unless set in Advanced | 8.1 |
+| `video-bitrate`, `audio-bitrate`, `audio-codec`, `demuxer-cache-duration` | property | read | Statistics overlay (Shift+I) | 8.8 |
+| any command from Settings › Advanced › Quick commands | command | write | The user's own commands (Ctrl+K) | 8.8 |
+| `audio-add <path> select` | command | write | Load an external audio track | 8.8 |
+| `brightness`, `contrast`, `saturation`, `gamma`, `hue` | property | write | Picture adjustments, −100…100 | 8.8 |
+| `audio-spdif` | option | write | Passthrough of AC-3, E-AC-3, DTS, DTS-HD and TrueHD (empty: off) | 8.8 |
+| `audio-device` | option | write | Sound output device (`auto`: the system default), Settings › Audio | fix |
+| `audio-device-list` | property | read | Devices for the output picker (JSON) | fix |
+| `ao-reload` | command | — | One retry when the sound device failed to open | fix |
+| `audio-channels` | option | write | `stereo` with Downmix to stereo, else `auto-safe` (task 9.4, Harbor) | 9.4 |
+| `sub-codepage` | option | write | `cp1256` when Arabic is wanted, else `auto` (task 9.5) | 9.5 |
+| `sub-filter-sdh` | option | write | Hide sound descriptions (task 9.5) | 9.5 |
+| `sub-fps` | option | write | Subtitle frame rate, reset per file (task 9.5) | 9.5 |
+| `dither`, `dither-depth`, `vd-lavc-fast`, `interpolation`, `linear-downscaling`, `hdr-compute-peak` | option | write | Part of the video presets, as Harbor's Performance/Balanced/Quality (task 9.4) | 9.4 |
+| `hwdec=auto-copy` | option | write | "HW+" in the decoder switch (H): hardware decoding copied back, so every filter works | 8.8 |
 | `hwdec-current`, `video-codec`, `width`, `height`, `container-fps`, `estimated-vf-fps`, `frame-drop-count` | property | read | `--diagnostics` overlay | 0.5 |
 | `filename`, `path`, `file-format`, `file-size`, `duration`, `chapters`, `audio-params/hr-channels`, `video-params/{w,h,pixelformat,colormatrix,primaries,gamma}`, `video-bitrate`, `audio-codec`, `audio-params/{channel-count,samplerate}`, `audio-bitrate` | property | read | Media info dialog | 1.3 |
 
 Log lines (`warn` and above) are kept in a 200-line buffer for the error
 screen (1.13). Errors matching "audio device/driver/output" or "no sound"
 are treated as non-fatal.
+
+## Frame engine (the one hidden mpv, task 8.1)
+
+`core/player/frame_engine.dart` runs a second, headless libmpv for all frame
+work on desktop. It starts on the first job and closes after 30 s idle.
+
+| Name | Kind | Access | Use | Task |
+|---|---|---|---|---|
+| `ao=null`, `sid=no`, `hwdec=no`, `pause=yes`, `keep-open=always`, `cache=no` | option | write | Set once when the engine starts: no sound, no subtitles, software decoding, the file stays open | 8.1 |
+| `vd-lavc-threads=2`, `vd-lavc-skiploopfilter=all`, `vd-lavc-fast=yes` | option | write | Cheaper decoding: small pictures don't show the difference | 8.1 |
+| `demuxer-max-bytes=4MiB`, `demuxer-max-back-bytes=1MiB` | option | write | Little read-ahead: the engine jumps around rather than playing | 8.1 |
+| `vo=image`, `vo-image-{format,jpeg-quality,outdir}`, `vf=scale=w=…:h=-2` | option | write | One JPEG per displayed picture, at preview size | 3.7, 7.2 |
+| `vid`, `aid` | option | write | Per job: frames use `aid=no`; probing uses `aid=auto` (a song has nothing else to open) | 7.3, 8.1 |
+| `start`, `loadfile`, `stop` | option/command | write | Open a file at the first wanted position | 3.7, 7.2 |
+| `hr-seek`, `seek <t> absolute+keyframes`, `seek <t> absolute+exact` | option/command | write | Storyboard: keyframe seeks (fast); seek-bar frames: exact seeks in the file already open | 7.2, 8.1 |
+| `time-pos`, `seeking` | property | read | Whether a seek landed on the picture already shown | 7.2 |
+| `audio-display=embedded-first` | option | write | A song's cover art becomes its thumbnail | 7.3 |
+| `vo=null`, `duration`, `track-list/count`, `track-list/N/{type,codec,demux-w,demux-h,albumart}`, `metadata/by-key/{title,artist,album,track}` | option/property | write/read | Library details without decoding | 7.3 |

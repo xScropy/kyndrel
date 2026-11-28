@@ -4,11 +4,16 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
+import 'package:kyndrel/app/theme/kyndrel_theme.dart';
 import 'package:kyndrel/core/platform/platform_capabilities.dart';
+import 'package:kyndrel/core/player/library_previews.dart';
 import 'package:kyndrel/core/player/mpv_options.dart';
+import 'package:kyndrel/core/player/player_providers.dart';
+import 'package:kyndrel/core/player/player_service.dart';
 import 'package:kyndrel/core/storage/history_repository.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/key_bindings.dart';
+import 'package:kyndrel/core/ui/seek_bar_painter.dart';
 import 'package:kyndrel/core/ui/settings_widgets.dart';
 import 'package:kyndrel/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
@@ -22,6 +27,52 @@ class PlaybackSettings extends ConsumerWidget {
     return SettingsSection(
       title: 'Playback',
       children: [
+        SwitchListTile(
+          key: const Key('settings-remember-file'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text("Remember each file's settings"),
+          subtitle: const Text(
+            'Audio and subtitle track, speed, delays, fit and zoom',
+          ),
+          value: s.rememberFileSettings,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(rememberFileSettings: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-skip-intro'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Offer to skip intros and credits'),
+          subtitle: const Text(
+            'Found from chapters, by comparing episodes, or marked with '
+            'Shift+M',
+          ),
+          value: s.skipIntro,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(skipIntro: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-heatmap'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Show what you watch again'),
+          subtitle: const Text(
+            'A soft curve over the seek bar where you replay most. '
+            'Kept on this device only.',
+          ),
+          value: s.showHeatmap,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(showHeatmap: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-incognito'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Incognito'),
+          subtitle: const Text(
+            'Nothing goes into history, resume points or file settings',
+          ),
+          value: s.incognito,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(incognito: v)),
+        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Skip length'),
@@ -115,14 +166,93 @@ class AudioSettings extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(settingsProvider);
+    final devices =
+        ref.watch(audioDevicesProvider).value ?? const [SoundDevice.automatic];
+    final current = devices.any((d) => d.name == s.audioDevice)
+        ? s.audioDevice
+        : SoundDevice.automatic.name;
     return SettingsSection(
       title: 'Volume',
       children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Output device'),
+          subtitle: const Text(
+            'Automatic follows the system. Pick one when sound goes to the '
+            'wrong place (a monitor over HDMI, headphones).',
+          ),
+          trailing: IconButton(
+            key: const Key('settings-audio-devices-refresh'),
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(audioDevicesProvider),
+          ),
+        ),
+        DropdownButton<String>(
+          key: const Key('settings-audio-device'),
+          isExpanded: true,
+          value: current,
+          items: [
+            for (final d in devices)
+              DropdownMenuItem(
+                value: d.name,
+                child: Text(d.description, overflow: TextOverflow.ellipsis),
+              ),
+          ],
+          onChanged: (v) {
+            if (v != null) {
+              updateSettings(ref, (x) => x.copyWith(audioDevice: v));
+            }
+          },
+        ),
+        SwitchListTile(
+          key: const Key('settings-downmix'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Downmix to stereo'),
+          subtitle: const Text(
+            'For laptop speakers and headphones: 5.1 films keep their '
+            'dialogue instead of losing it (or all sound)',
+          ),
+          value: s.downmixStereo,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(downmixStereo: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-passthrough'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Audio passthrough'),
+          subtitle: const Text(
+            'Dolby and DTS go untouched to an AV receiver (HDMI, S/PDIF). '
+            'Leave off for laptop speakers and headphones: they go silent.',
+          ),
+          value: s.audioPassthrough,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(audioPassthrough: v)),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Boost limit'),
+          subtitle: Text(
+            s.volumeBoostMax <= 100
+                ? 'Off: the volume stops at 100%'
+                : 'The volume goes up to ${s.volumeBoostMax.round()}%',
+          ),
+        ),
+        Slider(
+          key: const Key('settings-boost-max'),
+          value: s.volumeBoostMax.clamp(100, 500),
+          min: 100,
+          max: 500,
+          divisions: 8,
+          label: '${s.volumeBoostMax.round()}%',
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(volumeBoostMax: v)),
+        ),
         SwitchListTile(
           key: const Key('settings-limiter'),
           contentPadding: EdgeInsets.zero,
           title: const Text('Limiter above 100% volume'),
-          subtitle: const Text('Reduces clipping when boosting up to 400%'),
+          subtitle: const Text('Reduces clipping when boosting above 100%'),
           value: s.limiterEnabled,
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(limiterEnabled: v)),
@@ -151,6 +281,18 @@ class SubtitleSettings extends ConsumerWidget {
           value: s.autoLoadSubtitles,
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(autoLoadSubtitles: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-sdh'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Hide sound descriptions'),
+          subtitle: const Text(
+            'Drops "[door creaks]" and "JOHN:" from subtitles for the hard '
+            'of hearing',
+          ),
+          value: s.hideSoundDescriptions,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(hideSoundDescriptions: v)),
         ),
         SettingsTextField(
           key: const Key('settings-languages'),
@@ -214,6 +356,54 @@ class LibrarySettings extends ConsumerWidget {
             child: const Text('Change'),
           ),
         ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Prepare scrubbing previews'),
+          subtitle: Text(_previewsStatus(ref.watch(libraryPreviewsProvider))),
+          trailing: DropdownButton<LibraryPreviews>(
+            key: const Key('settings-library-previews'),
+            value: s.libraryPreviews,
+            dropdownColor: KyndrelColors.surface,
+            items: const [
+              DropdownMenuItem(
+                value: LibraryPreviews.auto,
+                child: Text('Automatic'),
+              ),
+              DropdownMenuItem(
+                value: LibraryPreviews.always,
+                child: Text('Always'),
+              ),
+              DropdownMenuItem(
+                value: LibraryPreviews.charging,
+                child: Text('Only while charging'),
+              ),
+              DropdownMenuItem(value: LibraryPreviews.off, child: Text('Off')),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(libraryPreviews: v)),
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Preview cache size'),
+          subtitle: const Text('Storyboards and seek-bar frames'),
+          trailing: DropdownButton<int>(
+            key: const Key('settings-frame-cache'),
+            value: AppSettings.frameCacheChoices.contains(s.frameCacheMb)
+                ? s.frameCacheMb
+                : 500,
+            dropdownColor: KyndrelColors.surface,
+            items: [
+              for (final v in AppSettings.frameCacheChoices)
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(v >= 1000 ? '${v ~/ 1000} GB' : '$v MB'),
+                ),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(frameCacheMb: v)),
+          ),
+        ),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: TextButton(
@@ -228,6 +418,16 @@ class LibrarySettings extends ConsumerWidget {
   }
 }
 
+/// "12 ready this session, 30 to go" under the library previews choice.
+String _previewsStatus(LibraryPreviewsStatus s) {
+  const what =
+      'Library videos get a small storyboard in the background, so '
+      'scrubbing works at once.';
+  if (s.waiting == 0 && s.made == 0) return what;
+  if (s.waiting == 0) return '$what All ready.';
+  return '$what ${s.waiting} to go.';
+}
+
 class AppearanceSettings extends ConsumerWidget {
   const new({super.key});
 
@@ -237,6 +437,25 @@ class AppearanceSettings extends ConsumerWidget {
     return SettingsSection(
       title: 'Appearance',
       children: [
+        SwitchListTile(
+          key: const Key('settings-amoled'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Pure black'),
+          subtitle: const Text('Saves power on OLED screens'),
+          value: s.amoledBlack,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(amoledBlack: v)),
+        ),
+        SwitchListTile(
+          key: const Key('settings-clock'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Clock in full screen'),
+          subtitle: const Text('The time, and when the film ends'),
+          value: s.showClock,
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(showClock: v)),
+        ),
+        const SeekBarSettings(),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Hide controls after'),
@@ -312,6 +531,24 @@ class AdvancedSettings extends ConsumerWidget {
     return SettingsSection(
       title: 'Advanced',
       children: [
+        SettingsTextField(
+          key: const Key('settings-quick-commands'),
+          label: 'Quick commands (Ctrl+K)',
+          helper:
+              'One per line: Label | mpv command, e.g. '
+              'Night sky | set brightness 10',
+          maxLines: 4,
+          value: ref.watch(settingsProvider).customCommands.join('\n'),
+          onChanged: (v) => updateSettings(
+            ref,
+            (x) => x.copyWith(
+              customCommands: [
+                for (final line in v.split('\n'))
+                  if (line.trim().isNotEmpty) line.trim(),
+              ],
+            ),
+          ),
+        ),
         SettingsTextField(
           key: const Key('settings-mpv-options'),
           label: 'mpv options',
@@ -425,6 +662,7 @@ class _ShortcutSettingsState extends ConsumerState<ShortcutSettings> {
       child: SettingsSection(
         title: 'Shortcuts',
         children: [
+          const _MouseButtons(),
           const Text(
             'Click a shortcut, then press the new keys. A key already in '
             'use moves to the new action.',
@@ -626,6 +864,201 @@ class MusicSettings extends ConsumerWidget {
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(reduceMotion: v)),
         ),
+      ],
+    );
+  }
+}
+
+/// Middle and back/forward mouse buttons (task 8.8).
+class _MouseButtons extends ConsumerWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(settingsProvider);
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Middle mouse button'),
+          trailing: DropdownButton<String>(
+            key: const Key('settings-mouse-middle'),
+            value: s.mouseMiddle,
+            dropdownColor: KyndrelColors.surface,
+            items: const [
+              DropdownMenuItem(value: 'playPause', child: Text('Play / pause')),
+              DropdownMenuItem(value: 'mute', child: Text('Mute')),
+              DropdownMenuItem(value: 'fullscreen', child: Text('Full screen')),
+              DropdownMenuItem(value: 'screenshot', child: Text('Screenshot')),
+              DropdownMenuItem(value: 'none', child: Text('Nothing')),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(mouseMiddle: v)),
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Back / forward mouse buttons'),
+          trailing: DropdownButton<String>(
+            key: const Key('settings-mouse-side'),
+            value: s.mouseSide,
+            dropdownColor: KyndrelColors.surface,
+            items: const [
+              DropdownMenuItem(value: 'seek', child: Text('Seek')),
+              DropdownMenuItem(
+                value: 'playlist',
+                child: Text('Previous / next file'),
+              ),
+              DropdownMenuItem(value: 'none', child: Text('Nothing')),
+            ],
+            onChanged: (v) =>
+                updateSettings(ref, (x) => x.copyWith(mouseSide: v)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The sound devices mpv sees, read when Settings › Audio opens.
+final FutureProvider<List<SoundDevice>> audioDevicesProvider =
+    FutureProvider.autoDispose<List<SoundDevice>>(
+      (ref) => ref.watch(playerServiceProvider).audioDevices(),
+    );
+
+/// Harbor's seek bar options (task 9.3), with a live preview.
+class SeekBarSettings extends ConsumerWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(settingsProvider);
+    void set(AppSettings Function(AppSettings) f) => updateSettings(ref, f);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 8),
+        const Text('SEEK BAR', style: KyndrelTheme.sectionLabel),
+        const SizedBox(height: 12),
+        SizedBox(
+          key: const Key('settings-seek-preview'),
+          height: 36,
+          child: CustomPaint(
+            painter: SeekBarPainter(
+              progress: 0.42,
+              buffered: 0.6,
+              hovering: true,
+              look: SeekBarLook.fromSettings(s),
+            ),
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Style'),
+          trailing: DropdownButton<SeekBarStyle>(
+            key: const Key('settings-seek-style'),
+            value: s.seekBarStyle,
+            dropdownColor: KyndrelColors.surface,
+            items: [
+              for (final v in SeekBarStyle.values)
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(switch (v) {
+                    SeekBarStyle.flat => 'Flat',
+                    SeekBarStyle.glass => 'Glass',
+                    SeekBarStyle.pinstripe => 'Pinstripe',
+                    SeekBarStyle.rainbow => 'Rainbow',
+                  }),
+                ),
+            ],
+            onChanged: (v) => set((x) => x.copyWith(seekBarStyle: v)),
+          ),
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final c in KyndrelColors.seekColors)
+              Semantics(
+                button: true,
+                selected: s.seekBarColor == c.toARGB32(),
+                label: 'Colour',
+                child: GestureDetector(
+                  key: Key('seek-color-${c.toARGB32()}'),
+                  onTap: () =>
+                      set((x) => x.copyWith(seekBarColor: c.toARGB32())),
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: c,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: s.seekBarColor == c.toARGB32()
+                            ? KyndrelColors.textPrimary
+                            : KyndrelColors.panelBorder,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text('Thickness: ${s.seekBarHeight.round()} px'),
+        ),
+        Slider(
+          key: const Key('settings-seek-height'),
+          value: s.seekBarHeight,
+          min: 3,
+          max: 14,
+          divisions: 11,
+          onChanged: (v) => set((x) => x.copyWith(seekBarHeight: v)),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Thumb'),
+          trailing: DropdownButton<SeekDotShape>(
+            key: const Key('settings-seek-dot'),
+            value: s.seekDotShape,
+            dropdownColor: KyndrelColors.surface,
+            items: [
+              for (final v in SeekDotShape.values)
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(switch (v) {
+                    SeekDotShape.circle => 'Circle',
+                    SeekDotShape.square => 'Square',
+                    SeekDotShape.hidden => 'Hidden',
+                  }),
+                ),
+            ],
+            onChanged: (v) => set((x) => x.copyWith(seekDotShape: v)),
+          ),
+        ),
+        if (s.seekDotShape != SeekDotShape.hidden) ...[
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text('Thumb size: ${s.seekDotSize.round()} px'),
+          ),
+          Slider(
+            key: const Key('settings-seek-dot-size'),
+            value: s.seekDotSize,
+            min: 8,
+            max: 32,
+            divisions: 12,
+            onChanged: (v) => set((x) => x.copyWith(seekDotSize: v)),
+          ),
+          SwitchListTile(
+            key: const Key('settings-seek-dot-hover'),
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Thumb only on hover'),
+            value: s.seekDotOnHover,
+            onChanged: (v) => set((x) => x.copyWith(seekDotOnHover: v)),
+          ),
+        ],
       ],
     );
   }
