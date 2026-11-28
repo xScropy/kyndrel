@@ -145,16 +145,20 @@ void main() {
     Rect slider(WidgetTester t) =>
         t.getRect(find.byKey(const Key('volume-slider')));
 
-    testWidgets('slider covers 0–400 and snaps to 100', (tester) async {
+    testWidgets('slider covers 0–500, 100 % at 64 %, and snaps to 100', (
+      tester,
+    ) async {
       final h = await setup(tester);
       final r = slider(tester);
       await tester.tapAt(Offset(r.right - 0.5, r.center.dy));
       await tester.pump();
-      expect(h.service.state.volume, closeTo(400, 2));
-      expect(find.text('${h.service.state.volume.round()}%'), findsOneWidget);
+      expect(h.service.state.volume, closeTo(500, 5));
+      await tester.tapAt(Offset(r.left + r.width * 0.32, r.center.dy));
+      await tester.pump();
+      expect(h.service.state.volume, closeTo(50, 1));
 
       // Just off the 100 % marker snaps onto it.
-      await tester.tapAt(Offset(r.left + r.width * 0.26, r.center.dy));
+      await tester.tapAt(Offset(r.left + r.width * 0.62, r.center.dy));
       await tester.pump();
       expect(h.service.state.volume, 100);
       await tester.pump();
@@ -164,11 +168,11 @@ void main() {
     testWidgets('boosting adds the limiter and is persisted', (tester) async {
       final h = await setup(tester);
       final r = slider(tester);
-      await tester.tapAt(Offset(r.left + r.width * 0.625, r.center.dy));
+      await tester.tapAt(Offset(r.left + r.width * 0.82, r.center.dy));
       await tester.pump();
-      expect(h.service.state.volume, closeTo(250, 2));
+      expect(h.service.state.volume, closeTo(300, 4));
       expect(h.backend.commands.last.first, 'af');
-      expect(h.container.read(settingsProvider).volume, closeTo(250, 2));
+      expect(h.container.read(settingsProvider).volume, closeTo(300, 4));
       expect(h.container.read(settingsProvider).boostWarningSeen, isTrue);
       expect(find.byType(SnackBar), findsOneWidget);
     });
@@ -178,7 +182,6 @@ void main() {
       await tester.tap(find.byKey(const Key('mute')));
       await tester.pump();
       expect(h.service.state.isMuted, isTrue);
-      expect(find.text('0%'), findsOneWidget);
       expect(find.byIcon(Icons.volume_off), findsOneWidget);
     });
 

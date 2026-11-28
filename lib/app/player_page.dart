@@ -26,6 +26,7 @@ import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
 import 'package:kyndrel/core/ui/osd.dart';
+import 'package:kyndrel/core/ui/volume_hud.dart';
 import 'package:kyndrel/features/browse/browse_view.dart';
 import 'package:kyndrel/features/cast/cast_button.dart';
 import 'package:kyndrel/features/download/download_button.dart';
@@ -420,6 +421,13 @@ class _PlayerPageState extends ConsumerState<PlayerPage> {
                 ),
                 // Brightness/volume level while swiping (task 6.3).
                 const Center(child: LevelOsdView()),
+                // Harbor's volume panel for keys, wheel and mute (9.1).
+                const Positioned(
+                  top: 36,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: VolumeHud()),
+                ),
                 // The scene under the finger while swipe-seeking (6.4).
                 const Center(child: SwipeSeekPreview()),
                 const Positioned(

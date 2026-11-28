@@ -121,12 +121,12 @@ void main() {
     expect(s.errorMessage, isNotEmpty);
   });
 
-  test('volume reaches 400 % and the limiter is added above 100 %', () async {
+  test('volume reaches 500 % and the limiter is added above 100 %', () async {
     await service.open(p.join(media, 'clip.mp4'));
     await waitFor((s) => s.isPlaying);
-    await service.setVolume(400);
-    await eventually(() async => double.parse((await prop('volume'))!) == 400);
-    expect(await prop('volume-max'), startsWith('400'));
+    await service.setVolume(500);
+    await eventually(() async => double.parse((await prop('volume'))!) == 500);
+    expect(await prop('volume-max'), startsWith('500'));
     expect(await prop('af'), contains('alimiter'));
     await service.setVolume(80);
     await eventually(

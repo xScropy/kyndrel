@@ -223,6 +223,25 @@ desktop idle ≤ 150 MB RSS, no frame over 16 ms while scrolling or scrubbing.
   - Earlier rebuild checks stay (30 seek-bar moves, 0 rebuilds, 8.3).
 - [x] 8.13 Release 1.3.0 (version and notes; tagging the release is left to the maintainer).
 
+### Phase 9: Harbor's player in Kyndrel (1.4)
+Harbor (HarborCommunity/Harbor, MIT, a Tauri + libmpv Stremio client) is the reference: only its player is ported; catalogs, IPTV, Trakt, debrid, torrents and profiles are not. Each task compares Harbor's version of a feature with Kyndrel's and takes Harbor's where it is better. Credited in `ATTRIBUTION.md`.
+- [x] 9.1 Volume boost to 500 %: Harbor's slider (100 % at 64 % of the track, the rest is boost), boost colour from orange to red, the volume HUD, a limiter whenever boosting, a boost limit setting.
+  - `volume-max=500`; Settings › Audio › Boost limit (100–500 %, default 500; a lower limit brings a louder volume down). The slider, the phone swipe and the swipe level all use Harbor's scale; Shift+wheel moves 50 %. Keys, wheel and mute show Harbor's glass volume panel at the top instead of a text message. The limiter stays on above 100 % (Harbor only limits when other filters are on; Kyndrel's is safer).
+- [ ] 9.2 Harbor's player layout: back and two-line title on top, volume and download at the left, previous/next episode around −10/play/+10 in the middle, tools at the right, a thin seek bar, an "Up next" tab.
+- [ ] 9.3 Seek bar styles: flat, glass, pinstripe, rainbow; height, colour and thumb shape.
+- [ ] 9.4 Audio and picture profiles: stereo downmix (5.1 on laptop speakers), Harbor's night-mode settings, Performance/Balanced/Quality video profiles.
+- [ ] 9.5 Subtitle text: encoding detection (Arabic windows-1256 and others), Arabic quality checks, SDH filter, frame-rate conversion.
+- [ ] 9.6 Subtitle sources without an API key (OpenSubtitles v3, Wyzie, Podnapisi, SubDL with a key) and Harbor's ranking by language and release name.
+- [ ] 9.7 Automatic subtitle sync to the audio (speech detection and alignment, offset and drift).
+- [ ] 9.8 Skip segments from online databases (AniSkip, TheIntroDB, IntroDB, SkipDB): intro, recap, credits; Harbor's skip pill.
+- [ ] 9.9 Playback rescue: frozen picture, stuck position and stalls are detected and retried.
+- [ ] 9.10 Anime4K shaders and a shader menu.
+- [ ] 9.11 Watch Together: rooms with a 6-letter code, synced play/pause/seek, chat; Harbor's relay on the user's own Cloudflare account.
+- [ ] 9.12 Multiview: two to four videos at once, one heard.
+- [ ] 9.13 Casting to Chromecast, AirPlay and Roku.
+- [ ] 9.14 Discord Rich Presence.
+- [ ] 9.15 Release 1.4.0.
+
 ## 4. Testing strategy
 - **Unit:** sleep timer logic, subtitle parsing/offset, filename episode parser, volume mapping (0–400), time formatting.
 - **Widget and golden:** seek bar, volume slider, speed popover, subtitle panel.

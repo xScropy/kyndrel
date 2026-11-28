@@ -49,7 +49,7 @@ void main() {
 
   test('out-of-range volume is clamped', () async {
     SharedPreferences.setMockInitialValues({'volume': 999.0});
-    expect((await SettingsRepository.create()).load().volume, 400);
+    expect((await SettingsRepository.create()).load().volume, 500);
   });
 
   test('every field survives a save and reload', () async {

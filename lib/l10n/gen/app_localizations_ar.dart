@@ -44,6 +44,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unmuteTooltip => 'إلغاء الكتم (M)';
 
   @override
+  String get volumeMuted => 'صامت';
+
+  @override
   String get volume => 'مستوى الصوت';
 
   @override

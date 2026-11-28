@@ -11,7 +11,8 @@ abstract final class VolumeActions {
   static const step = 5.0;
 
   static const boostWarning =
-      'Volume above 100% boosts the signal and can distort. A limiter is on '
+      'Volume above 100% boosts the signal (up to 500%) and can distort. A '
+      'limiter is on '
       'to reduce clipping (Settings › Audio).';
 
   /// Sets the volume. [persist] is false while a slider is being dragged.
@@ -22,10 +23,11 @@ abstract final class VolumeActions {
     bool showOsd = false,
     void Function(String message)? onFirstBoost,
   }) async {
-    final v = volume.clamp(0, PlayerService.maxVolume).toDouble();
-    await ref.read(playerServiceProvider).setVolume(v);
-    if (showOsd) ref.read(osdProvider.notifier).show('Volume ${v.round()}%');
     final settings = ref.read(settingsProvider);
+    final max = settings.volumeBoostMax.clamp(100, PlayerService.maxVolume);
+    final v = volume.clamp(0, max).toDouble();
+    await ref.read(playerServiceProvider).setVolume(v);
+    if (showOsd) ref.read(volumeHudProvider.notifier).show();
     if (v > 100 && !settings.boostWarningSeen && onFirstBoost != null) {
       onFirstBoost(boostWarning);
       await ref
@@ -51,12 +53,6 @@ abstract final class VolumeActions {
   static Future<void> toggleMute(WidgetRef ref) async {
     final service = ref.read(playerServiceProvider);
     await service.toggleMute();
-    ref
-        .read(osdProvider.notifier)
-        .show(
-          service.state.isMuted
-              ? 'Muted'
-              : 'Volume ${service.state.volume.round()}%',
-        );
+    ref.read(volumeHudProvider.notifier).show();
   }
 }

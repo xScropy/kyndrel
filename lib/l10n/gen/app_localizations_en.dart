@@ -44,6 +44,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unmuteTooltip => 'Unmute (M)';
 
   @override
+  String get volumeMuted => 'Muted';
+
+  @override
   String get volume => 'Volume';
 
   @override

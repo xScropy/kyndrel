@@ -37,6 +37,23 @@ abstract final class KyndrelColors {
   /// Muted grey small-caps section labels ("PLAYBACK SPEED").
   static const Color sectionLabel = Color(0xFF8A8A93);
 
+  /// Volume boost, from just above 100 % (orange) to the limit (red);
+  /// Harbor's colours (task 9.1). Use [boost] for the value in between.
+  static const Color boostLow = Color(0xFFF97316);
+  static const Color boostHigh = Color(0xFFDC2626);
+
+  /// The boost zone of an empty volume track: amber to red, faint.
+  static const Color boostZoneLow = Color(0x2EF59E0B);
+  static const Color boostZoneHigh = Color(0x42DC2626);
+
+  /// The volume HUD's glass panel and its edge.
+  static const Color glass = Color(0x59080C12);
+  static const Color glassBorder = Color(0x26FFFFFF);
+
+  /// Colour of a boost [t] of the way (0–1) from 100 % to the limit.
+  static Color boost(double t) =>
+      Color.lerp(boostLow, boostHigh, t.clamp(0, 1).toDouble())!;
+
   /// Seek/volume track behind the progress fill.
   static const Color track = Color(0x33FFFFFF);
 

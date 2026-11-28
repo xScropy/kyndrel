@@ -295,19 +295,19 @@ void main() {
     expect(backend.disposed, isTrue);
   });
 
-  test('engine is configured for 400 % volume and pitch correction', () async {
+  test('engine is configured for 500 % volume and pitch correction', () async {
     await pumpEventQueue();
-    expect(backend.properties['volume-max'], '400');
+    expect(backend.properties['volume-max'], '500');
     expect(backend.properties['audio-pitch-correction'], 'yes');
   });
 
   group('volume', () {
-    test('clamps to 0–400', () async {
-      await service.setVolume(520);
-      expect(service.state.volume, 400);
+    test('clamps to 0–500', () async {
+      await service.setVolume(620);
+      expect(service.state.volume, 500);
       await service.setVolume(-3);
       expect(service.state.volume, 0);
-      expect(backend.calls, ['volume(400.0)', 'volume(0.0)']);
+      expect(backend.calls, ['volume(500.0)', 'volume(0.0)']);
     });
 
     test('adds the limiter above 100 % and removes it below', () async {

@@ -71,7 +71,7 @@ class PlaybackState {
   /// device"), so this alone does not mean playback failed; see [status].
   final String? errorMessage;
 
-  /// 0–400 (mpv `volume`, with `volume-max=400`).
+  /// 0–500 (mpv `volume`, with `volume-max=500`).
   final double volume;
   final bool isMuted;
 

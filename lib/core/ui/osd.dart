@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/player/volume_scale.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -70,16 +71,19 @@ enum LevelKind { brightness, volume }
 /// A vertical level bar while swiping brightness or volume.
 @immutable
 class OsdLevel {
-  const new(this.kind, this.value);
+  const new(this.kind, this.value, {this.max = 500});
 
   final LevelKind kind;
 
-  /// Brightness 0–1; volume 0–200 (%), the part above 100 being boost.
+  /// Brightness 0–1; volume 0–[max] (%), the part above 100 being boost.
   final double value;
+
+  /// The volume's boost limit (task 9.1).
+  final double max;
 
   double get fraction => switch (kind) {
     LevelKind.brightness => value.clamp(0, 1),
-    LevelKind.volume => (value / 200).clamp(0, 1),
+    LevelKind.volume => VolumeScale.fraction(value, max),
   };
 
   String get label => switch (kind) {
@@ -89,12 +93,20 @@ class OsdLevel {
 
   bool get isBoost => kind == LevelKind.volume && value > 100;
 
-  @override
-  bool operator ==(Object other) =>
-      other is OsdLevel && other.kind == kind && other.value == value;
+  /// White, or orange to red through the boost (task 9.1).
+  Color get color => isBoost
+      ? KyndrelColors.boost(VolumeScale.boostAmount(value, max))
+      : KyndrelColors.textPrimary;
 
   @override
-  int get hashCode => Object.hash(kind, value);
+  bool operator ==(Object other) =>
+      other is OsdLevel &&
+      other.kind == kind &&
+      other.value == value &&
+      other.max == max;
+
+  @override
+  int get hashCode => Object.hash(kind, value, max);
 }
 
 class LevelOsdNotifier extends Notifier<OsdLevel?> {
@@ -144,12 +156,7 @@ class LevelOsdView extends ConsumerWidget {
             Text(
               level.label,
               key: const Key('level-osd-value'),
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: level.isBoost
-                    ? KyndrelColors.accent
-                    : KyndrelColors.textPrimary,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w700, color: level.color),
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -184,14 +191,11 @@ class _LevelPainter extends CustomPainter {
         Rect.fromLTRB(0, top, size.width, size.height),
         r,
       ),
-      Paint()
-        ..color = level.isBoost
-            ? KyndrelColors.accent
-            : KyndrelColors.textPrimary,
+      Paint()..color = level.color,
     );
-    if (level.kind == LevelKind.volume) {
+    if (level.kind == LevelKind.volume && level.max > 100) {
       // 100 %: where the phone's volume ends and the boost begins.
-      final mid = size.height / 2;
+      final mid = size.height * (1 - VolumeScale.normalFraction);
       canvas.drawLine(
         Offset(-3, mid),
         Offset(size.width + 3, mid),
@@ -205,3 +209,31 @@ class _LevelPainter extends CustomPainter {
   @override
   bool shouldRepaint(_LevelPainter old) => old.level != level;
 }
+
+/// Shows Harbor's volume panel for a moment after the volume changes from
+/// the keyboard, the wheel or the mute button (task 9.1).
+class VolumeHudNotifier extends Notifier<bool> {
+  static const hideAfter = Duration(milliseconds: 1200);
+  Timer? _timer;
+
+  @override
+  bool build() {
+    ref.onDispose(() => _timer?.cancel());
+    return false;
+  }
+
+  void show() {
+    try {
+      if (!ref.read(settingsProvider).showOsd) return;
+    } on Object {
+      // No settings (tests): show it.
+    }
+    state = true;
+    _timer?.cancel();
+    _timer = Timer(hideAfter, () => state = false);
+  }
+}
+
+final volumeHudProvider = NotifierProvider<VolumeHudNotifier, bool>(
+  VolumeHudNotifier.new,
+);

@@ -114,7 +114,7 @@ class PlayerService {
   }
 
   /// Maximum volume in percent (task 1.6).
-  static const double maxVolume = 400;
+  static const double maxVolume = 500;
 
   /// Label of the limiter filter added above 100 % volume.
   static const limiterLabel = '@kyndrel-limiter';

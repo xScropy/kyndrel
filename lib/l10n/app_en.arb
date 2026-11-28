@@ -24,6 +24,7 @@
   },
   "muteTooltip": "Mute (M)",
   "unmuteTooltip": "Unmute (M)",
+  "volumeMuted": "Muted",
   "volume": "Volume",
   "fullscreenTooltip": "Full screen (F)",
   "exitFullscreenTooltip": "Exit full screen (F)",

@@ -38,7 +38,9 @@ final engineSyncProvider = Provider<void>((ref) {
 
   unawaited(() async {
     await service.setLimiterEnabled(enabled: initial.limiterEnabled);
-    await service.setVolume(initial.volume);
+    await service.setVolume(
+      initial.volume.clamp(0, initial.volumeBoostMax).toDouble(),
+    );
     await service.setAutoLoadSubtitles(enabled: initial.autoLoadSubtitles);
     await service.applySubtitleStyle(initial.subtitleStyle);
     await service.setHardwareDecoding(_decoder(initial.hwdec));
@@ -87,6 +89,10 @@ final engineSyncProvider = Provider<void>((ref) {
     })
     ..listen(settingsProvider.select((s) => s.audioPassthrough), (_, v) {
       unawaited(service.setAudioPassthrough(enabled: v));
+    })
+    ..listen(settingsProvider.select((s) => s.volumeBoostMax), (_, max) {
+      // A lower limit brings a louder volume down to it.
+      if (service.state.volume > max) unawaited(service.setVolume(max));
     })
     ..listen(settingsProvider.select((s) => s.audioDevice), (_, v) {
       unawaited(service.setAudioDevice(v));

@@ -10,6 +10,7 @@
   "forwardSeconds": "تقديم {seconds} ث",
   "muteTooltip": "كتم الصوت (M)",
   "unmuteTooltip": "إلغاء الكتم (M)",
+  "volumeMuted": "صامت",
   "volume": "مستوى الصوت",
   "fullscreenTooltip": "ملء الشاشة (F)",
   "exitFullscreenTooltip": "الخروج من ملء الشاشة (F)",

@@ -158,6 +158,12 @@ abstract class AppLocalizations {
   /// **'Unmute (M)'**
   String get unmuteTooltip;
 
+  /// No description provided for @volumeMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get volumeMuted;
+
   /// No description provided for @volume.
   ///
   /// In en, this message translates to:

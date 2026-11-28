@@ -6,6 +6,7 @@ import 'package:kyndrel/core/platform/brightness_service.dart';
 import 'package:kyndrel/core/platform/system_volume.dart';
 import 'package:kyndrel/core/player/player_providers.dart';
 import 'package:kyndrel/core/player/video_view_settings.dart';
+import 'package:kyndrel/core/player/volume_scale.dart';
 import 'package:kyndrel/core/playlist/playlist.dart';
 import 'package:kyndrel/core/storage/settings.dart';
 import 'package:kyndrel/core/ui/controls_visibility.dart';
@@ -289,11 +290,16 @@ class _VideoGestureLayerState extends ConsumerState<VideoGestureLayer> {
       case _Drag.volume:
         final start = _levelStart;
         if (start == null) return;
-        final v = (start + _verticalFraction * CombinedVolume.max)
-            .clamp(0.0, CombinedVolume.max)
-            .roundToDouble();
+        // On the same scale as the slider: 100 % at 64 % of the way.
+        final max = ref.read(settingsProvider).volumeBoostMax;
+        final v = VolumeScale.valueAt(
+          VolumeScale.fraction(start, max) + _verticalFraction,
+          max,
+        );
         unawaited(_setCombinedVolume(v));
-        ref.read(levelOsdProvider.notifier).show(OsdLevel(LevelKind.volume, v));
+        ref
+            .read(levelOsdProvider.notifier)
+            .show(OsdLevel(LevelKind.volume, v, max: max));
       case _Drag.none:
       case _Drag.pinch:
       case _Drag.ignored:

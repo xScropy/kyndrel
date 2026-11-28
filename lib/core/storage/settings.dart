@@ -44,6 +44,7 @@ class AppSettings {
     this.openSubtitlesApiKey = '',
     this.subtitleLanguages = 'en',
     this.boostWarningSeen = false,
+    this.volumeBoostMax = 500,
     this.autoPlayNextEpisode = true,
     this.tmdbApiKey = '',
     this.screenshotFolder = '',
@@ -87,7 +88,7 @@ class AppSettings {
     this.mouseSide = 'seek',
   });
 
-  /// Last volume, 0–400.
+  /// Last volume, 0–500.
   final double volume;
 
   /// Length of the back/forward skip and the ←/→ seek (task 1.5).
@@ -148,6 +149,10 @@ class AppSettings {
 
   /// The one-time warning about boosting above 100 % has been shown.
   final bool boostWarningSeen;
+
+  /// The top of the volume slider, 100–500 % (task 9.1); 100 turns the
+  /// boost off.
+  final double volumeBoostMax;
 
   /// Opening an episode queues the next ones from the same folder (3.2).
   final bool autoPlayNextEpisode;
@@ -291,6 +296,7 @@ class AppSettings {
     String? openSubtitlesApiKey,
     String? subtitleLanguages,
     bool? boostWarningSeen,
+    double? volumeBoostMax,
     bool? autoPlayNextEpisode,
     String? tmdbApiKey,
     String? screenshotFolder,
@@ -356,6 +362,7 @@ class AppSettings {
       openSubtitlesApiKey: openSubtitlesApiKey ?? this.openSubtitlesApiKey,
       subtitleLanguages: subtitleLanguages ?? this.subtitleLanguages,
       boostWarningSeen: boostWarningSeen ?? this.boostWarningSeen,
+      volumeBoostMax: volumeBoostMax ?? this.volumeBoostMax,
       autoPlayNextEpisode: autoPlayNextEpisode ?? this.autoPlayNextEpisode,
       tmdbApiKey: tmdbApiKey ?? this.tmdbApiKey,
       screenshotFolder: screenshotFolder ?? this.screenshotFolder,
@@ -443,7 +450,7 @@ class SettingsRepository {
       }
     }
     return AppSettings(
-      volume: (_prefs.getDouble('volume') ?? d.volume).clamp(0, 400),
+      volume: (_prefs.getDouble('volume') ?? d.volume).clamp(0, 500),
       skipSeconds: _prefs.getInt('skipSeconds') ?? d.skipSeconds,
       upNextSeconds: _prefs.getInt('upNextSeconds') ?? d.upNextSeconds,
       libraryFolders:
@@ -475,6 +482,9 @@ class SettingsRepository {
           _prefs.getString('subtitleLanguages') ?? d.subtitleLanguages,
       boostWarningSeen:
           _prefs.getBool('boostWarningSeen') ?? d.boostWarningSeen,
+      volumeBoostMax: (_prefs.getDouble('volumeBoostMax') ?? d.volumeBoostMax)
+          .clamp(100, 500)
+          .toDouble(),
       autoPlayNextEpisode:
           _prefs.getBool('autoPlayNextEpisode') ?? d.autoPlayNextEpisode,
       tmdbApiKey: _prefs.getString('tmdbApiKey') ?? d.tmdbApiKey,
@@ -589,6 +599,7 @@ class SettingsRepository {
     await _prefs.setString('openSubtitlesApiKey', s.openSubtitlesApiKey);
     await _prefs.setString('subtitleLanguages', s.subtitleLanguages);
     await _prefs.setBool('boostWarningSeen', s.boostWarningSeen);
+    await _prefs.setDouble('volumeBoostMax', s.volumeBoostMax);
     await _prefs.setBool('autoPlayNextEpisode', s.autoPlayNextEpisode);
     await _prefs.setString('tmdbApiKey', s.tmdbApiKey);
     await _prefs.setString('screenshotFolder', s.screenshotFolder);

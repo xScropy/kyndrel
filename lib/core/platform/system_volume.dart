@@ -34,7 +34,8 @@ final systemVolumeProvider = Provider<SystemVolumeService?>(
 /// the phone's media volume (Kyndrel at 100 %), the rest is Kyndrel's
 /// boost with the phone at its maximum.
 abstract final class CombinedVolume {
-  static const double max = 200;
+  /// The top of the scale: Kyndrel's highest boost.
+  static const double max = 500;
 
   /// Where the scale is now, from the phone volume (0–1) and Kyndrel's.
   static double of({required double system, required double player}) =>

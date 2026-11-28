@@ -215,11 +215,30 @@ class AudioSettings extends ConsumerWidget {
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(audioPassthrough: v)),
         ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Boost limit'),
+          subtitle: Text(
+            s.volumeBoostMax <= 100
+                ? 'Off: the volume stops at 100%'
+                : 'The volume goes up to ${s.volumeBoostMax.round()}%',
+          ),
+        ),
+        Slider(
+          key: const Key('settings-boost-max'),
+          value: s.volumeBoostMax.clamp(100, 500),
+          min: 100,
+          max: 500,
+          divisions: 8,
+          label: '${s.volumeBoostMax.round()}%',
+          onChanged: (v) =>
+              updateSettings(ref, (x) => x.copyWith(volumeBoostMax: v)),
+        ),
         SwitchListTile(
           key: const Key('settings-limiter'),
           contentPadding: EdgeInsets.zero,
           title: const Text('Limiter above 100% volume'),
-          subtitle: const Text('Reduces clipping when boosting up to 400%'),
+          subtitle: const Text('Reduces clipping when boosting above 100%'),
           value: s.limiterEnabled,
           onChanged: (v) =>
               updateSettings(ref, (x) => x.copyWith(limiterEnabled: v)),

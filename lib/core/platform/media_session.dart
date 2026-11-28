@@ -29,7 +29,7 @@ class MediaSessionState {
   final bool canNext;
   final bool canPrevious;
 
-  /// 0–1 (the OS has no idea about 400 %).
+  /// 0–1 (the OS has no idea about 500 %).
   final double volume;
 
   Map<String, Object?> toMap() => {
