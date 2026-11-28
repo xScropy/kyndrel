@@ -3,6 +3,28 @@
 All notable changes to Kyndrel. The release workflow copies a version's
 section into its GitHub release.
 
+## [2.1.0] - 2026-11-28
+
+Watch films together, a new library, and closing that no longer crashes.
+
+### Watch together
+- Start a room from the player (the people button) and send the invite;
+  play, pause, seeking and speed stay in step for everyone, with a chat.
+- On the same Wi-Fi it works as it is. For friends elsewhere, Settings ›
+  Watch together puts a small relay on your own free Cloudflare account.
+
+### Library
+- A new look: a sidebar with Settings at the bottom, a search bar, a big
+  card for the video to pick up again (Resume / Start over), and rows of
+  large cards for Continue Watching and Recently Added.
+
+### Subtitles
+- Search OpenSubtitles or SubDL by the film's name in your browser, then
+  load the file you download.
+
+### Fixes
+- Closing the app (the close button or Alt+F4) no longer crashes it.
+
 ## [2.0.0] - 2026-11-28
 
 A new look: the player now takes after Harbor's, with its icons and
