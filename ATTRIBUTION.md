@@ -21,6 +21,7 @@ is out of date. Do not edit by hand.
 | Inter font | `assets/fonts/Inter.ttf` | SIL OFL 1.1 (`assets/fonts/OFL.txt`) | [rsms/inter](https://github.com/rsms/inter) |
 | Noto Sans Arabic font | `assets/fonts/NotoSansArabic.ttf` | SIL OFL 1.1 (`assets/fonts/NotoSansArabic-OFL.txt`) | [notofonts/arabic](https://github.com/notofonts/arabic) |
 | Material Icons | bundled by Flutter | Apache-2.0 | [google/material-design-icons](https://github.com/google/material-design-icons) |
+| Harbor (player design and features) | the player chrome, volume boost, skip segments, subtitle handling and Watch Together relay are ported from Harbor (Phase 9); `Copyright (c) 2026 Harbor` | MIT | [HarborCommunity/Harbor](https://github.com/HarborCommunity/Harbor) |
 
 ### What this means
 - Kyndrel is GPL-3.0. Every component above is GPL-3.0-compatible

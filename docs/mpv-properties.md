@@ -9,7 +9,7 @@ uses them.
 | Name | Value | Why | Task |
 |---|---|---|---|
 | `hwdec` | `auto-safe` | Hardware decoding with safe fallback (VideoController) | 0.5 |
-| `volume-max` | `400` | Volume up to 500 % | 1.6 |
+| `volume-max` | `500` | Volume up to 500 % (task 9.1) | 1.6, 9.1 |
 | `audio-pitch-correction` | `yes` | Keep pitch when changing speed | 2.2 |
 | `stream-lavf-o` | `reconnect_delay_max=15` | Give up on a dropped HTTP stream after the 15 s retry (~26 s in all) instead of ~2 min | 5.5 |
 | `sub-ass`, `sub-visibility`, `secondary-sub-visibility` | `yes` | media_kit `libass: true`: mpv draws subtitles, so image subtitles and styles work | 2.8, 2.10 |
