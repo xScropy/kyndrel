@@ -231,3 +231,14 @@ String? languageCode2(String? code) {
   final base = code.toLowerCase().split(RegExp('[-_]')).first;
   return _threeToTwo[base] ?? (base.length == 2 ? base : null);
 }
+
+/// The three-letter code (ISO 639-2) for a two-letter one, as subtitle
+/// sites use them ("ar" → "ara").
+String? languageCode3(String? code) {
+  final two = languageCode2(code);
+  if (two == null) return null;
+  for (final e in _threeToTwo.entries) {
+    if (e.value == two) return e.key;
+  }
+  return null;
+}

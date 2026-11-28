@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kyndrel/app/theme/kyndrel_colors.dart';
 import 'package:kyndrel/app/theme/kyndrel_theme.dart';
+import 'package:kyndrel/core/platform/open_external.dart';
 import 'package:kyndrel/core/utils/languages.dart';
 import 'package:kyndrel/features/subtitles/opensubtitles/opensubtitles_client.dart';
 import 'package:kyndrel/features/subtitles/subtitle_search_controller.dart';
@@ -72,6 +73,35 @@ class _OnlineResultsViewState extends ConsumerState<OnlineResultsView> {
             ),
           },
         ),
+        // Or find it on a subtitle site by the film's name, download it
+        // there and load the file.
+        if (search.status != SearchStatus.idle &&
+            search.status != SearchStatus.searching)
+          Wrap(
+            key: const Key('subtitle-sites'),
+            spacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text(
+                'Search the site:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: KyndrelColors.textSecondary,
+                ),
+              ),
+              for (final (name, url) in subtitleSiteSearches(
+                search.queryText,
+                ref.read(subtitleSearchProvider.notifier).languages,
+              ))
+                TextButton.icon(
+                  key: Key('subtitle-site-$name'),
+                  onPressed: () =>
+                      unawaited(ref.read(externalOpenerProvider)('$url')),
+                  icon: const Icon(Icons.open_in_new, size: 14),
+                  label: Text(name, style: const TextStyle(fontSize: 12)),
+                ),
+            ],
+          ),
         if (search.status == SearchStatus.done && search.message != null)
           Padding(
             padding: const EdgeInsets.only(top: 6),
